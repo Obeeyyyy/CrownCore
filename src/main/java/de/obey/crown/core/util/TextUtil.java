@@ -4,15 +4,13 @@
 package de.obey.crown.core.util;
 
 import com.google.common.collect.Maps;
-import de.obey.crown.core.CrownCore;
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
 import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
-import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -27,20 +25,13 @@ import java.util.regex.Pattern;
 @UtilityClass
 public final class TextUtil {
 
-    private final String hi = "https://dsc.gg/crownplugins";
-    private final String how = "https://dsc.gg/crownplugins";
-    private final String are = "https://dsc.gg/crownplugins";
-    private final String you = "https://dsc.gg/crownplugins";
-    private final String doing = "https://dsc.gg/crownplugins";
-
     @Getter
     private final Map<String, String> placeholders = Maps.newConcurrentMap();
     private final Map<String, String> rawPlaceholders = Maps.newConcurrentMap();
 
-    /* Hex Pattern */
-    public boolean containsOnlyLettersAndNumbers(final String input) {
-        return input.matches("\\w+");
-    }
+    private final Pattern HEX_PATTERN = Pattern.compile("#[A-Fa-f0-9]{6}");
+    private final Pattern HEX_PATTERN_TWO = Pattern.compile("&#[A-Fa-f0-9]{6}");
+    private final DecimalFormat decimalFormat = new DecimalFormat("#,###.##", new DecimalFormatSymbols(Locale.ENGLISH));
 
     public String reverse(final String text) {
         String value = "";
@@ -50,118 +41,15 @@ public final class TextUtil {
         return value;
     }
 
-    public Location parseStringToLocation(final String data) {
-        // #world#x#y#z#yaw#pitch
-        final String[] parts = data.split("#");
-        final World world = Bukkit.getWorld(parts[1]);
-
-        if (world == null)
-            return null;
-
-        return new Location(world,
-                Double.parseDouble(parts[2]),
-                Double.parseDouble(parts[3]),
-                Double.parseDouble(parts[4]),
-                Float.parseFloat(parts[5]),
-                Float.parseFloat(parts[6]));
+    public boolean containsOnlyLettersAndNumbers(final String input) {
+        return input.matches("\\w+");
     }
 
-    public String parseLocationToString(final Location location) {
-        // #world#x#y#z#yaw#pitch
-        return "#" + location.getWorld().getName() +
-                "#" + location.getX() + "#" +
-                location.getY() + "#" +
-                location.getZ() + "#" +
-                location.getYaw() + "#" +
-                location.getPitch();
-    }
-
-    public String formatTimeString(long millis) {
-        int days = 0, hours = 0, minutes = 0, seconds = 0;
-
-        while (millis >= 1000) {
-            seconds++;
-            millis -= 1000;
-        }
-
-        while (seconds >= 60) {
-            minutes++;
-            seconds -= 60;
-        }
-
-        while (minutes >= 60) {
-            hours++;
-            minutes -= 60;
-        }
-
-        while (hours >= 24) {
-            days++;
-            hours -= 24;
-        }
-
-        return (days > 0 ? days + "d " : "") + (hours > 0 ? hours + "h " : "") + (minutes > 0 ? minutes + "m " : "") + (seconds > 0 ? seconds + "." + (millis / 100) + "s" : "0." + (millis / 100) + "s");
-    }
-
-    public String formatTimeStringNoSeconds(long millis) {
-        int days = 0, hours = 0, minutes = 0, seconds = 0;
-
-        while (millis >= 1000) {
-            seconds++;
-            millis -= 1000;
-        }
-
-        while (seconds >= 60) {
-            minutes++;
-            seconds -= 60;
-        }
-
-        while (minutes >= 60) {
-            hours++;
-            minutes -= 60;
-        }
-
-        while (hours >= 24) {
-            days++;
-            hours -= 24;
-        }
-
-        return (days > 0 ? days + "d " : "") + (hours > 0 ? hours + "h " : "") + (minutes > 0 ? minutes + "m " : "");
-    }
-
-    public String formatTimeStringNoMilliSeconds(long millis) {
-        int days = 0, hours = 0, minutes = 0, seconds = 0;
-
-        while (millis >= 1000) {
-            seconds++;
-            millis -= 1000;
-        }
-
-        while (seconds >= 60) {
-            minutes++;
-            seconds -= 60;
-        }
-
-        while (minutes >= 60) {
-            hours++;
-            minutes -= 60;
-        }
-
-        while (hours >= 24) {
-            days++;
-            hours -= 24;
-        }
-
-        return (days > 0 ? days + "d " : "") + (hours > 0 ? hours + "h " : "") + (minutes > 0 ? minutes + "m " : "") + (seconds > 0 ? seconds + "s" : "");
-    }
-
-    final DecimalFormat decimalFormat = new DecimalFormat("#,###.##", new DecimalFormatSymbols(Locale.ENGLISH));
-
-    public String formatNumber(final long value) {
-        return decimalFormat.format(value);
-    }
-
-    public String formatNumber(final double value) {
-        return decimalFormat.format(value);
+    public String registerCorePlaceholder(final String placeholder, String replacement) {
+        rawPlaceholders.put(placeholder, replacement);
+        replacement = translateHexColors(translateLegacyColors(replacement));
+        placeholders.put(placeholder, replacement);
+        return replacement;
     }
 
     public String formatNumberShort(final double value) {
@@ -169,8 +57,6 @@ public final class TextUtil {
 
         if (value <= 999)
             return edited;
-
-        // 1,001,001,100,000,000
 
         if (edited.length() == 5) {
             edited = edited.substring(0, 4) + "k";
@@ -211,8 +97,8 @@ public final class TextUtil {
                 String number = text
                         .replace("k", "")
                         .replace(",", ".");
-                double value = Double.parseDouble(number) * 1000;
-                return value;
+
+                return Double.parseDouble(number) * 1000;
             } catch (final NumberFormatException exception) {
                 return -1;
             }
@@ -225,8 +111,7 @@ public final class TextUtil {
                         .replace("mil", "")
                         .replace(",", ".");
 
-                double value = Double.parseDouble(number) * 1_000_000;
-                return value;
+                return Double.parseDouble(number) * 1_000_000;
             } catch (final NumberFormatException exception) {
                 return -1;
             }
@@ -238,8 +123,8 @@ public final class TextUtil {
                         .replace("bil", "")
                         .replace("b", "")
                         .replace(",", ".");
-                double value = Double.parseDouble(number) * 1_000_000_000;
-                return value;
+
+                return Double.parseDouble(number) * 1_000_000_000;
             } catch (final NumberFormatException exception) {
                 return -1;
             }
@@ -248,12 +133,65 @@ public final class TextUtil {
         return -1;
     }
 
-    public void sendActionBar(final Player player, final String message) {
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(translateColors(message)));
+    public Location parseStringToLocation(final String data) {
+        // #world#x#y#z#yaw#pitch
+        final String[] parts = data.split("#");
+        final World world = Bukkit.getWorld(parts[1]);
+
+        if (world == null)
+            return null;
+
+        return new Location(world,
+                Double.parseDouble(parts[2]),
+                Double.parseDouble(parts[3]),
+                Double.parseDouble(parts[4]),
+                Float.parseFloat(parts[5]),
+                Float.parseFloat(parts[6]));
     }
 
-    private final Pattern HEX_PATTERN = Pattern.compile("#[A-Fa-f0-9]{6}");
-    private final Pattern HEX_PATTERN_TWO = Pattern.compile("&#[A-Fa-f0-9]{6}");
+    public String parseLocationToString(final Location location) {
+        // #world#x#y#z#yaw#pitch
+        return "#" + location.getWorld().getName() +
+                "#" + location.getX() + "#" +
+                location.getY() + "#" +
+                location.getZ() + "#" +
+                location.getYaw() + "#" +
+                location.getPitch();
+    }
+
+    public String formatTimeString(long millis, final boolean showSeconds, final boolean showMilliseconds) {
+        int days = 0, hours = 0, minutes = 0, seconds = 0;
+
+        while (millis >= 1000) {
+            seconds++;
+            millis -= 1000;
+        }
+
+        while (seconds >= 60) {
+            minutes++;
+            seconds -= 60;
+        }
+
+        while (minutes >= 60) {
+            hours++;
+            minutes -= 60;
+        }
+
+        while (hours >= 24) {
+            days++;
+            hours -= 24;
+        }
+
+        return (days > 0 ? days + "d " : "") + (hours > 0 ? hours + "h " : "") + (minutes > 0 ? minutes + "m " : "") + (showSeconds ? (seconds > 0 ? seconds + "." + (millis / 100) + "s" : (showMilliseconds ? "0." + (millis / 100) + "s" : "")) : "");
+    }
+
+    public String formatNumber(final long value) {
+        return decimalFormat.format(value);
+    }
+
+    public String formatNumber(final double value) {
+        return decimalFormat.format(value);
+    }
 
     public String translateHexColors(String message) {
         if (message == null)
@@ -278,20 +216,20 @@ public final class TextUtil {
         return message;
     }
 
-    public TextComponent translateComponent(String message) {
+    public net.kyori.adventure.text.TextComponent translateComponent(String message) {
         message = ChatColor.translateAlternateColorCodes('&', message);
 
         Matcher matcher = HEX_PATTERN.matcher(message);
-        final TextComponent mainComponent = new TextComponent();
+        net.kyori.adventure.text.TextComponent mainComponent = Component.empty();
         int lastIndex = 0;
 
         while (matcher.find()) {
             if (matcher.start() > lastIndex) {
-                mainComponent.addExtra(new TextComponent(message.substring(lastIndex, matcher.start())));
+                mainComponent = mainComponent.append(Component.text().content(message.substring(lastIndex, matcher.start())));
             }
 
             String hexColor = matcher.group(0);
-            net.md_5.bungee.api.ChatColor color = net.md_5.bungee.api.ChatColor.of(hexColor);
+            final TextColor textColor = TextColor.fromCSSHexString(hexColor);
 
             int textStart = matcher.end();
             int nextColorStart = textStart;
@@ -308,16 +246,16 @@ public final class TextUtil {
             String coloredText = message.substring(textStart, nextColorStart);
 
             if (!coloredText.isEmpty()) {
-                TextComponent colorComponent = new TextComponent(coloredText);
-                colorComponent.setColor(color);
-                mainComponent.addExtra(colorComponent);
+                net.kyori.adventure.text.TextComponent colorComponent = Component.text().content(coloredText).build();
+                colorComponent = colorComponent.color(textColor);
+                mainComponent = mainComponent.append(colorComponent);
             }
 
             lastIndex = nextColorStart;
         }
 
         if (lastIndex < message.length()) {
-            mainComponent.addExtra(new TextComponent(message.substring(lastIndex)));
+            mainComponent = mainComponent.append(Component.text().content(message.substring(lastIndex)));
         }
 
         return mainComponent;
@@ -366,50 +304,10 @@ public final class TextUtil {
     }
 
     public String translatePlaceholders(final Player player, final String message) {
-        if (!CrownCore.getInstance().isPlaceholderapi())
-            return message;
-
         return PlaceholderAPI.setPlaceholders(player, message);
-    }
-
-    public String translateGradient(String text) {
-        final String gradientPattern = "<#([0-9a-fA-F]{6}):#([0-9a-fA-F]{6}):([^>]+)>";
-        final Pattern pattern = Pattern.compile(gradientPattern);
-        final Matcher matcher = pattern.matcher(text);
-        final StringBuilder translatedText = new StringBuilder();
-
-        while (matcher.find()) {
-            final Color startColor = Color.fromRGB(Integer.parseInt(matcher.group(1), 16));
-            final Color endColor = Color.fromRGB(Integer.parseInt(matcher.group(2), 16));
-
-            final String translateText = matcher.group(3);
-
-            int step = (endColor.getRed() - startColor.getRed()) / translateText.length();
-
-            for (int i = 0; i < translateText.length(); i++) {
-
-                int red = startColor.getRed() + (step * i);
-                int green = startColor.getGreen() + (step * i);
-                int blue = startColor.getBlue() + (step * i);
-
-                final String hexColor = String.format("#%02x%02x%02x", red, green, blue);
-                ChatColor color = ChatColor.of(hexColor);
-
-                translatedText.append(color).append(translateText.charAt(i));
-            }
-        }
-
-        return translatedText.toString();
     }
 
     public String translateColors(final String message) {
         return translateLegacyColors(translateHexColors(translateCorePlaceholder(message)));
-    }
-
-    public String registerCorePlaceholder(final String placeholder, String replacement) {
-        rawPlaceholders.put(placeholder, replacement);
-        replacement = translateHexColors(translateLegacyColors(replacement));
-        placeholders.put(placeholder, replacement);
-        return replacement;
     }
 }

@@ -14,7 +14,7 @@ import java.io.File;
 
 @Getter
 public class CrownConfig implements CrowPlugin {
-    
+
     private final CrownCore crownCore = CrownCore.getInstance();
     @NonNull
     private final Plugin plugin;
@@ -36,10 +36,8 @@ public class CrownConfig implements CrowPlugin {
 
         messanger = new Messanger(plugin);
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            loadConfig();
-            loadMessages();
-        }, 5);
+        loadConfig();
+        loadMessages();
     }
 
     @Override

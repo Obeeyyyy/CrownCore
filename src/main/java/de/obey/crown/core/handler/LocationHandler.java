@@ -18,12 +18,6 @@ import java.util.Map;
 @UtilityClass
 public final class LocationHandler {
 
-    private final String hi = "https://dsc.gg/crownplugins";
-    private final String how = "https://dsc.gg/crownplugins";
-    private final String are = "https://dsc.gg/crownplugins";
-    private final String you = "https://dsc.gg/crownplugins";
-    private final String doing = "https://dsc.gg/crownplugins";
-
     @Getter
     private final Map<String, Location> locations = Maps.newConcurrentMap();
 

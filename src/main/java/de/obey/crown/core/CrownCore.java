@@ -6,64 +6,52 @@ import de.obey.crown.core.event.CoreStartEvent;
 import de.obey.crown.core.handler.LocationHandler;
 import de.obey.crown.core.listener.PlayerChat;
 import de.obey.crown.core.listener.PlayerCommandPreprocess;
-import de.obey.crown.core.listener.PlayerLogin;
-import de.obey.crown.core.util.FileUtil;
+import de.obey.crown.core.util.Scheduler;
 import de.obey.crown.core.util.Teleporter;
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
 @Setter
 public final class CrownCore extends JavaPlugin {
 
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private ExecutorService executorService;
 
-    private boolean coreStarted = false, placeholderapi = false;
+    private boolean placeholderapi = false;
 
     private PluginConfig pluginConfig;
 
     @Override
-    public void onEnable() {
-        // create core data folder
-        if (!getDataFolder().exists())
-            getDataFolder().mkdir();
-
-        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null)
-            placeholderapi = true;
-
-        // generate core message file with default messages
-        FileUtil.getGeneratedCoreFile("messages.yml", true);
-        FileUtil.getGeneratedCoreFile("config.yml", true);
-
+    public void onLoad() {
+        executorService = Executors.newCachedThreadPool();
         pluginConfig = new PluginConfig(this);
-        new Placeholders().register();
+    }
 
-        final AtomicInteger counter = new AtomicInteger();
-        Bukkit.getScheduler().runTaskTimer(this, (runnable) -> {
+    @Override
+    public void onEnable() {
 
-            if (counter.get() == 2) {
-                pluginConfig.getMessanger().loadCorePlaceholders();
-                LocationHandler.loadLocations();
-                Teleporter.initialize();
-            }
+        // check if placeholderapi is present
+        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            placeholderapi = true;
+            new Placeholders().register();
+        }
 
-            if (counter.get() == 5) {
-                coreStarted = true;
-                getServer().getPluginManager().callEvent(new CoreStartEvent());
-                load();
-                runnable.cancel();
-                return;
-            }
+        Scheduler.initialize();
 
-            counter.incrementAndGet();
-        }, 20, 20);
+        pluginConfig.getMessanger().loadCorePlaceholders();
+        load();
+
+        // load locations
+        Scheduler.runTaskLater(this, () -> {
+            LocationHandler.loadLocations();
+            Teleporter.initialize();
+            getServer().getPluginManager().callEvent(new CoreStartEvent());
+        }, 2);
     }
 
     @Override
@@ -89,7 +77,6 @@ public final class CrownCore extends JavaPlugin {
     private void loadListener() {
         final PluginManager pluginManager = getServer().getPluginManager();
 
-        pluginManager.registerEvents(new PlayerLogin(this), this);
         pluginManager.registerEvents(new PlayerChat(pluginConfig), this);
         pluginManager.registerEvents(new PlayerCommandPreprocess(pluginConfig, pluginConfig.getMessanger()), this);
     }
