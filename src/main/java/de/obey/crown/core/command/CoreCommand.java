@@ -23,7 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @NonNull
 public final class CoreCommand implements CommandExecutor, TabCompleter {
-    
+
     private final Messanger messanger;
     private final PluginConfig pluginConfig;
 
@@ -64,7 +64,6 @@ public final class CoreCommand implements CommandExecutor, TabCompleter {
             if (args[0].equalsIgnoreCase("reload")) {
                 pluginConfig.loadMessages();
                 pluginConfig.loadConfig();
-                messanger.loadCorePlaceholders();
                 messanger.sendMessage(sender, "plugin-reloaded", new String[]{"plugin"}, CrownCore.getInstance().getName());
                 return false;
             }
@@ -73,7 +72,6 @@ public final class CoreCommand implements CommandExecutor, TabCompleter {
         if (args.length == 2) {
             if (args[0].equalsIgnoreCase("reload")) {
                 if (args[1].equalsIgnoreCase("messages")) {
-                    messanger.loadCorePlaceholders();
                     pluginConfig.loadMessages();
                     messanger.sendMessage(sender, "messages-reloaded", new String[]{"plugin"}, CrownCore.getInstance().getName());
 

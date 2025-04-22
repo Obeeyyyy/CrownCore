@@ -3,16 +3,19 @@
 
 package de.obey.crown.core.event;
 
+import de.obey.crown.core.util.VersionChecker;
+import lombok.RequiredArgsConstructor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.bukkit.plugin.Plugin;
 
+@RequiredArgsConstructor
 public final class CoreStartEvent extends Event {
 
-    private final String hi = "https://dsc.gg/crownplugins";
-    private final String how = "https://dsc.gg/crownplugins";
-    private final String are = "https://dsc.gg/crownplugins";
-    private final String you = "https://dsc.gg/crownplugins";
-    private final String doing = "https://dsc.gg/crownplugins";
+    private final VersionChecker versionChecker;
 
     private static final HandlerList HANDLERS = new HandlerList();
 
@@ -23,6 +26,27 @@ public final class CoreStartEvent extends Event {
     @Override
     public HandlerList getHandlers() {
         return HANDLERS;
+    }
+
+    public void sendStartupMessage(final Plugin plugin) {
+        versionChecker.isNewestVersion(plugin).thenAcceptAsync((newest) -> {
+            Component component = Component.empty()
+                    .append(Component.text("\n")
+                            .append(Component.text("                 ✔", NamedTextColor.GREEN)))
+                    .append(Component.text(" Enabled ", NamedTextColor.WHITE))
+                    .append(Component.text(plugin.getName(), NamedTextColor.DARK_PURPLE))
+                    .append(Component.text(" - ", NamedTextColor.WHITE))
+                    .append(Component.text("v" + plugin.getDescription().getVersion(), NamedTextColor.DARK_PURPLE))
+                    .append(newest ? Component.text(" (latest)", NamedTextColor.GREEN) : Component.text(" (outdated)", NamedTextColor.DARK_RED));
+
+            if (!newest) {
+                component = component.append(Component.text("\n")
+                        .append(Component.text("                       ! Version: v" + versionChecker.getNewestVersion(plugin) + " is available.\n", NamedTextColor.YELLOW)))
+                ;
+            }
+
+            Bukkit.getConsoleSender().sendMessage(component);
+        });
     }
 
 }

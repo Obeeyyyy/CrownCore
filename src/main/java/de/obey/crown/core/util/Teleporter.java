@@ -181,7 +181,7 @@ public class Teleporter {
 
             bossaBars.put(player, bossBar);
         } else {
-            TextUtil.sendActionBar(player, messanger.getMessage("teleported-message"));
+            messanger.sendActionbar(player, messanger.getMessage("teleported-message"));
         }
     }
 
@@ -205,7 +205,7 @@ public class Teleporter {
 
             bossaBars.put(player, bossBar);
         } else {
-            TextUtil.sendActionBar(player, messanger.getMessage("telportation-message", new String[]{"remaining"}, TextUtil.formatTimeString(remaining)));
+            messanger.sendActionbar(player, messanger.getMessage("telportation-message", new String[]{"remaining"}, TextUtil.formatTimeString(remaining)));
         }
     }
 

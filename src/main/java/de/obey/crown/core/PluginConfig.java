@@ -28,7 +28,7 @@ public final class PluginConfig extends CrownConfig {
     private TeleportMessageType teleportMessageType;
 
     private int teleportDelay, messageDelay, commandDelay;
-    private boolean instantTeleport = false, instantRespawn = true, teleportOnJoin, discordCommand, storeCommand;
+    private boolean instantTeleport = false, instantRespawn = true, teleportOnJoin, updateReminder = true;
     private ArrayList<String> instantTeleportWorlds;
 
     public PluginConfig(@NonNull Plugin plugin) {
@@ -46,9 +46,7 @@ public final class PluginConfig extends CrownConfig {
         setInstantTeleportWorlds(FileUtil.getStringArrayList(configuration, "instant-teleport-worlds", new ArrayList<>()));
         setMessageDelay(FileUtil.getInt(configuration, "message-cooldown", 0));
         setCommandDelay(FileUtil.getInt(configuration, "command-cooldown", 0));
-
-        setDiscordCommand(FileUtil.getBoolean(configuration, "discord-command", false));
-        setStoreCommand(FileUtil.getBoolean(configuration, "store-command", false));
+        setUpdateReminder(FileUtil.getBoolean(configuration, "update-reminder", true));
 
         FileUtil.saveConfigurationIntoFile(configuration, file);
     }

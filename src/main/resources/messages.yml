@@ -1,6 +1,6 @@
 prefix: "&6&lCORE &8●&f"
-whiteColor: "&f"
-accentColor: "&e"
+white: "&f"
+accent: "&e"
 
 messages:
   no-permission: "%prefix% You are not allowed to do that! &8(%white%%permission%&8)"
@@ -22,18 +22,4 @@ messages:
   telportation-message: '%prefix% &fTeleporting in %accent%&o%remaining%%white%!'
   teleported-message: '%prefix% &fTeleportation complete.'
   teleportation-cancelled: '%prefix% &c&oTeleportation cancelled.'
-  balance-not-enough: "%prefix% You dont have enough money, you are missing %accent%-$%missing%%white%."
-
-multi-line-messages:
-  discord-message:
-    - ""
-    - " #7289da❤ &lJoin our discord to stay updated and interact with the community."
-    - ""
-    - "   &e➥ Link: &ndiscord.gg/abc"
-    - ""
-  store-message:
-    - ""
-    - " #29ff70❤ &lVisit our store to support the server and secure some goodies."
-    - ""
-    - "   &e➥ Link: &nstore.name.com"
-    - ""
+  not-enough-money: "%prefix% You dont have enough money, you are missing %accent%-$%missing%%white%."

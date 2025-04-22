@@ -9,6 +9,8 @@ public interface CrowPlugin {
 
     void loadMessages();
 
+    void loadSounds();
+
     void loadConfig();
-    
+
 }

@@ -4,6 +4,9 @@
 # we are there to assist you
 #
 
+# toggle the update reminder when joining (only players with permission see the reminder)
+update-reminder: true
+
 # this is the teleport delay in s
 teleport-delay: 5
 
@@ -23,7 +26,3 @@ command-cooldown: 0
 
 # cooldown before sending another chat message in milliseconds
 message-cooldown: 0
-
-# toggle the /store and /discord commands
-store-command: false
-discord-command: false

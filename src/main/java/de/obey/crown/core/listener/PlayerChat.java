@@ -6,20 +6,18 @@ package de.obey.crown.core.listener;
 import com.google.common.collect.Maps;
 import de.obey.crown.core.PluginConfig;
 import de.obey.crown.core.util.TextUtil;
-import lombok.NonNull;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 import java.util.Map;
 import java.util.UUID;
 
 @RequiredArgsConstructor
-@NonNull
 public final class PlayerChat implements Listener {
 
     private final PluginConfig pluginConfig;
@@ -28,7 +26,7 @@ public final class PlayerChat implements Listener {
     private final Map<UUID, Long> commandCooldowns = Maps.newConcurrentMap();
 
     @EventHandler
-    public void on(final AsyncPlayerChatEvent event) {
+    public void on(final AsyncChatEvent event) {
         if (pluginConfig.getMessageDelay() <= 0)
             return;
 

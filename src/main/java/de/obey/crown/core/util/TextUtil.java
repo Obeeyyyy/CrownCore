@@ -159,6 +159,10 @@ public final class TextUtil {
                 location.getPitch();
     }
 
+    public String formatTimeString(long millis) {
+        return formatTimeString(millis, true, true);
+    }
+
     public String formatTimeString(long millis, final boolean showSeconds, final boolean showMilliseconds) {
         int days = 0, hours = 0, minutes = 0, seconds = 0;
 
