@@ -37,11 +37,10 @@ public final class CoreStartEvent extends Event {
                     .append(Component.text(plugin.getName(), NamedTextColor.DARK_PURPLE))
                     .append(Component.text(" - ", NamedTextColor.WHITE))
                     .append(Component.text("v" + plugin.getDescription().getVersion(), NamedTextColor.DARK_PURPLE))
-                    .append(newest ? Component.text(" (latest)", NamedTextColor.GREEN) : Component.text(" (outdated)", NamedTextColor.DARK_RED));
+                    .append(newest ? Component.text(" (latest) \n", NamedTextColor.GREEN) : Component.text(" (outdated)\n", NamedTextColor.DARK_RED));
 
             if (!newest) {
-                component = component.append(Component.text("\n")
-                        .append(Component.text("                       ! Version: v" + versionChecker.getNewestVersion(plugin) + " is available.\n", NamedTextColor.YELLOW)))
+                component = component.append(Component.text("                       ! Version: v" + versionChecker.getNewestVersion(plugin) + " is available.\n", NamedTextColor.YELLOW))
                 ;
             }
 

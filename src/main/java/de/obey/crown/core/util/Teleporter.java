@@ -11,10 +11,15 @@ import de.obey.crown.core.CrownCore;
 import de.obey.crown.core.PluginConfig;
 import de.obey.crown.core.data.plugin.Messanger;
 import de.obey.crown.core.data.plugin.TeleportMessageType;
+import de.obey.crown.core.data.plugin.sound.SoundData;
+import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.handler.LocationHandler;
 import de.obey.crown.core.util.effects.TeleportEffect;
 import lombok.experimental.UtilityClass;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -33,40 +38,39 @@ public class Teleporter {
 
     private PluginConfig crownPluginConfig;
     private Messanger messanger;
+    private Sounds sounds;
 
     public void initialize() {
         crownPluginConfig = CrownCore.getInstance().getPluginConfig();
         messanger = crownPluginConfig.getMessanger();
+        sounds = crownPluginConfig.getSounds();
     }
 
     public void teleportInstant(final Player player, final String locationName) {
         final Location location = LocationHandler.getLocation(locationName);
         if (location == null) {
             messanger.sendMessage(player, "location-invalid", new String[]{"name"}, locationName);
-            player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.5f, 3f);
+            sounds.playSoundToPlayer(player, "location-invalid");
             return;
         }
 
-        player.teleport(location);
-        player.playSound(player.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 0.5f, 3f);
-        player.playSound(player.getLocation(), Sound.ENTITY_SHULKER_TELEPORT, 0.5f, 3f);
+        teleportInstant(player, location);
     }
 
     public void teleportInstant(final Player player, final Location location) {
-        if (location == null) {
+        if (location == null)
             return;
-        }
 
         player.teleport(location);
-        player.playSound(player.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 0.5f, 3f);
-        player.playSound(player.getLocation(), Sound.ENTITY_SHULKER_TELEPORT, 0.5f, 3f);
+        sounds.playSoundToPlayer(player, "teleport-instant-1");
+        sounds.playSoundToPlayer(player, "teleport-instant-2");
     }
 
     public void teleportWithAnimation(final Player player, final String locationName) {
         final Location location = LocationHandler.getLocation(locationName);
         if (location == null) {
             messanger.sendMessage(player, "location-invalid", new String[]{"name"}, locationName);
-            player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.5f, 3f);
+            sounds.playSoundToPlayer(player, "location-invalid");
             return;
         }
 
@@ -106,7 +110,7 @@ public class Teleporter {
         isTeleporting.add(player.getUniqueId());
         effect.run(CrownCore.getInstance(), player, 1, null);
 
-        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BANJO, 0.5f, 0.6f);
+        sounds.playSoundToPlayer(player, "teleport-tick");
 
         new BukkitRunnable() {
 
@@ -122,7 +126,7 @@ public class Teleporter {
                 if (player.getLocation().getX() != saved.getX() || player.getLocation().getZ() != saved.getZ()) {
                     removeBossbar(player);
                     effect.stop();
-                    player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 0.2f, 3f);
+                    sounds.playSoundToPlayer(player, "teleport-cancelled");
                     messanger.sendMessage(player, "teleportation-cancelled");
                     isTeleporting.remove(player.getUniqueId());
                     cancel();
@@ -150,7 +154,8 @@ public class Teleporter {
                 }
 
                 pitch += 0.1f;
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BANJO, 0.5f, pitch);
+                final SoundData soundData = sounds.getSoundData("teleport-tick");
+                player.playSound(player.getLocation(), soundData.getSound(), soundData.getVolume(), pitch);
 
                 ticks++;
             }
@@ -181,7 +186,7 @@ public class Teleporter {
 
             bossaBars.put(player, bossBar);
         } else {
-            messanger.sendActionbar(player, messanger.getMessage("teleported-message"));
+            messanger.sendActionbar(player, "teleported-message");
         }
     }
 

@@ -31,7 +31,10 @@ public final class FileUtil {
         final File file = new File(plugin.getDataFolder().getPath() + "/" + fileName);
 
         if (!file.exists() && generate) {
-            plugin.saveResource(fileName, false);
+            try {
+                plugin.saveResource(fileName, false);
+            } catch (final IllegalArgumentException ignored) {
+            }
         }
 
         return file;

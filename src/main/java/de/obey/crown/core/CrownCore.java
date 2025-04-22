@@ -2,6 +2,7 @@ package de.obey.crown.core;
 
 import de.obey.crown.core.command.CoreCommand;
 import de.obey.crown.core.command.LocationCommand;
+import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.event.CoreStartEvent;
 import de.obey.crown.core.handler.LocationHandler;
 import de.obey.crown.core.listener.CoreStart;
@@ -32,11 +33,13 @@ public final class CrownCore extends JavaPlugin {
     private boolean placeholderapi = false;
 
     private PluginConfig pluginConfig;
+    private Sounds sounds;
 
     @Override
     public void onLoad() {
         executorService = Executors.newCachedThreadPool();
         pluginConfig = new PluginConfig(this);
+        sounds = pluginConfig.getSounds();
     }
 
     @Override
@@ -86,7 +89,7 @@ public final class CrownCore extends JavaPlugin {
         final PluginManager pluginManager = getServer().getPluginManager();
 
         pluginManager.registerEvents(new CoreStart(), this);
-        pluginManager.registerEvents(new PlayerChat(pluginConfig), this);
+        pluginManager.registerEvents(new PlayerChat(pluginConfig, sounds), this);
         pluginManager.registerEvents(new PlayerJoin(pluginConfig, versionChecker), this);
     }
 

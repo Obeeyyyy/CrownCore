@@ -5,10 +5,10 @@ package de.obey.crown.core.listener;
 
 import com.google.common.collect.Maps;
 import de.obey.crown.core.PluginConfig;
+import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.util.TextUtil;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import lombok.RequiredArgsConstructor;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -21,6 +21,7 @@ import java.util.UUID;
 public final class PlayerChat implements Listener {
 
     private final PluginConfig pluginConfig;
+    private final Sounds sounds;
 
     private final Map<UUID, Long> messageCooldowns = Maps.newConcurrentMap();
     private final Map<UUID, Long> commandCooldowns = Maps.newConcurrentMap();
@@ -40,7 +41,7 @@ public final class PlayerChat implements Listener {
             final long delay = pluginConfig.getMessageDelay();
             if (difference < delay) {
                 pluginConfig.getMessanger().sendMessage(player, "message-cooldown", new String[]{"remaining"}, TextUtil.formatTimeString(delay - difference));
-                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.1f, 0.5f);
+                sounds.playSoundToPlayer(player, "message-cooldown");
                 event.setCancelled(true);
                 return;
             }
@@ -64,7 +65,7 @@ public final class PlayerChat implements Listener {
             final long delay = pluginConfig.getCommandDelay();
             if (difference < delay) {
                 pluginConfig.getMessanger().sendMessage(player, "command-cooldown", new String[]{"remaining"}, TextUtil.formatTimeString(delay - difference));
-                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.1f, 0.5f);
+                sounds.playSoundToPlayer(player, "command-cooldown");
                 event.setCancelled(true);
                 return;
             }

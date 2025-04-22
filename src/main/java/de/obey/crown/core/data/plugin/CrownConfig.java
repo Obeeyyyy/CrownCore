@@ -36,8 +36,8 @@ public class CrownConfig implements CrowPlugin {
 
         createFiles();
 
-        messanger = new Messanger(plugin);
         sounds = new Sounds(plugin);
+        messanger = new Messanger(plugin);
 
         loadConfig();
         loadMessages();

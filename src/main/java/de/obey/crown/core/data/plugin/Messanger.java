@@ -5,6 +5,7 @@ package de.obey.crown.core.data.plugin;
 
 import com.google.common.collect.Maps;
 import de.obey.crown.core.CrownCore;
+import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.util.FileUtil;
 import de.obey.crown.core.util.TextUtil;
 import de.obey.crown.core.util.VaultHook;
@@ -19,7 +20,6 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -38,6 +38,7 @@ public final class Messanger {
     private final boolean placeholderapi = crownCore.isPlaceholderapi();
 
     private final Plugin plugin;
+    private Sounds sounds;
 
     private String prefix, whiteColor, accentColor;
     private final Map<String, String> messages = Maps.newConcurrentMap();
@@ -47,14 +48,25 @@ public final class Messanger {
         final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
+        sounds = crownCore.getSounds();
+
         loadCoreMessages();
-        loadCorePlaceholders(configuration);
+        loadCorePlaceholders();
+        loadPluginPlaceholders(configuration);
         loadMultiLineMessages(configuration);
         loadMessages(configuration);
     }
 
-    private void loadCorePlaceholders(final YamlConfiguration configuration) {
-        prefix = TextUtil.registerCorePlaceholder("%prefix%", FileUtil.getString(configuration, "prefix", "&5&lOBEY &8●&f"));
+    private void loadPluginPlaceholders(final YamlConfiguration configuration) {
+        prefix = FileUtil.getString(configuration, "prefix", "&5&lCORE &8●&f");
+        whiteColor = FileUtil.getString(configuration, "white", "&f");
+        accentColor = FileUtil.getString(configuration, "accent", "&5");
+    }
+
+    private void loadCorePlaceholders() {
+        final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(FileUtil.getCoreFile("messages.yml"));
+
+        prefix = TextUtil.registerCorePlaceholder("%prefix%", FileUtil.getString(configuration, "prefix", "&5&lCORE &8●&f"));
         whiteColor = TextUtil.registerCorePlaceholder("%white%", FileUtil.getString(configuration, "white", "&f"));
         accentColor = TextUtil.registerCorePlaceholder("%accent%", FileUtil.getString(configuration, "accent", "&5"));
     }
@@ -434,7 +446,7 @@ public final class Messanger {
 
         if (send) {
             if (sender instanceof Player player)
-                player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.2f, 1);
+                sounds.playSoundToPlayer(player, "no-permission");
 
             sendMessage(sender, "no-permission", new String[]{"permission"}, permission);
         }
@@ -444,6 +456,10 @@ public final class Messanger {
 
     public boolean isKnown(final CommandSender sender, final String name) {
         if (!name.matches("[a-zA-z0-9]{3,16}")) {
+
+            if (sender instanceof Player player)
+                sounds.playSoundToPlayer(player, "player-invalid");
+
             sendMessage(sender, "player-invalid", new String[]{"name"}, name);
             return false;
         }
@@ -454,6 +470,10 @@ public final class Messanger {
             return true;
 
         if (!offlinePlayer.hasPlayedBefore()) {
+
+            if (sender instanceof Player player)
+                sounds.playSoundToPlayer(player, "player-invalid");
+
             sendMessage(sender, "player-invalid", new String[]{"name"}, name);
             return false;
         }
@@ -468,6 +488,10 @@ public final class Messanger {
 
         final Player target = Bukkit.getPlayer(name);
         if (target == null || !target.isOnline()) {
+
+            if (sender instanceof Player player)
+                sounds.playSoundToPlayer(player, "player-offline");
+
             sendMessage(sender, "player-offline", new String[]{"name"}, name);
             return false;
         }

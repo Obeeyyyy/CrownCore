@@ -1,0 +1,11 @@
+sounds:
+  no-permission: "ENTITY_GENERIC_EXPLODE:0.2:1.0"
+  player-invalid: "ENTITY_GENERIC_EXPLODE:0.2:1.0"
+  player-offline: "ENTITY_GENERIC_EXPLODE:0.2:1.0"
+  message-cooldown: "ENTITY_VILLAGER_NO:0.2:1.0"
+  command-cooldown: "ENTITY_VILLAGER_NO:0.2:1.0"
+  location-invalid: "ENTITY_GENERIC_EXPLODE:0.2:1.0"
+  teleport-instant-1: "ENTITY_SPLASH_POTION_BREAK:0.5:3.0"
+  teleport-instant-2: "ENTITY_SHULKER_TELEPORT:0.5:3.0"
+  teleport-cancelled: "ENTITY_ITEM_BREAK:0.5:3.0"
+  teleport-tick: "BLOCK_NOTE_BLOCK_BANJO:0.5:0.6"
