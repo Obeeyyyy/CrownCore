@@ -210,7 +210,7 @@ public class Teleporter {
 
             bossaBars.put(player, bossBar);
         } else {
-            messanger.sendActionbar(player, messanger.getMessage("telportation-message", new String[]{"remaining"}, TextUtil.formatTimeString(remaining)));
+            messanger.sendActionbar(player, "telportation-message", new String[]{"remaining"}, TextUtil.formatTimeString(remaining));
         }
     }
 

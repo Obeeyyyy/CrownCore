@@ -210,7 +210,7 @@ public final class Messanger {
             }
         }
 
-        return PlaceholderAPI.setPlaceholders(player, TextUtil.translateColors(message));
+        return TextUtil.translateColors(PlaceholderAPI.setPlaceholders(player, message));
     }
 
     public ArrayList<String> getMultiLineMessage(final String key) {
