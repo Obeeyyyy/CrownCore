@@ -4,7 +4,6 @@
 package de.obey.crown.core;
 
 import de.obey.crown.core.util.TextUtil;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
@@ -12,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @RequiredArgsConstructor
-@NonNull
 public final class Placeholders extends PlaceholderExpansion {
 
     @Override
