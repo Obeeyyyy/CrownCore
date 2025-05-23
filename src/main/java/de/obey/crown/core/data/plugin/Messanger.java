@@ -58,9 +58,9 @@ public final class Messanger {
     }
 
     private void loadPluginPlaceholders(final YamlConfiguration configuration) {
-        prefix = FileUtil.getString(configuration, "prefix", "&5&lCORE &8●&f");
-        whiteColor = FileUtil.getString(configuration, "white", "&f");
-        accentColor = FileUtil.getString(configuration, "accent", "&5");
+        prefix = TextUtil.registerCorePlaceholder("%" + plugin.getName().toLowerCase() + "_prefix%", FileUtil.getString(configuration, "prefix", prefix));
+        whiteColor = TextUtil.registerCorePlaceholder("%" + plugin.getName().toLowerCase() + "_white%",FileUtil.getString(configuration, "white", whiteColor));
+        accentColor = TextUtil.registerCorePlaceholder("%" + plugin.getName().toLowerCase() + "_accent%",FileUtil.getString(configuration, "accent", accentColor));
     }
 
     private void loadCorePlaceholders() {
@@ -364,7 +364,7 @@ public final class Messanger {
     }
 
     public void sendActionbar(final CommandSender sender, final String key, final String[] placeholders, final String... replacements) {
-        final TextComponent textComponent = TextUtil.translateComponent(getMessage(key, placeholders, replacements));
+        final TextComponent textComponent = TextUtil.translateComponent(getRawMessage(key, placeholders, replacements));
         sender.sendActionBar(textComponent);
     }
 
@@ -454,7 +454,7 @@ public final class Messanger {
         return false;
     }
 
-    public boolean isKnown(final CommandSender sender, final String name) {
+    public boolean isValidPlayerName(final CommandSender sender, final String name) {
         if (!name.matches("[a-zA-z0-9]{3,16}")) {
 
             if (sender instanceof Player player)
@@ -463,6 +463,13 @@ public final class Messanger {
             sendMessage(sender, "player-invalid", new String[]{"name"}, name);
             return false;
         }
+
+        return true;
+    }
+
+    public boolean isKnown(final CommandSender sender, final String name) {
+        if (!isValidPlayerName(sender, name))
+            return false;
 
         final OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(name);
 
@@ -483,7 +490,7 @@ public final class Messanger {
 
     public boolean isOnline(final CommandSender sender, final String name) {
 
-        if (!isKnown(sender, name))
+        if (!isValidPlayerName(sender, name))
             return false;
 
         final Player target = Bukkit.getPlayer(name);

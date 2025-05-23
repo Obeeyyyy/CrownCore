@@ -6,14 +6,19 @@ package de.obey.crown.core;
 import de.obey.crown.core.data.plugin.CrownConfig;
 import de.obey.crown.core.data.plugin.TeleportMessageType;
 import de.obey.crown.core.util.FileUtil;
+import de.obey.crown.core.util.TextUtil;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import org.apache.commons.lang.LocaleUtils;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.Locale;
 
 @Getter
 @Setter
@@ -47,6 +52,12 @@ public final class PluginConfig extends CrownConfig {
         setMessageDelay(FileUtil.getInt(configuration, "message-cooldown", 0));
         setCommandDelay(FileUtil.getInt(configuration, "command-cooldown", 0));
         setUpdateReminder(FileUtil.getBoolean(configuration, "update-reminder", true));
+
+        Locale locale = LocaleUtils.toLocale(FileUtil.getString(configuration, "number-formatting", "en_US"));
+        if(locale == null)
+            locale = Locale.ENGLISH;
+
+        TextUtil.setDecimalFormat(new DecimalFormat("#,###.##", new DecimalFormatSymbols(locale)));
 
         FileUtil.saveConfigurationIntoFile(configuration, file);
     }

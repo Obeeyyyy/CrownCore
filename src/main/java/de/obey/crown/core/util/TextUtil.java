@@ -5,6 +5,7 @@ package de.obey.crown.core.util;
 
 import com.google.common.collect.Maps;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.UtilityClass;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
@@ -31,7 +32,10 @@ public final class TextUtil {
 
     private final Pattern HEX_PATTERN = Pattern.compile("#[A-Fa-f0-9]{6}");
     private final Pattern HEX_PATTERN_TWO = Pattern.compile("&#[A-Fa-f0-9]{6}");
-    private final DecimalFormat decimalFormat = new DecimalFormat("#,###.##", new DecimalFormatSymbols(Locale.ENGLISH));
+    private final Pattern HEX_COMBINED = Pattern.compile("&#[A-Fa-f0-9]{6}|#[A-Fa-f0-9]{6}");
+
+    @Setter
+    private DecimalFormat decimalFormat = new DecimalFormat("#,###.##", new DecimalFormatSymbols(Locale.ENGLISH));
 
     public String reverse(final String text) {
         String value = "";
@@ -53,40 +57,18 @@ public final class TextUtil {
     }
 
     public String formatNumberShort(final double value) {
-        String edited = formatNumber((int) value);
+        double absValue = Math.abs(value);
+        final String[] suffixes = {"", "k", "M", "B", "T", "Q"};
+        int index = 0;
 
-        if (value <= 999)
-            return edited;
-
-        if (edited.length() == 5) {
-            edited = edited.substring(0, 4) + "k";
-        } else if (edited.length() == 6) {
-            edited = edited.substring(0, 5) + "k";
-        } else if (edited.length() == 7) {
-            edited = edited.substring(0, 6) + "k";
-        } else if (edited.length() == 9) {
-            edited = edited.substring(0, 4) + "M";
-        } else if (edited.length() == 10) {
-            edited = edited.substring(0, 5) + "M";
-        } else if (edited.length() == 11) {
-            edited = edited.substring(0, 6) + "M";
-        } else if (edited.length() == 13) {
-            edited = edited.substring(0, 4) + "B";
-        } else if (edited.length() == 14) {
-            edited = edited.substring(0, 5) + "B";
-        } else if (edited.length() == 15) {
-            edited = edited.substring(0, 6) + "B";
-        } else if (edited.length() == 17) {
-            edited = edited.substring(0, 4) + "T";
-        } else if (edited.length() == 18) {
-            edited = edited.substring(0, 5) + "T";
-        } else if (edited.length() == 19) {
-            edited = edited.substring(0, 6) + "T";
-        } else {
-            edited = value + "";
+        while (absValue >= 1000 && index < suffixes.length - 1) {
+            absValue /= 1000;
+            index++;
         }
 
-        return edited;
+        String formatted = absValue % 1 == 0 ? String.format("%.0f", absValue) : String.format("%.1f", absValue);
+
+        return formatted + suffixes[index];
     }
 
     public double getDoubleFromStringwithSuffix(String text) {
@@ -221,9 +203,9 @@ public final class TextUtil {
     }
 
     public net.kyori.adventure.text.TextComponent translateComponent(String message) {
-        message = ChatColor.translateAlternateColorCodes('&', message);
 
-        Matcher matcher = HEX_PATTERN.matcher(message);
+
+        Matcher matcher = HEX_COMBINED.matcher(message);
         net.kyori.adventure.text.TextComponent mainComponent = Component.empty();
         int lastIndex = 0;
 
@@ -239,7 +221,7 @@ public final class TextUtil {
             int nextColorStart = textStart;
 
             while (nextColorStart < message.length()) {
-                Matcher nextMatcher = HEX_PATTERN.matcher(message.substring(nextColorStart));
+                Matcher nextMatcher = HEX_COMBINED.matcher(message.substring(nextColorStart));
                 if (nextMatcher.lookingAt()) {
                     break;
                 }
@@ -250,7 +232,7 @@ public final class TextUtil {
             String coloredText = message.substring(textStart, nextColorStart);
 
             if (!coloredText.isEmpty()) {
-                net.kyori.adventure.text.TextComponent colorComponent = Component.text().content(coloredText).build();
+                net.kyori.adventure.text.TextComponent colorComponent = Component.text().content(translateLegacyColors(coloredText)).build();
                 colorComponent = colorComponent.color(textColor);
                 mainComponent = mainComponent.append(colorComponent);
             }
@@ -297,6 +279,7 @@ public final class TextUtil {
 
         if (placeholders.isEmpty())
             return message;
+
 
         for (final String key : placeholders.keySet()) {
             if (message.contains(key)) {

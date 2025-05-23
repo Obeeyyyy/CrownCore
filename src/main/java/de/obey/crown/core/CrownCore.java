@@ -52,6 +52,7 @@ public final class CrownCore extends JavaPlugin {
             placeholderapi = true;
             new Placeholders().register();
         }
+
         Scheduler.initialize();
 
         load();
