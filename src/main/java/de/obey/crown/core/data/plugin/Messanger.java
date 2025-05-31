@@ -163,6 +163,22 @@ public final class Messanger {
         return getMessageWithPlaceholderAPI(null, key, placeholders, replacements);
     }
 
+    public String getRawMessageWithPlacehodlerAPI(final String key) {
+        return getRawMessageWithPlacehodlerAPI(null, key);
+    }
+
+    public String getRawMessageWithPlacehodlerAPI(final OfflinePlayer offlinePlayer, final String key) {
+        return PlaceholderAPI.setPlaceholders(offlinePlayer, getRawMessage(key));
+    }
+
+    public String getRawMessageWithPlacehodlerAPI(final OfflinePlayer offlinePlayer, final String key, final String[] placeholders, final String... replacements) {
+        return PlaceholderAPI.setPlaceholders(offlinePlayer, getRawMessage(key, placeholders, replacements));
+    }
+
+    public String getRawMessageWithPlacehodlerAPI(final String key, final String[] placeholders, final String... replacements) {
+        return PlaceholderAPI.setPlaceholders(null, getRawMessage(key, placeholders, replacements));
+    }
+
     public String getRawMessage(final String key) {
         return getRawMessage(key, null);
     }
