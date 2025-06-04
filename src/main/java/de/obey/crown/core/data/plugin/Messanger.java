@@ -402,15 +402,19 @@ public final class Messanger {
     }
 
     public Component getComonent(final String key) {
-        return getComonent(key, null);
+        return getRawComponent(key, null);
     }
 
-    public Component getComonent(final String key, final String[] placeholders, final String... replacements) {
+    public Component getRawComponent(final String key, final String[] placeholders, final String... replacements) {
         return TextUtil.translateComponent(getRawMessage(key, placeholders, replacements));
     }
 
+    public Component getComponent(final String key, final String[] placeholders, final String... replacements) {
+        return TextUtil.translateComponent(getMessage(key, placeholders, replacements));
+    }
+
     public void sendHoverableMessage(final CommandSender sender, Component component, final String hoverKey, final String[] placeholders, final String... replacements) {
-        component = component.hoverEvent(HoverEvent.showText(getComonent(hoverKey, placeholders, replacements)));
+        component = component.hoverEvent(HoverEvent.showText(getRawComponent(hoverKey, placeholders, replacements)));
         sender.sendMessage(component);
     }
 
@@ -419,9 +423,20 @@ public final class Messanger {
     }
 
     public void sendClickableMessage(final CommandSender sender, final String command, final String key, final String[] placeholders, final String... replacements) {
-        final Component component = getComonent(key, placeholders, replacements)
+        sendClickableMessageWithHoverOption(sender, "&8 » &f" + command, command, key, placeholders, replacements);
+    }
+
+    public void sendClickableMessageWithHoverOption(final CommandSender sender,final String hoverOption, final String command, final String key) {
+        final Component component = getRawComponent(key, null, null)
                 .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, command))
-                .hoverEvent(HoverEvent.showText(TextUtil.translateComponent("&8 » &f" + command)));
+                .hoverEvent(HoverEvent.showText(TextUtil.translateComponent(hoverOption)));
+        sender.sendMessage(component);
+    }
+
+    public void sendClickableMessageWithHoverOption(final CommandSender sender,final String hoverOption, final String command, final String key, final String[] placeholders, final String... replacements) {
+        final Component component = getRawComponent(key, placeholders, replacements)
+                .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, command))
+                .hoverEvent(HoverEvent.showText(TextUtil.translateComponent(hoverOption)));
         sender.sendMessage(component);
     }
 

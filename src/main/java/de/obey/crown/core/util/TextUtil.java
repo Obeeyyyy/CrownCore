@@ -9,6 +9,7 @@ import lombok.Setter;
 import lombok.experimental.UtilityClass;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -202,10 +203,9 @@ public final class TextUtil {
         return message;
     }
 
+    /*
     public net.kyori.adventure.text.TextComponent translateComponent(String message) {
-
-
-        Matcher matcher = HEX_COMBINED.matcher(message);
+        final Matcher matcher = HEX_COMBINED.matcher(message);
         net.kyori.adventure.text.TextComponent mainComponent = Component.empty();
         int lastIndex = 0;
 
@@ -222,14 +222,13 @@ public final class TextUtil {
 
             while (nextColorStart < message.length()) {
                 Matcher nextMatcher = HEX_COMBINED.matcher(message.substring(nextColorStart));
-                if (nextMatcher.lookingAt()) {
+                if (nextMatcher.lookingAt())
                     break;
-                }
 
                 nextColorStart++;
             }
 
-            String coloredText = message.substring(textStart, nextColorStart);
+            final String coloredText = message.substring(textStart, nextColorStart);
 
             if (!coloredText.isEmpty()) {
                 net.kyori.adventure.text.TextComponent colorComponent = Component.text().content(translateLegacyColors(coloredText)).build();
@@ -242,6 +241,47 @@ public final class TextUtil {
 
         if (lastIndex < message.length()) {
             mainComponent = mainComponent.append(Component.text().content(message.substring(lastIndex)));
+        }
+
+        return mainComponent;
+    }
+
+     */
+
+    public net.kyori.adventure.text.TextComponent translateComponent(String message) {
+        final Matcher matcher = HEX_COMBINED.matcher(message);
+        TextComponent mainComponent = Component.empty();
+        int lastIndex = 0;
+
+        while (matcher.find()) {
+            if (matcher.start() > lastIndex) {
+                String preHexText = message.substring(lastIndex, matcher.start());
+                mainComponent = mainComponent.append(Component.text(translateLegacyColors(preHexText)));
+            }
+
+            final String hexColor = matcher.group();
+            final TextColor textColor = TextColor.fromCSSHexString(hexColor);
+
+            final int textStart = matcher.end();
+            int nextColorStart = textStart;
+
+            while (nextColorStart < message.length()) {
+                final Matcher nextMatcher = HEX_COMBINED.matcher(message.substring(nextColorStart));
+                if (nextMatcher.lookingAt()) break;
+                nextColorStart++;
+            }
+
+            final String coloredText = message.substring(textStart, nextColorStart);
+            if (!coloredText.isEmpty()) {
+                final TextComponent colorComponent = Component.text(translateLegacyColors(coloredText)).color(textColor);
+                mainComponent = mainComponent.append(colorComponent);
+            }
+
+            lastIndex = nextColorStart;
+        }
+
+        if (lastIndex < message.length()) {
+            mainComponent = mainComponent.append(Component.text(translateLegacyColors(message.substring(lastIndex))));
         }
 
         return mainComponent;
