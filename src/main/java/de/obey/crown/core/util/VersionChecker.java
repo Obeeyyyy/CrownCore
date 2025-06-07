@@ -5,8 +5,10 @@ package de.obey.crown.core.util;
 
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import de.obey.crown.core.CrownCore;
 import lombok.Getter;
 import org.bukkit.plugin.Plugin;
 
@@ -22,16 +24,17 @@ import java.util.concurrent.CompletableFuture;
 @Getter
 public final class VersionChecker {
 
-    private final String url = "https://versions.obeeyyyy.de/version/%plugin%/%version%";
+    private final String singleUrl = "https://versions.obeeyyyy.de/version/%plugin%/%version%";
+    private final String url = "https://versions.obeeyyyy.de/versions";
 
     private final Map<String, String> newestVersions = Maps.newConcurrentMap();
     private final ArrayList<Plugin> outdatedPlugins = new ArrayList<>();
 
-    public CompletableFuture<String> retrieveNewestVersion(final String pluginName, final String pluginVersion) {
-        return CompletableFuture.supplyAsync(() -> {
+    public void retrieveNewestPluginVersions() {
+        CrownCore.getInstance().getExecutorService().execute(() -> {
             final HttpClient client = HttpClient.newHttpClient();
             final HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url.replace("%plugin%", pluginName).replace("%version%", pluginVersion)))
+                    .uri(URI.create(url))
                     .GET()
                     .build();
 
@@ -39,35 +42,23 @@ public final class VersionChecker {
                 final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 final JsonObject jsonResponse = new Gson().fromJson(response.body(), JsonObject.class);
 
-                if (!jsonResponse.has("newest"))
-                    return pluginVersion;
+                final Map<String, JsonElement> map = jsonResponse.asMap();
 
-                final String newestVersion = jsonResponse.get("newest").getAsString();
-                newestVersions.put(pluginName, newestVersion);
-
-                return newestVersion;
-
-            } catch (JsonSyntaxException | IOException | InterruptedException e) {
-                return pluginVersion;
-            }
+                for (final String pluginName : map.keySet()) {
+                    newestVersions.put(pluginName, map.get(pluginName).getAsString());
+                }
+            } catch (JsonSyntaxException | IOException | InterruptedException ignored) {}
         });
     }
 
-    public CompletableFuture<Boolean> isNewestVersion(final Plugin plugin) {
+    public boolean isNewestVersion(final Plugin plugin) {
         final String pluginName = plugin.getName();
         final String pluginVersion = plugin.getDescription().getVersion();
 
         if (newestVersions.containsKey(pluginName))
-            return CompletableFuture.supplyAsync(() -> newestVersions.get(pluginName).equalsIgnoreCase(pluginVersion));
+            return newestVersions.get(pluginName).equalsIgnoreCase(pluginVersion);
 
-        return retrieveNewestVersion(pluginName, pluginVersion).thenApply((newestVersion) -> {
-            final boolean isNewest = newestVersion.equalsIgnoreCase(pluginVersion);
-
-            if (!isNewest)
-                outdatedPlugins.add(plugin);
-
-            return isNewest;
-        });
+        return true;
     }
 
     public String getNewestVersion(final Plugin plugin) {

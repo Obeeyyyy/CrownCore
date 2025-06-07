@@ -29,23 +29,23 @@ public final class CoreStartEvent extends Event {
     }
 
     public void sendStartupMessage(final Plugin plugin) {
-        versionChecker.isNewestVersion(plugin).thenAcceptAsync((newest) -> {
-            Component component = Component.empty()
-                    .append(Component.text("\n")
-                            .append(Component.text("                 ✔", NamedTextColor.GREEN)))
-                    .append(Component.text(" Enabled ", NamedTextColor.WHITE))
-                    .append(Component.text(plugin.getName(), NamedTextColor.DARK_PURPLE))
-                    .append(Component.text(" - ", NamedTextColor.WHITE))
-                    .append(Component.text("v" + plugin.getDescription().getVersion(), NamedTextColor.DARK_PURPLE))
-                    .append(newest ? Component.text(" (latest) \n", NamedTextColor.GREEN) : Component.text(" (outdated)\n", NamedTextColor.DARK_RED));
+        final boolean isLatest = versionChecker.isNewestVersion(plugin);
 
-            if (!newest) {
-                component = component.append(Component.text("                       ! Version: v" + versionChecker.getNewestVersion(plugin) + " is available.\n", NamedTextColor.YELLOW))
-                ;
-            }
+        Component component = Component.empty()
+                .append(Component.text("\n")
+                        .append(Component.text("                 ✔", NamedTextColor.GREEN)))
+                .append(Component.text(" Enabled ", NamedTextColor.WHITE))
+                .append(Component.text(plugin.getName(), NamedTextColor.DARK_PURPLE))
+                .append(Component.text(" - ", NamedTextColor.WHITE))
+                .append(Component.text("v" + plugin.getDescription().getVersion(), NamedTextColor.DARK_PURPLE))
+                .append(isLatest ? Component.text(" (latest) \n", NamedTextColor.GREEN) : Component.text(" (outdated)\n", NamedTextColor.DARK_RED));
 
-            Bukkit.getConsoleSender().sendMessage(component);
-        });
+        if (!isLatest) {
+            component = component.append(Component.text("                       ! Version: v" + versionChecker.getNewestVersion(plugin) + " is available.\n", NamedTextColor.YELLOW));
+            versionChecker.getOutdatedPlugins().add(plugin);
+        }
+
+        Bukkit.getConsoleSender().sendMessage(component);
     }
 
 }
