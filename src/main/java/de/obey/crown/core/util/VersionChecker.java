@@ -10,6 +10,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import de.obey.crown.core.CrownCore;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.bukkit.plugin.Plugin;
 
 import java.io.IOException;
@@ -17,12 +18,17 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
+@RequiredArgsConstructor
 @Getter
 public final class VersionChecker {
+
+    private final ExecutorService executor;
 
     private final String singleUrl = "https://versions.obeeyyyy.de/version/%plugin%/%version%";
     private final String url = "https://versions.obeeyyyy.de/versions";
@@ -32,14 +38,19 @@ public final class VersionChecker {
 
     public void retrieveNewestPluginVersions() {
         CrownCore.getInstance().getExecutorService().execute(() -> {
-            final HttpClient client = HttpClient.newHttpClient();
+            final HttpClient httpClient = HttpClient.newBuilder()
+                    .version(HttpClient.Version.HTTP_2)
+                    .executor(executor)
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .build();
+
             final HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .GET()
                     .build();
 
             try {
-                final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
                 final JsonObject jsonResponse = new Gson().fromJson(response.body(), JsonObject.class);
 
                 final Map<String, JsonElement> map = jsonResponse.asMap();

@@ -37,7 +37,12 @@ public final class CrownCore extends JavaPlugin {
 
     @Override
     public void onLoad() {
-        executorService = Executors.newCachedThreadPool();
+        executorService = Executors.newFixedThreadPool(3, runnable -> {
+            Thread thread = new Thread(runnable);
+            thread.setName("Crown-Core-Worker-" + thread.getId());
+            return thread;
+        });
+
         pluginConfig = new PluginConfig(this);
         sounds = pluginConfig.getSounds();
     }
@@ -45,7 +50,8 @@ public final class CrownCore extends JavaPlugin {
     @Override
     public void onEnable() {
 
-        versionChecker = new VersionChecker();
+        versionChecker = new VersionChecker(executorService);
+        versionChecker.retrieveNewestPluginVersions();
 
         // check if placeholderapi is present
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
