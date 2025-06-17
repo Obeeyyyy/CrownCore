@@ -29,6 +29,11 @@ public final class Placeholders extends PlaceholderExpansion {
     }
 
     @Override
+    public boolean persist() {
+        return true;
+    }
+
+    @Override
     public @Nullable String onPlaceholderRequest(Player player, @NotNull String params) {
         final String[] args = params.split("_");
 

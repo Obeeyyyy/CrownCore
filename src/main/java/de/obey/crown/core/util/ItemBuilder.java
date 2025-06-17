@@ -71,7 +71,8 @@ public final class ItemBuilder {
     public ItemBuilder setDisplayname(String name) {
         name = TextUtil.translateColors(name);
 
-        meta.setDisplayName(name);
+        if(meta != null)
+            meta.setDisplayName(name);
 
         if (fireworkMeta != null)
             fireworkMeta.setDisplayName(name);
@@ -98,7 +99,8 @@ public final class ItemBuilder {
             list.add(line);
         }
 
-        meta.setLore(list);
+        if(meta != null)
+            meta.setLore(list);
 
         if (fireworkMeta != null)
             fireworkMeta.setLore(list);
@@ -132,7 +134,8 @@ public final class ItemBuilder {
 
         Collections.addAll(list, lore);
 
-        meta.setLore(list);
+        if(meta != null)
+            meta.setLore(list);
 
         if (fireworkMeta != null)
             fireworkMeta.setLore(list);
@@ -151,7 +154,8 @@ public final class ItemBuilder {
 
         list.addAll(lore);
 
-        meta.setLore(list);
+        if(meta != null)
+            meta.setLore(list);
 
         if (fireworkMeta != null)
             fireworkMeta.setLore(list);
@@ -243,7 +247,8 @@ public final class ItemBuilder {
     }
 
     public ItemBuilder addEnchantment(final Enchantment enchantment, final int level) {
-        meta.addEnchant(enchantment, level, true);
+        if(meta != null)
+            meta.addEnchant(enchantment, level, true);
 
         if (fireworkMeta != null)
             fireworkMeta.addEnchant(enchantment, level, true);
@@ -258,7 +263,8 @@ public final class ItemBuilder {
     }
 
     public ItemBuilder addEnchantment(final Enchantment enchantment) {
-        meta.addEnchant(enchantment, 1, true);
+        if(meta != null)
+            meta.addEnchant(enchantment, 1, true);
 
         if (fireworkMeta != null)
             fireworkMeta.addEnchant(enchantment, 1, true);
@@ -284,7 +290,8 @@ public final class ItemBuilder {
     }
 
     public ItemBuilder addItemFlags(final ItemFlag... flags) {
-        meta.addItemFlags(flags);
+        if(meta != null)
+            meta.addItemFlags(flags);
 
         if (fireworkMeta != null)
             fireworkMeta.addItemFlags(flags);
