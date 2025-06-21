@@ -10,6 +10,7 @@ import de.obey.crown.core.listener.PlayerChat;
 import de.obey.crown.core.listener.PlayerJoin;
 import de.obey.crown.core.util.Scheduler;
 import de.obey.crown.core.util.Teleporter;
+import de.obey.crown.core.util.UUIDFetcher;
 import de.obey.crown.core.util.VersionChecker;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,9 +38,9 @@ public final class CrownCore extends JavaPlugin {
 
     @Override
     public void onLoad() {
-        executorService = Executors.newFixedThreadPool(3, runnable -> {
+        executorService = Executors.newFixedThreadPool(4, runnable -> {
             Thread thread = new Thread(runnable);
-            thread.setName("Crown-Core-Worker-" + thread.getId());
+            thread.setName("CrownCore-Worker-" + thread.getId());
             return thread;
         });
 
@@ -50,6 +51,7 @@ public final class CrownCore extends JavaPlugin {
     @Override
     public void onEnable() {
 
+        UUIDFetcher.initHTTPClient();
         versionChecker = new VersionChecker(executorService);
         versionChecker.retrieveNewestPluginVersions();
 

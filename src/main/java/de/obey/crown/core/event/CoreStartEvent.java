@@ -3,6 +3,7 @@
 
 package de.obey.crown.core.event;
 
+import de.obey.crown.core.CrownCore;
 import de.obey.crown.core.util.VersionChecker;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
@@ -11,6 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 @RequiredArgsConstructor
 public final class CoreStartEvent extends Event {
@@ -24,8 +26,12 @@ public final class CoreStartEvent extends Event {
     }
 
     @Override
-    public HandlerList getHandlers() {
+    public @NotNull HandlerList getHandlers() {
         return HANDLERS;
+    }
+
+    public CrownCore getCrownCore() {
+        return CrownCore.getInstance();
     }
 
     public void sendStartupMessage(final Plugin plugin) {

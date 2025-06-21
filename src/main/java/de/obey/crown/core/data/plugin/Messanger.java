@@ -427,7 +427,7 @@ public final class Messanger {
     }
 
     public void sendClickableMessageWithHoverOption(final CommandSender sender,final String hoverOption, final String command, final String key) {
-        final Component component = getRawComponent(key, null, null)
+        final Component component = getRawComponent(key, null, "")
                 .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, command))
                 .hoverEvent(HoverEvent.showText(TextUtil.translateComponent(hoverOption)));
         sender.sendMessage(component);

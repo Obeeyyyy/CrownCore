@@ -6,6 +6,7 @@ package de.obey.crown.core.util;
 import de.obey.crown.core.CrownCore;
 import lombok.experimental.UtilityClass;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -192,5 +193,26 @@ public final class FileUtil {
             configuration.set(path + "." + slot, item);
             slot++;
         }
+    }
+
+    public ItemStack getItemStack(final YamlConfiguration configuration, final String path, final ItemStack defaultValue) {
+        if (configuration.contains(path))
+            return configuration.getItemStack(path);
+
+        configuration.set(path, defaultValue);
+        return defaultValue;
+    }
+
+    public Material getMaterial(final YamlConfiguration configuration, final String path, final Material defaultValue) {
+        if (configuration.contains(path)) {
+            try {
+                return Material.valueOf(configuration.getString(path));
+            } catch (IllegalArgumentException ignored) {
+
+            }
+        }
+
+        configuration.set(path, defaultValue.name());
+        return defaultValue;
     }
 }
