@@ -3,7 +3,7 @@
 
 package de.obey.crown.core.event;
 
-import de.obey.crown.core.CrownCore;
+import de.obey.crown.core.nobf.CrownCore;
 import de.obey.crown.core.util.VersionChecker;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;

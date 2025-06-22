@@ -3,19 +3,25 @@
 
 package de.obey.crown.core.util;
 
+import de.obey.crown.core.nobf.CrownCore;
 import lombok.experimental.UtilityClass;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.Plugin;
 
+import java.util.concurrent.ExecutorService;
+
 @UtilityClass
 public final class Scheduler {
 
+    private  ExecutorService executor;
     private boolean isFolia = false;
 
     public void initialize() {
         if (Bukkit.getVersion().contains("Folia"))
             isFolia = true;
+
+        executor = CrownCore.getInstance().getExecutor();
     }
 
     public void callEvent(final Plugin plugin, final Event event) {
@@ -40,12 +46,11 @@ public final class Scheduler {
 
     public void runTaskAsync(final Plugin plugin, final Runnable task) {
         if (isFolia) {
-            Bukkit.getAsyncScheduler().runNow(plugin, (scheduledTask) -> task.run());
+            Bukkit.getAsyncScheduler().runNow(plugin, (scheduledTask) -> executor.execute(task));
             return;
         }
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, task);
-
     }
 
     public void runTaskLater(final Plugin plugin, final Runnable task, final long delay) {
@@ -57,12 +62,31 @@ public final class Scheduler {
         Bukkit.getScheduler().runTaskLater(plugin, task, delay);
     }
 
+    public void runTaskLaterAsync(final Plugin plugin, final Runnable task, final long delay) {
+        if (isFolia) {
+            Bukkit.getGlobalRegionScheduler().runDelayed(plugin, (scheduledTask) -> executor.execute(task), delay);
+            return;
+        }
+
+        Bukkit.getScheduler().runTaskLater(plugin, task, delay);
+    }
+
     public void runTaskTimer(final Plugin plugin, final Runnable task, final long delay, final long period) {
         if (isFolia) {
             Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, (scheduledTask) -> task.run(), delay, period);
+            return;
         }
         
         Bukkit.getScheduler().runTaskTimer(plugin, task, delay, period);
+    }
+
+    public void runTaskTimerAsync(final Plugin plugin, final Runnable task, final long delay, final long period) {
+        if (isFolia) {
+            Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, (scheduledTask) -> executor.execute(task), delay, period);
+            return;
+        }
+
+        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, task, delay, period);
     }
 
 }

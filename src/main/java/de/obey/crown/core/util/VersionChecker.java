@@ -8,7 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
-import de.obey.crown.core.CrownCore;
+import de.obey.crown.core.nobf.CrownCore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.plugin.Plugin;
@@ -21,7 +21,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 @RequiredArgsConstructor
@@ -37,7 +36,7 @@ public final class VersionChecker {
     private final ArrayList<Plugin> outdatedPlugins = new ArrayList<>();
 
     public void retrieveNewestPluginVersions() {
-        CrownCore.getInstance().getExecutorService().execute(() -> {
+        CrownCore.getInstance().getExecutor().execute(() -> {
             final HttpClient httpClient = HttpClient.newBuilder()
                     .version(HttpClient.Version.HTTP_2)
                     .executor(executor)

@@ -1,7 +1,7 @@
 /* CrownPlugins - CrownCore */
 /* 11.02.2025 - 02:28 */
 
-package de.obey.crown.core;
+package de.obey.crown.core.nobf;
 
 import de.obey.crown.core.util.TextUtil;
 import lombok.RequiredArgsConstructor;

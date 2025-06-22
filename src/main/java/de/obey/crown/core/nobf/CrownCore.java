@@ -1,13 +1,13 @@
-package de.obey.crown.core;
+package de.obey.crown.core.nobf;
 
 import de.obey.crown.core.command.CoreCommand;
 import de.obey.crown.core.command.LocationCommand;
+import de.obey.crown.core.data.player.newer.PlayerData;
+import de.obey.crown.core.data.player.newer.PlayerDataService;
 import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.event.CoreStartEvent;
 import de.obey.crown.core.handler.LocationHandler;
-import de.obey.crown.core.listener.CoreStart;
-import de.obey.crown.core.listener.PlayerChat;
-import de.obey.crown.core.listener.PlayerJoin;
+import de.obey.crown.core.listener.*;
 import de.obey.crown.core.util.Scheduler;
 import de.obey.crown.core.util.Teleporter;
 import de.obey.crown.core.util.UUIDFetcher;
@@ -18,6 +18,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -28,7 +29,12 @@ import java.util.concurrent.Executors;
 @Setter
 public final class CrownCore extends JavaPlugin {
 
-    private ExecutorService executorService;
+    /***
+     * Fixed thread pool.
+     * Threads: 8
+     * Used for all core and child plugins tasks.
+     */
+    private ExecutorService executor;
     private VersionChecker versionChecker;
 
     private boolean placeholderapi = false;
@@ -36,11 +42,13 @@ public final class CrownCore extends JavaPlugin {
     private PluginConfig pluginConfig;
     private Sounds sounds;
 
+    private PlayerDataService playerDataService;
+
     @Override
     public void onLoad() {
-        executorService = Executors.newFixedThreadPool(4, runnable -> {
+        executor = Executors.newFixedThreadPool(8, runnable -> {
             Thread thread = new Thread(runnable);
-            thread.setName("CrownCore-Worker-" + thread.getId());
+            thread.setName("Crown-Worker-" + thread.getId());
             return thread;
         });
 
@@ -51,9 +59,9 @@ public final class CrownCore extends JavaPlugin {
     @Override
     public void onEnable() {
 
+        ConfigurationSerialization.registerClass(PlayerData.class, "PlayerData");
+        Scheduler.initialize();
         UUIDFetcher.initHTTPClient();
-        versionChecker = new VersionChecker(executorService);
-        versionChecker.retrieveNewestPluginVersions();
 
         // check if placeholderapi is present
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -61,7 +69,9 @@ public final class CrownCore extends JavaPlugin {
             new Placeholders().register();
         }
 
-        Scheduler.initialize();
+        versionChecker = new VersionChecker(executor);
+        versionChecker.retrieveNewestPluginVersions();
+        playerDataService = new PlayerDataService(executor);
 
         load();
 
@@ -77,13 +87,20 @@ public final class CrownCore extends JavaPlugin {
     @Override
     public void onDisable() {
         LocationHandler.saveLocations();
+        playerDataService.saveAllData();
     }
 
+    /***
+     * Loads commands and listener.
+     */
     public void load() {
         loadListener();
         loadCommand();
     }
 
+    /***
+     * Loads commands.
+     */
     private void loadCommand() {
         final LocationCommand locationCommand = new LocationCommand(pluginConfig.getMessanger());
         getCommand("location").setExecutor(locationCommand);
@@ -94,26 +111,31 @@ public final class CrownCore extends JavaPlugin {
         getCommand("crowncore").setTabCompleter(coreCommand);
     }
 
+    /***
+     * Loads listener.
+     */
     private void loadListener() {
         final PluginManager pluginManager = getServer().getPluginManager();
 
         pluginManager.registerEvents(new CoreStart(), this);
         pluginManager.registerEvents(new PlayerChat(pluginConfig, sounds), this);
-        pluginManager.registerEvents(new PlayerJoin(pluginConfig, versionChecker), this);
+        pluginManager.registerEvents(new PlayerJoin(pluginConfig, versionChecker, playerDataService), this);
+        pluginManager.registerEvents(new PlayerLogin(playerDataService), this);
+        pluginManager.registerEvents(new PlayerQuit(playerDataService), this);
     }
 
+    /***
+     * Returns the CrownCore (plugin) instance.
+     * @return CrownCore Instance
+     */
     public static CrownCore getInstance() {
         return getPlugin(CrownCore.class);
     }
 
-    /*
- ______   _____
-/\  ___\ /\  __-.
-\ \ \____\ \ \/\ \
- \ \_____\\ \____-
-  \/_____/ \/____/
-     */
 
+    /***
+     * Sends the initial console message on startup.
+     */
     private void sendConsoleMessage() {
         final String pluginName = this.getDescription().getName();
         final String version = this.getDescription().getVersion();

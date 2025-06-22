@@ -7,7 +7,7 @@ package de.obey.crown.core.util;
 
  */
 
-import de.obey.crown.core.CrownCore;
+import de.obey.crown.core.nobf.CrownCore;
 import lombok.experimental.UtilityClass;
 
 import com.google.common.cache.Cache;
@@ -50,7 +50,7 @@ public class UUIDFetcher {
     private HttpClient httpClient;
 
     public void initHTTPClient() {
-        httpClient = HttpClient.newBuilder().executor(CrownCore.getInstance().getExecutorService()).build();
+        httpClient = HttpClient.newBuilder().executor(CrownCore.getInstance().getExecutor()).build();
     }
 
     public void addNameToUniqueIdConverter(Function<String, UUID> function) {
@@ -62,11 +62,11 @@ public class UUIDFetcher {
     }
 
     public CompletableFuture<UUID> getUniqueIdAsync(@NonNull String userName) {
-        return CompletableFuture.supplyAsync(() -> getUniqueId(userName), CrownCore.getInstance().getExecutorService());
+        return CompletableFuture.supplyAsync(() -> getUniqueId(userName), CrownCore.getInstance().getExecutor());
     }
 
     public CompletableFuture<String> getUserNameAsync(@NonNull UUID uniqueId) {
-        return CompletableFuture.supplyAsync(() -> getUserName(uniqueId), CrownCore.getInstance().getExecutorService());
+        return CompletableFuture.supplyAsync(() -> getUserName(uniqueId), CrownCore.getInstance().getExecutor());
     }
 
 

@@ -7,8 +7,8 @@ package de.obey.crown.core.util;
 */
 
 import com.google.common.collect.Maps;
-import de.obey.crown.core.CrownCore;
-import de.obey.crown.core.PluginConfig;
+import de.obey.crown.core.nobf.CrownCore;
+import de.obey.crown.core.nobf.PluginConfig;
 import de.obey.crown.core.data.plugin.Messanger;
 import de.obey.crown.core.data.plugin.TeleportMessageType;
 import de.obey.crown.core.data.plugin.sound.SoundData;

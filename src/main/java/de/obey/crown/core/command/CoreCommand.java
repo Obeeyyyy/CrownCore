@@ -3,10 +3,10 @@
 
 package de.obey.crown.core.command;
 
-import de.obey.crown.core.CrownCore;
-import de.obey.crown.core.PluginConfig;
+import de.obey.crown.core.nobf.CrownCore;
+import de.obey.crown.core.nobf.PluginConfig;
 import de.obey.crown.core.data.plugin.Messanger;
-import lombok.NonNull;
+import de.obey.crown.core.util.Log;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.List;
 
 @RequiredArgsConstructor
-@NonNull
 public final class CoreCommand implements CommandExecutor, TabCompleter {
 
     private final Messanger messanger;
@@ -33,7 +32,7 @@ public final class CoreCommand implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        if (!messanger.hasPermission(sender, "command.core.reload"))
+        if (!messanger.hasPermission(sender, "command.core.admin"))
             return false;
 
         if (args.length == 1) {
@@ -42,6 +41,15 @@ public final class CoreCommand implements CommandExecutor, TabCompleter {
                 pluginConfig.loadConfig();
                 pluginConfig.loadSounds();
                 messanger.sendMessage(sender, "plugin-reloaded", new String[]{"plugin"}, CrownCore.getInstance().getName());
+                return false;
+            }
+
+            if(args[0].equalsIgnoreCase("debug")) {
+                Log.setDebug(!Log.isDebug());
+                pluginConfig.saveConfig();
+
+                messanger.sendNonConfigMessage(sender, "%prefix% Set debug-mode to %accent%" + Log.isDebug() + "%white%.");
+
                 return false;
             }
         }
@@ -81,6 +89,7 @@ public final class CoreCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 1) {
             list.add("reload");
+            list.add("debug");
         }
 
         if (args.length == 2) {

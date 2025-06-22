@@ -3,8 +3,9 @@
 
 package de.obey.crown.core.listener;
 
-import de.obey.crown.core.CrownCore;
-import de.obey.crown.core.PluginConfig;
+import de.obey.crown.core.nobf.CrownCore;
+import de.obey.crown.core.nobf.PluginConfig;
+import de.obey.crown.core.data.player.newer.PlayerDataService;
 import de.obey.crown.core.util.Scheduler;
 import de.obey.crown.core.util.VersionChecker;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +20,13 @@ public final class PlayerJoin implements Listener {
 
     private final PluginConfig pluginConfig;
     private final VersionChecker versionChecker;
+    private final PlayerDataService playerDataService;
 
     @EventHandler
     public void on(final PlayerJoinEvent event) {
+
+        playerDataService.loadAsync(event.getPlayer().getUniqueId()).thenAccept((data) -> data.join(event.getPlayer()));
+
         if (!pluginConfig.isUpdateReminder())
             return;
 
@@ -39,7 +44,6 @@ public final class PlayerJoin implements Listener {
                 final String newest = versionChecker.getNewestVersions().get(pluginName);
                 final String current = plugin.getDescription().getVersion();
                 final String downloadLink = plugin.getDescription().getWebsite();
-
 
                 player.sendMessage("");
                 pluginConfig.getMessanger().sendNonConfigMessage(
