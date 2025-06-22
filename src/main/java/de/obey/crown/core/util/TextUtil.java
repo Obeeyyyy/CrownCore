@@ -259,7 +259,11 @@ public final class TextUtil {
                 mainComponent = mainComponent.append(Component.text(translateLegacyColors(preHexText)));
             }
 
-            final String hexColor = matcher.group();
+            String hexColor = matcher.group();
+
+            if(hexColor.startsWith("&"))
+                hexColor = hexColor.substring(1);
+
             final TextColor textColor = TextColor.fromCSSHexString(hexColor);
 
             final int textStart = matcher.end();
