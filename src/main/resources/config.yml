@@ -6,6 +6,7 @@
 
 # toggle the update reminder when joining (only players with permission see the reminder)
 update-reminder: true
+debug-mode: false
 
 # this is the teleport delay in s
 teleport-delay: 5
