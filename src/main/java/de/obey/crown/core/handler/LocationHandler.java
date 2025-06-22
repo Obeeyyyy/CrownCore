@@ -4,7 +4,7 @@
 package de.obey.crown.core.handler;
 
 import com.google.common.collect.Maps;
-import de.obey.crown.core.nobf.CrownCore;
+import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.util.FileUtil;
 import de.obey.crown.core.util.TextUtil;
 import lombok.Getter;

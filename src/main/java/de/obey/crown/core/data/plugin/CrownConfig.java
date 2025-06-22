@@ -3,7 +3,7 @@
 
 package de.obey.crown.core.data.plugin;
 
-import de.obey.crown.core.nobf.CrownCore;
+import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.util.FileUtil;
 import lombok.Getter;

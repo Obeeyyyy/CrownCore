@@ -7,7 +7,7 @@ package de.obey.crown.core.util;
 
  */
 
-import de.obey.crown.core.nobf.CrownCore;
+import de.obey.crown.core.noobf.CrownCore;
 import lombok.experimental.UtilityClass;
 
 import com.google.common.cache.Cache;

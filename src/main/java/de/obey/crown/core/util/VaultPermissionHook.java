@@ -3,7 +3,7 @@
 
 package de.obey.crown.core.util;
 
-import de.obey.crown.core.nobf.CrownCore;
+import de.obey.crown.core.noobf.CrownCore;
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
 import net.milkbowl.vault.permission.Permission;

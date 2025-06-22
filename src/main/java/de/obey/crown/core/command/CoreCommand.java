@@ -3,8 +3,8 @@
 
 package de.obey.crown.core.command;
 
-import de.obey.crown.core.nobf.CrownCore;
-import de.obey.crown.core.nobf.PluginConfig;
+import de.obey.crown.core.noobf.CrownCore;
+import de.obey.crown.core.noobf.PluginConfig;
 import de.obey.crown.core.data.plugin.Messanger;
 import de.obey.crown.core.util.Log;
 import lombok.RequiredArgsConstructor;

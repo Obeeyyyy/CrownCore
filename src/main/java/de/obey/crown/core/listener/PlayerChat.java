@@ -4,7 +4,7 @@
 package de.obey.crown.core.listener;
 
 import com.google.common.collect.Maps;
-import de.obey.crown.core.nobf.PluginConfig;
+import de.obey.crown.core.noobf.PluginConfig;
 import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.util.TextUtil;
 import io.papermc.paper.event.player.AsyncChatEvent;

@@ -8,7 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
-import de.obey.crown.core.nobf.CrownCore;
+import de.obey.crown.core.noobf.CrownCore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.plugin.Plugin;

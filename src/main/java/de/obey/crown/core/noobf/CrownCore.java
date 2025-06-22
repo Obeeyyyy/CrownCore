@@ -1,4 +1,4 @@
-package de.obey.crown.core.nobf;
+package de.obey.crown.core.noobf;
 
 import de.obey.crown.core.command.CoreCommand;
 import de.obey.crown.core.command.LocationCommand;

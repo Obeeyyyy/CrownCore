@@ -1,7 +1,7 @@
 /* CrownPlugins - CrownCore */
 /* 18.08.2024 - 01:22 */
 
-package de.obey.crown.core.nobf;
+package de.obey.crown.core.noobf;
 
 import de.obey.crown.core.data.plugin.CrownConfig;
 import de.obey.crown.core.data.plugin.TeleportMessageType;

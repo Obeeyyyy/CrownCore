@@ -1,7 +1,7 @@
 package de.obey.crown.core.data.player.newer;
 
 import com.google.common.collect.Maps;
-import de.obey.crown.core.nobf.CrownCore;
+import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.util.Log;
 import de.obey.crown.core.util.Scheduler;
 import org.bukkit.Bukkit;
