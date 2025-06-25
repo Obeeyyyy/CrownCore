@@ -6,7 +6,7 @@ package de.obey.crown.core.noobf;
 import de.obey.crown.core.data.plugin.CrownConfig;
 import de.obey.crown.core.data.plugin.TeleportMessageType;
 import de.obey.crown.core.util.FileUtil;
-import de.obey.crown.core.util.Log;
+import de.obey.crown.core.data.plugin.Log;
 import de.obey.crown.core.util.TextUtil;
 import lombok.Getter;
 import lombok.NonNull;
@@ -24,12 +24,6 @@ import java.util.Locale;
 @Getter
 @Setter
 public final class PluginConfig extends CrownConfig {
-
-    private final String hi = "https://dsc.gg/crownplugins";
-    private final String how = "https://dsc.gg/crownplugins";
-    private final String are = "https://dsc.gg/crownplugins";
-    private final String you = "https://dsc.gg/crownplugins";
-    private final String doing = "https://dsc.gg/crownplugins";
 
     private TeleportMessageType teleportMessageType;
 
@@ -54,23 +48,20 @@ public final class PluginConfig extends CrownConfig {
         setCommandDelay(FileUtil.getInt(configuration, "command-cooldown", 0));
         setUpdateReminder(FileUtil.getBoolean(configuration, "update-reminder", true));
 
-        Log.setDebug(FileUtil.getBoolean(configuration, "debug-mode", false));
+        CrownCore.log.setDebug(FileUtil.getBoolean(configuration, "debug-mode", false));
 
         Locale locale = LocaleUtils.toLocale(FileUtil.getString(configuration, "number-formatting", "en_US"));
         if(locale == null)
             locale = Locale.ENGLISH;
 
         TextUtil.setDecimalFormat(new DecimalFormat("#,###.##", new DecimalFormatSymbols(locale)));
-
         FileUtil.saveConfigurationIntoFile(configuration, file);
     }
 
     @Override
     public void saveConfig() {
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(getConfigFile());
-
-        configuration.set("debug-mode", Log.isDebug());
-
+        configuration.set("debug-mode", CrownCore.log.isDebug());
         FileUtil.saveConfigurationIntoFile(configuration, getConfigFile());
     }
 }

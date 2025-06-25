@@ -4,6 +4,7 @@ import de.obey.crown.core.command.CoreCommand;
 import de.obey.crown.core.command.LocationCommand;
 import de.obey.crown.core.data.player.newer.PlayerData;
 import de.obey.crown.core.data.player.newer.PlayerDataService;
+import de.obey.crown.core.data.plugin.Log;
 import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.event.CoreStartEvent;
 import de.obey.crown.core.handler.LocationHandler;
@@ -29,6 +30,9 @@ import java.util.concurrent.Executors;
 @Setter
 public final class CrownCore extends JavaPlugin {
 
+    public static final Log log = new Log();
+    private static CrownCore crownCore;
+
     /***
      * Fixed thread pool.
      * Threads: 8
@@ -46,11 +50,18 @@ public final class CrownCore extends JavaPlugin {
 
     @Override
     public void onLoad() {
+        crownCore = this;
+        log.setPlugin(this);
+
+        log.debug(" on load triggered ");
+
         executor = Executors.newFixedThreadPool(8, runnable -> {
             Thread thread = new Thread(runnable);
             thread.setName("Crown-Worker-" + thread.getId());
             return thread;
         });
+
+        log.debug("executor initialized");
 
         pluginConfig = new PluginConfig(this);
         sounds = pluginConfig.getSounds();
@@ -59,7 +70,8 @@ public final class CrownCore extends JavaPlugin {
     @Override
     public void onEnable() {
 
-        ConfigurationSerialization.registerClass(PlayerData.class, "PlayerData");
+        log.debug(" on enable triggered");
+
         Scheduler.initialize();
         UUIDFetcher.initHTTPClient();
 
@@ -129,7 +141,7 @@ public final class CrownCore extends JavaPlugin {
      * @return CrownCore Instance
      */
     public static CrownCore getInstance() {
-        return getPlugin(CrownCore.class);
+        return crownCore;
     }
 
 

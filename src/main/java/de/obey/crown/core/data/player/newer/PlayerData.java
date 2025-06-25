@@ -3,24 +3,20 @@ package de.obey.crown.core.data.player.newer;
 import com.google.common.collect.Maps;
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.util.FileUtil;
-import de.obey.crown.core.util.Log;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.SerializableAs;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
-@RequiredArgsConstructor
 @Getter @Setter @SerializableAs("PlayerData")
-public class PlayerData implements ConfigurationSerializable {
+public class PlayerData {
 
     private final ExecutorService executor = CrownCore.getInstance().getExecutor();
     private final Map<DataKey<?>, Object> data = Maps.newConcurrentMap();
@@ -30,82 +26,28 @@ public class PlayerData implements ConfigurationSerializable {
     private boolean unload = false;
     private long lastseen = System.currentTimeMillis();
 
-    public static PlayerData deserialize(Map<String, Object> map) {
-        Log.debug(" - deserializing playerdata object");
-
-        for (final String key : map.keySet()) {
-            Log.debug("  -> key: " + key + " / value: " + map.get(key));
-        }
-
-        if (!map.containsKey("uuid"))
-            return null;
-
-        final UUID uuid = UUID.fromString((String) map.get("uuid"));
-        final PlayerData playerData = new PlayerData(uuid);
-
-        for (final DataKey<?> key : DataKeyRegistry.getRegistryValues()) {
-            final Object raw = map.getOrDefault(key.path(), key.defaultValue());
-
-            try {
-                final Object value = key.type().cast(raw);
-                playerData.getData().put(key, value);
-                Log.debug("  - loaded key: " + key.key() + " = " + value);
-            } catch (ClassCastException e) {
-                Log.debug("  - type mismatch for key: " + key.key() + " (expected: " + key.type().getSimpleName() + ")");
-            }
-        }
-
-        return playerData;
-    }
-
-    public static PlayerData valueOf(Map<String, Object> map) {
-        return deserialize(map);
-    }
-
-    public static PlayerData create(final UUID uuid) {
-        final File file = FileUtil.getGeneratedFile(CrownCore.getInstance(), "playerData/" + uuid + ".yml", true);
-        final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
-
-        Log.debug("creating playerdata object for '" + uuid + "'");
-
-        if (!configuration.contains("data")) {
-            Log.debug(" - new player, creating data");
-            final PlayerData data = new PlayerData(uuid);
-
-            for (final DataKey<?> dataKey : DataKeyRegistry.getRegistryValues()) {
-                data.getData().put(dataKey, getDefault(dataKey.type()));
-                Log.debug(" - set key '" + dataKey.key() + "' to default value: " + getDefault(dataKey.type()));
-            }
-            return data;
-        }
-
-        Log.debug(" - starting deserialization");
-
-        Log.debug(configuration.getSerializable("data", PlayerData.class).toString());
-
-        return configuration.getSerializable("data", PlayerData.class, new PlayerData(uuid));
+    public PlayerData(UUID uuid) {
+        this.uuid = uuid;
+        load();
     }
 
     /***
-     * Executed whenever a player joins the server in the
-     * PlayerJoinEvent. Used to update the player object and make sure
-     * no data is unloaded when the player is online.
-     *
-     * @param player instance of Player
+     * loading playerdata from file.
+     * defaults all registered datakeys if not present.
      */
-    public void join(final Player player) {
-        unload = false;
-        lastseen = System.currentTimeMillis();
-        this.player = player;
-    }
-
-    /*
     public void load() {
         final File file = FileUtil.getGeneratedFile(CrownCore.getInstance(), "playerData/" + uuid + ".yml", true);
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
-        if(!configuration.contains("data"))
+        if(!configuration.contains("data")) {
+            CrownCore.log.debug(" - new player, creating data");
+
+            for (final DataKey<?> dataKey : DataKeyRegistry.getRegistryValues()) {
+                data.put(dataKey, getDefault(dataKey.type()));
+                CrownCore.log.debug(" - set key '" + dataKey.key() + "' to default value: " + getDefault(dataKey.type()));
+            }
             return;
+        }
 
         for (DataKey<?> key : DataKeyRegistry.getRegistryValues()) {
             final String path = "data." + key.path();
@@ -129,33 +71,64 @@ public class PlayerData implements ConfigurationSerializable {
         FileUtil.saveConfigurationIntoFile(configuration, file);
     }
 
+    /***
+     * saves all datakeys and their values into the file.
+     * path: data.'datakey.path'
+     *
+     * @return current PlayerData
      */
-
     public PlayerData save() {
         final File file = FileUtil.getGeneratedFile(CrownCore.getInstance(), "playerData/" + uuid + ".yml", true);
-        final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+        final YamlConfiguration configuration = new YamlConfiguration();
 
-        Log.debug("saving playerdata object");
+        CrownCore.log.debug("saving playerdata '" + uuid + "'");
 
-        final Map<String, Object> serialized = serialize();
-
-        for (String key : serialized.keySet())
-            Log.debug("serialized - " + key + " : " + serialized.get(key));
-
-        configuration.set("data", this);
+        for (DataKey<?> dataKey : data.keySet()) {
+            configuration.set("data." + dataKey.path(), get(dataKey));
+        }
 
         FileUtil.saveConfigurationIntoFile(configuration, file);
-
         return this;
     }
 
+    /***
+     * Executed whenever a player joins the server in the
+     * PlayerJoinEvent. Used to update the player object and make sure
+     * no data is unloaded when the player is online.
+     *
+     * @param player instance of Player
+     */
+    public void join(final Player player) {
+        unload = false;
+        lastseen = System.currentTimeMillis();
+        this.player = player;
+    }
+
+    /***
+     * set the value of a datakey in the data cache
+     * @param key dataKey to set
+     * @param value value to set
+     * @param <T> type of dateKey
+     */
     public <T> void set(DataKey<T> key, T value) {
         data.put(key, value);
     }
 
+    /***
+     *
+     * @param key dataKey to get
+     * @return value stored in data cache for dataKey
+     * @param <T> type of dateKey
+     */
     public <T> T get(DataKey<T> key) {
         return key.type().cast(data.getOrDefault(key, getDefault(key.type())));
     }
+
+    /***
+     * get the default value for a dataKey
+     * @param type type of dataKey
+     * @return default value stored in dataKey
+     */
 
     private static Object getDefault(Class<?> type) {
         for (DataKey<?> key : DataKeyRegistry.getRegistryValues()) {
@@ -171,11 +144,8 @@ public class PlayerData implements ConfigurationSerializable {
         return this;
     }
 
-    @Override
-    public @NotNull Map<String, Object> serialize() {
+    public Map<String, Object> serialize() {
         final Map<String, Object> serialized = Maps.newConcurrentMap();
-
-        serialized.put("uuid", uuid.toString());
 
         for (final DataKey<?> dataKey : DataKeyRegistry.getRegistryValues())
             serialized.put(dataKey.path(), data.getOrDefault(dataKey, getDefault(dataKey.type())));

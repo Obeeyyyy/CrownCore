@@ -2,7 +2,7 @@ package de.obey.crown.core.data.player.newer;
 
 import com.google.common.collect.Maps;
 import de.obey.crown.core.noobf.CrownCore;
-import de.obey.crown.core.util.Log;
+import de.obey.crown.core.data.plugin.Log;
 import de.obey.crown.core.util.Scheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -21,7 +21,7 @@ public class PlayerDataService {
         this.executor = executor;
 
         Scheduler.runTaskTimerAsync(CrownCore.getInstance(), () -> {
-            Log.debug("playerDataService task - cache size: " + cache.size());
+            CrownCore.log.debug("playerDataService task - cache size: " + cache.size());
             for (final PlayerData data : cache.values()) {
                 final Player player = Bukkit.getPlayer(data.getUuid());
                 saveAsync(data.getUuid());
@@ -52,15 +52,20 @@ public class PlayerDataService {
     public CompletableFuture<PlayerData> loadAsync(final UUID uuid) {
         final long started = System.currentTimeMillis();
         return CompletableFuture.supplyAsync(() -> {
+
+            CrownCore.log.debug(" loading async");
+
             if(cache.containsKey(uuid)) {
-                Log.debug("found player in cache '" + uuid.toString() + "' in " + (System.currentTimeMillis() - started) + "ms");
+                CrownCore.log.debug("found player in cache '" + uuid.toString() + "' in " + (System.currentTimeMillis() - started) + "ms");
                 return cache.get(uuid).setUnload(false);
             }
 
-            final PlayerData playerData = PlayerData.create(uuid);
+            CrownCore.log.debug("  not in cache");
+
+            final PlayerData playerData = new PlayerData(uuid);
             cache.put(uuid, playerData);
 
-            Log.debug("loaded player data for '" + uuid.toString() + "' in " + (System.currentTimeMillis() - started) + "ms");
+            CrownCore.log.debug("loaded player data for '" + uuid.toString() + "' in " + (System.currentTimeMillis() - started) + "ms");
 
             return playerData;
         }, executor);

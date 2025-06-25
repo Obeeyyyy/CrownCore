@@ -6,7 +6,7 @@ package de.obey.crown.core.command;
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.noobf.PluginConfig;
 import de.obey.crown.core.data.plugin.Messanger;
-import de.obey.crown.core.util.Log;
+import de.obey.crown.core.data.plugin.Log;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -45,10 +45,10 @@ public final class CoreCommand implements CommandExecutor, TabCompleter {
             }
 
             if(args[0].equalsIgnoreCase("debug")) {
-                Log.setDebug(!Log.isDebug());
+                CrownCore.log.setDebug(!CrownCore.log.isDebug());
                 pluginConfig.saveConfig();
 
-                messanger.sendNonConfigMessage(sender, "%prefix% Set debug-mode to %accent%" + Log.isDebug() + "%white%.");
+                messanger.sendNonConfigMessage(sender, "%prefix% Set debug-mode to %accent%" + CrownCore.log.isDebug() + "%white%.");
 
                 return false;
             }
