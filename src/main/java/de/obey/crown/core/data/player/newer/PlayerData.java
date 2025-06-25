@@ -6,7 +6,6 @@ import de.obey.crown.core.util.FileUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.SerializableAs;
 import org.bukkit.entity.Player;
 
@@ -142,14 +141,5 @@ public class PlayerData {
     public PlayerData setUnload(final boolean value) {
         this.unload = value;
         return this;
-    }
-
-    public Map<String, Object> serialize() {
-        final Map<String, Object> serialized = Maps.newConcurrentMap();
-
-        for (final DataKey<?> dataKey : DataKeyRegistry.getRegistryValues())
-            serialized.put(dataKey.path(), data.getOrDefault(dataKey, getDefault(dataKey.type())));
-
-        return serialized;
     }
 }
