@@ -16,4 +16,6 @@ loadbefore:
 
 commands:
   location:
+    description: Command to manage locations.
   crowncore:
+    description: Command for core
