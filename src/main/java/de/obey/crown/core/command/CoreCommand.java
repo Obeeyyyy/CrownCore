@@ -6,7 +6,6 @@ package de.obey.crown.core.command;
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.noobf.PluginConfig;
 import de.obey.crown.core.data.plugin.Messanger;
-import de.obey.crown.core.data.plugin.Log;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -80,7 +79,7 @@ public final class CoreCommand implements CommandExecutor, TabCompleter {
     }
 
     @Override
-    public List<String> onTabComplete(final CommandSender sender, Command command, String s, String[] args) {
+    public List<String> onTabComplete(final CommandSender sender, @NotNull Command command, @NotNull String s, String[] args) {
 
         final ArrayList<String> list = new ArrayList<>();
 

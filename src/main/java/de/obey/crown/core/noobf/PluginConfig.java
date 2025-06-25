@@ -6,7 +6,6 @@ package de.obey.crown.core.noobf;
 import de.obey.crown.core.data.plugin.CrownConfig;
 import de.obey.crown.core.data.plugin.TeleportMessageType;
 import de.obey.crown.core.util.FileUtil;
-import de.obey.crown.core.data.plugin.Log;
 import de.obey.crown.core.util.TextUtil;
 import lombok.Getter;
 import lombok.NonNull;

@@ -2,7 +2,6 @@ package de.obey.crown.core.noobf;
 
 import de.obey.crown.core.command.CoreCommand;
 import de.obey.crown.core.command.LocationCommand;
-import de.obey.crown.core.data.player.newer.PlayerData;
 import de.obey.crown.core.data.player.newer.PlayerDataService;
 import de.obey.crown.core.data.plugin.Log;
 import de.obey.crown.core.data.plugin.sound.Sounds;
@@ -19,10 +18,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -115,12 +114,12 @@ public final class CrownCore extends JavaPlugin {
      */
     private void loadCommand() {
         final LocationCommand locationCommand = new LocationCommand(pluginConfig.getMessanger());
-        getCommand("location").setExecutor(locationCommand);
-        getCommand("location").setTabCompleter(locationCommand);
+        Objects.requireNonNull(getCommand("location")).setExecutor(locationCommand);
+        Objects.requireNonNull(getCommand("location")).setTabCompleter(locationCommand);
 
         final CoreCommand coreCommand = new CoreCommand(pluginConfig.getMessanger(), pluginConfig);
-        getCommand("crowncore").setExecutor(coreCommand);
-        getCommand("crowncore").setTabCompleter(coreCommand);
+        Objects.requireNonNull(getCommand("crowncore")).setExecutor(coreCommand);
+        Objects.requireNonNull(getCommand("crowncore")).setTabCompleter(coreCommand);
     }
 
     /***

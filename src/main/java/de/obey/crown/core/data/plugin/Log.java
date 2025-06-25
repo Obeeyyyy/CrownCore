@@ -5,14 +5,10 @@ package de.obey.crown.core.data.plugin;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
-
-import javax.naming.Name;
 
 @Setter @Getter
 public class Log {
