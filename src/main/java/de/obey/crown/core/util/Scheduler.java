@@ -4,6 +4,7 @@
 package de.obey.crown.core.util;
 
 import de.obey.crown.core.noobf.CrownCore;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import lombok.experimental.UtilityClass;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
@@ -18,8 +19,11 @@ public final class Scheduler {
     private boolean isFolia = false;
 
     public void initialize() {
-        if (Bukkit.getVersion().contains("Folia"))
+        if (CrownCore.getInstance().getServer().getName().toLowerCase().contains("folia")) {
             isFolia = true;
+
+            CrownCore.log.debug("detected folia server");
+        }
 
         executor = CrownCore.getInstance().getExecutor();
     }
@@ -35,58 +39,64 @@ public final class Scheduler {
         }
     }
 
-    public void runTask(final Plugin plugin, final Runnable task) {
+    public Runnable runTask(final Plugin plugin, final Runnable task) {
         if (isFolia) {
             Bukkit.getGlobalRegionScheduler().execute(plugin, task);
-            return;
+            return task;
         }
 
         Bukkit.getScheduler().runTask(plugin, task);
+        return task;
     }
 
-    public void runTaskAsync(final Plugin plugin, final Runnable task) {
+    public Runnable runTaskAsync(final Plugin plugin, final Runnable task) {
         if (isFolia) {
             Bukkit.getAsyncScheduler().runNow(plugin, (scheduledTask) -> executor.execute(task));
-            return;
+            return task;
         }
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, task);
+        return task;
     }
 
-    public void runTaskLater(final Plugin plugin, final Runnable task, final long delay) {
+    public Runnable runTaskLater(final Plugin plugin, final Runnable task, final long delay) {
         if (isFolia) {
             Bukkit.getGlobalRegionScheduler().runDelayed(plugin, (scheduledTask) -> task.run(), delay);
-            return;
+            return task;
         }
 
         Bukkit.getScheduler().runTaskLater(plugin, task, delay);
+        return task;
     }
 
-    public void runTaskLaterAsync(final Plugin plugin, final Runnable task, final long delay) {
+    public Runnable runTaskLaterAsync(final Plugin plugin, final Runnable task, final long delay) {
         if (isFolia) {
             Bukkit.getGlobalRegionScheduler().runDelayed(plugin, (scheduledTask) -> executor.execute(task), delay);
-            return;
+            return task;
         }
 
         Bukkit.getScheduler().runTaskLater(plugin, task, delay);
+        return task;
     }
 
-    public void runTaskTimer(final Plugin plugin, final Runnable task, final long delay, final long period) {
+    public Runnable runTaskTimer(final Plugin plugin, final Runnable task, final long delay, final long period) {
         if (isFolia) {
             Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, (scheduledTask) -> task.run(), delay, period);
-            return;
+            return task;
         }
         
         Bukkit.getScheduler().runTaskTimer(plugin, task, delay, period);
+        return task;
     }
 
-    public void runTaskTimerAsync(final Plugin plugin, final Runnable task, final long delay, final long period) {
+    public Runnable runTaskTimerAsync(final Plugin plugin, final Runnable task, final long delay, final long period) {
         if (isFolia) {
             Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, (scheduledTask) -> executor.execute(task), delay, period);
-            return;
+            return task;
         }
 
         Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, task, delay, period);
+        return task;
     }
 
 }
