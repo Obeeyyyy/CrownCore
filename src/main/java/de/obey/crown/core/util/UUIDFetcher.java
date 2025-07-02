@@ -19,15 +19,14 @@ import com.google.gson.JsonParser;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.FileNotFoundException;
 import java.net.SocketException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.LinkedList;
 import java.util.List;
@@ -47,10 +46,10 @@ public class UUIDFetcher {
     private final List<Function<String, UUID>> NAME_TO_UNIQUE_ID_CONVERTER_LIST = new LinkedList<>();
     private final List<Function<UUID, String>> UNIQUE_ID_TO_NAME_CONVERTER_LIST = new LinkedList<>();
 
-    private HttpClient httpClient;
+    private OkHttpClient okHttpClient;
 
-    public void initHTTPClient() {
-        httpClient = HttpClient.newBuilder().executor(CrownCore.getInstance().getExecutor()).build();
+    public void initHTTPClient(final OkHttpClient param) {
+        okHttpClient = param;
     }
 
     public void addNameToUniqueIdConverter(Function<String, UUID> function) {
@@ -121,33 +120,34 @@ public class UUIDFetcher {
 
     private String[] getRemoteUserData(@NotNull String nameOrUuid) {
         try {
-            String url = "https://api.minetools.eu/uuid/" + nameOrUuid;
-            HttpRequest request = HttpRequest.newBuilder()
-                    .GET()
-                    .uri(URI.create(url))
-                    .setHeader("User-Agent", "UUIDUtils-1.1")
+            final String url = "https://api.minetools.eu/uuid/" + nameOrUuid;
+            final Request request = new Request.Builder()
+                    .url(url)
                     .build();
-            String result = httpClient.send(request, HttpResponse.BodyHandlers.ofString()).body();
-            if (result == null || result.isEmpty() || result.trim().isEmpty()) {
-                return null;
-            }
-            JsonObject object = JsonParser.parseString(result).getAsJsonObject();
-            if (object == null || !object.has("name") || !object.has("id")) {
-                return null;
-            }
 
-            JsonElement uuidElement = object.get("id");
-            if (uuidElement == null || uuidElement instanceof JsonNull) {
-                return null;
-            }
+            try (final Response response = okHttpClient.newCall(request).execute()) {
+                if (response.body() == null)
+                    return null;
 
-            String uniqueIdString = object.get("id").getAsString();
-            UUID uniqueId = validateUniqueId(uniqueIdString);
-            if (uniqueId == null) {
-                return null;
+                final JsonObject object = JsonParser.parseString(response.body().toString()).getAsJsonObject();
+                if (object == null || !object.has("name") || !object.has("id")) {
+                    return null;
+                }
+
+                final JsonElement uuidElement = object.get("id");
+                if (uuidElement == null || uuidElement instanceof JsonNull) {
+                    return null;
+                }
+
+                final String uniqueIdString = object.get("id").getAsString();
+                final UUID uniqueId = validateUniqueId(uniqueIdString);
+                if (uniqueId == null) {
+                    return null;
+                }
+
+                final String name = object.get("name").getAsString();
+                return new String[]{name, uniqueId.toString()};
             }
-            String name = object.get("name").getAsString();
-            return new String[]{name, uniqueId.toString()};
         } catch (Exception e) {
             if (!(e instanceof FileNotFoundException) && !(e instanceof SocketException)) {
                 throw new RuntimeException("Couldn't find uuid of \"" + nameOrUuid + "\" at api.minetools.eu:", e);

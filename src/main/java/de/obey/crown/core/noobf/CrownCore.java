@@ -17,6 +17,7 @@ import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import okhttp3.OkHttpClient;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -38,6 +39,7 @@ public final class CrownCore extends JavaPlugin {
      * Used for all core and child plugins tasks.
      */
     private ExecutorService executor;
+    private OkHttpClient okHttpClient;
     private VersionChecker versionChecker;
 
     private boolean placeholderapi = false;
@@ -52,15 +54,13 @@ public final class CrownCore extends JavaPlugin {
         crownCore = this;
         log.setPlugin(this);
 
-        log.debug(" on load triggered ");
-
         executor = Executors.newFixedThreadPool(8, runnable -> {
             Thread thread = new Thread(runnable);
             thread.setName("Crown-Worker-" + thread.getId());
             return thread;
         });
 
-        log.debug("executor initialized");
+        okHttpClient = new OkHttpClient();
 
         pluginConfig = new PluginConfig(this);
         sounds = pluginConfig.getSounds();
@@ -68,11 +68,8 @@ public final class CrownCore extends JavaPlugin {
 
     @Override
     public void onEnable() {
-
-        log.debug(" on enable triggered");
-
         Scheduler.initialize();
-        UUIDFetcher.initHTTPClient();
+        UUIDFetcher.initHTTPClient(okHttpClient);
 
         // check if placeholderapi is present
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -80,7 +77,7 @@ public final class CrownCore extends JavaPlugin {
             new Placeholders().register();
         }
 
-        versionChecker = new VersionChecker(executor);
+        versionChecker = new VersionChecker(executor, okHttpClient);
         versionChecker.retrieveNewestPluginVersions();
         playerDataService = new PlayerDataService(executor);
 

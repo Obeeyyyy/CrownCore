@@ -7,18 +7,16 @@ import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
 import de.obey.crown.core.noobf.CrownCore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.bukkit.plugin.Plugin;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -28,6 +26,7 @@ import java.util.concurrent.ExecutorService;
 public final class VersionChecker {
 
     private final ExecutorService executor;
+    private final OkHttpClient okHttpClient;
 
     private final String singleUrl = "https://versions.obeeyyyy.de/version/%plugin%/%version%";
     private final String url = "https://versions.obeeyyyy.de/versions";
@@ -37,27 +36,28 @@ public final class VersionChecker {
 
     public void retrieveNewestPluginVersions() {
         CrownCore.getInstance().getExecutor().execute(() -> {
-            final HttpClient httpClient = HttpClient.newBuilder()
-                    .version(HttpClient.Version.HTTP_2)
-                    .executor(executor)
-                    .connectTimeout(Duration.ofSeconds(10))
+            final Request request = new Request.Builder()
+                    .url(url)
                     .build();
 
-            final HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .GET()
-                    .build();
+            try (final Response response = okHttpClient.newCall(request).execute()) {
+                final ResponseBody responseBody = response.body();
+                if(responseBody == null)
+                    return;
 
-            try {
-                final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-                final JsonObject jsonResponse = new Gson().fromJson(response.body(), JsonObject.class);
+                final String bodyString = responseBody.string();
 
+                CrownCore.log.debug(" versionchecker response: " + bodyString);
+
+                final JsonObject jsonResponse = new Gson().fromJson(bodyString, JsonObject.class);
                 final Map<String, JsonElement> map = jsonResponse.asMap();
 
                 for (final String pluginName : map.keySet()) {
                     newestVersions.put(pluginName, map.get(pluginName).getAsString());
                 }
-            } catch (JsonSyntaxException | IOException | InterruptedException ignored) {}
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         });
     }
 

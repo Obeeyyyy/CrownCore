@@ -1,10 +1,13 @@
 name: CrownCore
-version: 1.3.4
+version: 1.3.6
 main: de.obey.crown.core.noobf.CrownCore
 author: Obey
 website: https://builtbybit.com/resources/crowncore.52753/
 api-version: '1.20'
 folia-supported: true
+
+libraries:
+  - com.squareup.okhttp3:okhttp:4.12.0
 
 softdepend:
   - PlaceholderAPI

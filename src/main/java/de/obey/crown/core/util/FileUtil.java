@@ -14,15 +14,10 @@ import org.bukkit.plugin.Plugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 @UtilityClass
 public final class FileUtil {
-
-    private final String hi = "https://dsc.gg/crownplugins";
-    private final String how = "https://dsc.gg/crownplugins";
-    private final String are = "https://dsc.gg/crownplugins";
-    private final String you = "https://dsc.gg/crownplugins";
-    private final String doing = "https://dsc.gg/crownplugins";
 
     public File getFile(final String path, final String fileName) {
         return new File(path + "/" + fileName);
@@ -138,6 +133,7 @@ public final class FileUtil {
         return defaultValue;
     }
 
+    @Deprecated
     public ArrayList<String> getStringArrayList(final YamlConfiguration configuration, final String path, final ArrayList defaultValue) {
         if (configuration.contains(path))
             return (ArrayList<String>) configuration.getList(path);
@@ -147,6 +143,16 @@ public final class FileUtil {
         return defaultValue;
     }
 
+    public List<String> getStringArrayList(final YamlConfiguration configuration, final String path, final List<String> defaultValue) {
+        if (configuration.contains(path))
+            return (List<String>) configuration.getList(path);
+
+        configuration.set(path, defaultValue);
+
+        return defaultValue;
+    }
+
+    @Deprecated
     public ArrayList<Integer> getIntArrayList(final YamlConfiguration configuration, final String path, final ArrayList defaultValue) {
         if (configuration.contains(path))
             return (ArrayList<Integer>) configuration.getList(path);
@@ -156,18 +162,38 @@ public final class FileUtil {
         return defaultValue;
     }
 
+    public List<Integer> getIntArrayList(final YamlConfiguration configuration, final String path, final List<Integer> defaultValue) {
+        if (configuration.contains(path))
+            return (List<Integer>) configuration.getList(path);
+
+        configuration.set(path, defaultValue);
+
+        return defaultValue;
+    }
+
+    @Deprecated
     public ArrayList<ItemStack> getItemStackList(final YamlConfiguration configuration, final String path, final ArrayList defaultValue) {
         if (!configuration.contains((path)))
             return defaultValue;
 
-        /*
+        final ArrayList<ItemStack> items = new ArrayList<>();
 
-        test:
-          path:
-            1: item here
-            2: item here
+        if (!configuration.contains(path))
+            return items;
 
-         */
+        if (configuration.getConfigurationSection(path).getKeys(false).isEmpty())
+            return items;
+
+        for (final String key : configuration.getConfigurationSection(path).getKeys(false)) {
+            items.add(configuration.getItemStack(path + "." + key));
+        }
+
+        return items;
+    }
+
+    public List<ItemStack> getItemStackList(final YamlConfiguration configuration, final String path, final List<ItemStack> defaultValue) {
+        if (!configuration.contains((path)))
+            return defaultValue;
 
         final ArrayList<ItemStack> items = new ArrayList<>();
 
