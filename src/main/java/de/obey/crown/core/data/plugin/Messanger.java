@@ -97,7 +97,7 @@ public final class Messanger {
             return;
 
         for (final String key : configuration.getConfigurationSection("multi-line-messages").getKeys(false)) {
-            multiLineMessages.put(key, FileUtil.getStringArrayList(configuration, "multi-line-messages." + key, new ArrayList<>()));
+            multiLineMessages.put(key, (ArrayList<String>) FileUtil.getStringArrayList(configuration, "multi-line-messages." + key, new ArrayList()));
         }
     }
 

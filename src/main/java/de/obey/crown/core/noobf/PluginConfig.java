@@ -18,6 +18,7 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 @Getter
@@ -28,7 +29,7 @@ public final class PluginConfig extends CrownConfig {
 
     private int teleportDelay, messageDelay, commandDelay;
     private boolean instantTeleport = false, instantRespawn = true, teleportOnJoin, updateReminder = true;
-    private ArrayList<String> instantTeleportWorlds;
+    private List<String> instantTeleportWorlds;
 
     public PluginConfig(@NonNull Plugin plugin) {
         super(plugin);

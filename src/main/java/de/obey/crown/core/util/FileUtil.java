@@ -133,29 +133,9 @@ public final class FileUtil {
         return defaultValue;
     }
 
-    @Deprecated
-    public ArrayList<String> getStringArrayList(final YamlConfiguration configuration, final String path, final ArrayList defaultValue) {
-        if (configuration.contains(path))
-            return (ArrayList<String>) configuration.getList(path);
-
-        configuration.set(path, defaultValue);
-
-        return defaultValue;
-    }
-
     public List<String> getStringArrayList(final YamlConfiguration configuration, final String path, final List<String> defaultValue) {
         if (configuration.contains(path))
             return (List<String>) configuration.getList(path);
-
-        configuration.set(path, defaultValue);
-
-        return defaultValue;
-    }
-
-    @Deprecated
-    public ArrayList<Integer> getIntArrayList(final YamlConfiguration configuration, final String path, final ArrayList defaultValue) {
-        if (configuration.contains(path))
-            return (ArrayList<Integer>) configuration.getList(path);
 
         configuration.set(path, defaultValue);
 
@@ -169,26 +149,6 @@ public final class FileUtil {
         configuration.set(path, defaultValue);
 
         return defaultValue;
-    }
-
-    @Deprecated
-    public ArrayList<ItemStack> getItemStackList(final YamlConfiguration configuration, final String path, final ArrayList defaultValue) {
-        if (!configuration.contains((path)))
-            return defaultValue;
-
-        final ArrayList<ItemStack> items = new ArrayList<>();
-
-        if (!configuration.contains(path))
-            return items;
-
-        if (configuration.getConfigurationSection(path).getKeys(false).isEmpty())
-            return items;
-
-        for (final String key : configuration.getConfigurationSection(path).getKeys(false)) {
-            items.add(configuration.getItemStack(path + "." + key));
-        }
-
-        return items;
     }
 
     public List<ItemStack> getItemStackList(final YamlConfiguration configuration, final String path, final List<ItemStack> defaultValue) {
