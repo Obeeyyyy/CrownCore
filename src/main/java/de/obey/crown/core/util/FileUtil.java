@@ -78,7 +78,7 @@ public final class FileUtil {
 
     public void saveConfigurationIntoFile(final YamlConfiguration configuration, final File file) {
         if (configuration == null || file == null) {
-            Bukkit.getLogger().warning("Could not save file.");
+            CrownCore.log.warn("Could not save file '" + file.getAbsolutePath() + "'");
             return;
         }
 

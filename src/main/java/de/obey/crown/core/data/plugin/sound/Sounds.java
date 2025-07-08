@@ -4,6 +4,7 @@
 package de.obey.crown.core.data.plugin.sound;
 
 import com.google.common.collect.Maps;
+import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.util.FileUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +49,7 @@ public final class Sounds {
                             final float volume = Float.parseFloat(data[1]);
                             soundData.setVolume(volume);
                         } catch (final NumberFormatException exception) {
-                            Bukkit.getLogger().warning("<!> " + plugin.getName() + " - Invalid volume value @ " + key);
+                           CrownCore.log.warn("Invalid sound volume value @ " + key);
                         }
                     }
 
@@ -57,13 +58,13 @@ public final class Sounds {
                             final float pitch = Float.parseFloat(data[2]);
                             soundData.setPitch(pitch);
                         } catch (final NumberFormatException exception) {
-                            Bukkit.getLogger().warning("<!> " + plugin.getName() + " - Invalid pitch value @ " + key);
+                            CrownCore.log.warn("Invalid sound pitch value @ " + key);
                         }
                     }
                     
                     sounds.put(key, soundData);
                 } catch (final IllegalArgumentException exception) {
-                    Bukkit.getLogger().warning("<!> " + plugin.getName() + " - Invalid sound @ " + key);
+                    CrownCore.log.warn("Invalid sound @ " + key);
                 }
             }
         }

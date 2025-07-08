@@ -29,7 +29,7 @@ public class CrownConfig implements CrowPlugin {
         this.plugin = plugin;
 
         if (Bukkit.getPluginManager().getPlugin("CrownCore") == null) {
-            Bukkit.getLogger().warning("<!> " + plugin.getName() + " depends on the CrownCore, please install the CrownCore!");
+            crownCore.getLogger().warning(plugin.getName() + " depends on the CrownCore, please install it.");
             Bukkit.getPluginManager().disablePlugin(plugin);
             return;
         }
