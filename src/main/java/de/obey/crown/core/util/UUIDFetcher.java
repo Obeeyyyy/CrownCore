@@ -22,11 +22,10 @@ import lombok.experimental.FieldDefaults;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.FileNotFoundException;
-import java.net.SocketException;
 import java.time.Duration;
 import java.util.LinkedList;
 import java.util.List;
@@ -70,7 +69,9 @@ public class UUIDFetcher {
 
 
     public @Nullable UUID getUniqueId(@NotNull String userName) {
+        CrownCore.log.debug("(!) fetching uuid for name " + userName);
         if (!isValidMinecraftUserName(userName)) {
+            CrownCore.log.debug(" - name is invalid (not a minecraft username)");
             return null;
         }
 
@@ -93,6 +94,7 @@ public class UUIDFetcher {
             NAME_TO_UNIQUE_ID_CACHE.put(userName, uniqueId);
             return uniqueId;
         }
+
         return null;
     }
 
@@ -120,56 +122,84 @@ public class UUIDFetcher {
 
     private String[] getRemoteUserData(@NotNull String nameOrUuid) {
         try {
-            final String url = "https://api.minetools.eu/uuid/" + nameOrUuid;
+
+            final String url = "https://api.mojang.com/users/profiles/minecraft/" + nameOrUuid;
+
+            CrownCore.log.debug(" - fetching from remote " + url);
+
             final Request request = new Request.Builder()
                     .url(url)
                     .build();
 
             try (final Response response = okHttpClient.newCall(request).execute()) {
-                if (response.body() == null)
+                final ResponseBody responseBody = response.body();
+                if (responseBody == null) {
+                    CrownCore.log.debug(" - response body is null");
                     return null;
+                }
 
-                final JsonObject object = JsonParser.parseString(response.body().toString()).getAsJsonObject();
+                final String responseString = responseBody.string();
+
+                CrownCore.log.debug(" - response: " + responseString);
+
+                final JsonObject object = JsonParser.parseString(responseString).getAsJsonObject();
+
+
                 if (object == null || !object.has("name") || !object.has("id")) {
+                    CrownCore.log.debug(" - response is missing 'name' and 'id' objects");
                     return null;
                 }
 
                 final JsonElement uuidElement = object.get("id");
                 if (uuidElement == null || uuidElement instanceof JsonNull) {
+                    CrownCore.log.debug(" - response is missing 'id' element");
                     return null;
                 }
 
-                final String uniqueIdString = object.get("id").getAsString();
+                final String uniqueIdString = uuidElement.getAsString();
                 final UUID uniqueId = validateUniqueId(uniqueIdString);
                 if (uniqueId == null) {
+                    CrownCore.log.debug(" - response is missing 'id' element");
                     return null;
                 }
 
                 final String name = object.get("name").getAsString();
+
+                CrownCore.log.debug(" - fetched");
+                CrownCore.log.debug("   - name:" + name);
+                CrownCore.log.debug("   - uuid:" + uniqueIdString);
+
                 return new String[]{name, uniqueId.toString()};
             }
-        } catch (Exception e) {
-            if (!(e instanceof FileNotFoundException) && !(e instanceof SocketException)) {
-                throw new RuntimeException("Couldn't find uuid of \"" + nameOrUuid + "\" at api.minetools.eu:", e);
-            }
+        } catch (final Exception e) {
+            CrownCore.log.debug(" - exception while fetching uuid " + e.getMessage());
         }
         return null;
     }
 
     private @Nullable UUID validateUniqueId(@NotNull String string) {
+        CrownCore.log.debug(" - validating uuid: " + string);
+
         if (string.length() != 32) {
+            CrownCore.log.debug(" - uuid is not 32 letters long.");
             return null;
         }
         if (string.contains("-")) {
             return UUID.fromString(string);
         }
-        String firstSeg = string.substring(0, 8); // 8
-        String secondSeg = string.substring(8, 12); // 4
-        String thirdSeg = string.substring(12, 16); // 4
-        String fourthSeg = string.substring(16, 20); // 4
-        String fifthSeg = string.substring(20, 32); // 12
-        return UUID.fromString(
+
+        final String firstSeg = string.substring(0, 8); // 8
+        final String secondSeg = string.substring(8, 12); // 4
+        final String thirdSeg = string.substring(12, 16); // 4
+        final String fourthSeg = string.substring(16, 20); // 4
+        final String fifthSeg = string.substring(20, 32); // 12
+
+        final UUID uuid = UUID.fromString(
                 firstSeg + "-" + secondSeg + "-" + thirdSeg + "-" + fourthSeg + "-" + fifthSeg);
+
+        CrownCore.log.debug(" - validated uuid " + uuid);
+
+        return uuid;
     }
 
     private boolean isValidMinecraftUserName(@NotNull String userName) {

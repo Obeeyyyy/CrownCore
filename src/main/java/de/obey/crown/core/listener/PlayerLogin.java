@@ -1,7 +1,6 @@
 package de.obey.crown.core.listener;
 
 import de.obey.crown.core.data.player.newer.PlayerDataService;
-import de.obey.crown.core.noobf.CrownCore;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,7 +13,6 @@ public class PlayerLogin implements Listener {
 
     @EventHandler
     public void on(final PlayerLoginEvent event) {
-        CrownCore.log.debug(" login ");
         playerDataService.loadAsync(event.getPlayer().getUniqueId());
     }
 }

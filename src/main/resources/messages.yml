@@ -1,4 +1,4 @@
-prefix: "&6&lCORE &8●&f"
+prefix: "&6&lCROWNCORE &8●&f"
 white: "&f"
 accent: "&e"
 
@@ -10,6 +10,7 @@ messages:
   message-cooldown: "%prefix% Please wait %accent%%remaining%%white% before sending another message."
   invalid-number: "%prefix% Please enter a valid number."
   invalid-name: "%prefix% Please enter a name with less than 10 letters and no spaces."
+  invalid-license: "%prefix% Your license for %accent%%plugin%%white% is invalid."
   no-item-in-hand: "%prefix% You need to hold an item in your hand."
   plugin-reloaded: "%prefix% [%plugin%] You have reloaded config and messages."
   messages-reloaded: "%prefix% [%plugin%] You have reloaded the messages."

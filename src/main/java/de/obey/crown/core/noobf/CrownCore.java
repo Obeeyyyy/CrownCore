@@ -129,7 +129,7 @@ public final class CrownCore extends JavaPlugin {
 
         pluginManager.registerEvents(new CoreStart(), this);
         pluginManager.registerEvents(new PlayerChat(pluginConfig, sounds), this);
-        pluginManager.registerEvents(new PlayerJoin(pluginConfig, versionChecker, playerDataService), this);
+        pluginManager.registerEvents(new PlayerJoin(pluginConfig, versionChecker), this);
         pluginManager.registerEvents(new PlayerLogin(playerDataService), this);
         pluginManager.registerEvents(new PlayerQuit(playerDataService), this);
     }
