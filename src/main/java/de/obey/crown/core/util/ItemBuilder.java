@@ -32,57 +32,25 @@ public final class ItemBuilder {
     private final ItemStack itemStack;
     private final ItemMeta meta;
 
-    private FireworkEffectMeta fireworkMeta;
-    private SkullMeta skullMeta;
-    private LeatherArmorMeta leatherMeta;
-
     public ItemBuilder(final ItemStack itemStack) {
         this.itemStack = itemStack;
-        meta = itemStack.getItemMeta();
-
-        setupCorrectItemMeta();
+        meta =  Bukkit.getItemFactory().getItemMeta(itemStack.getType());
     }
 
     public ItemBuilder(final Material material) {
         itemStack = new ItemStack(material);
-        meta = itemStack.getItemMeta();
+        meta =  Bukkit.getItemFactory().getItemMeta(material);
 
-        setupCorrectItemMeta();
     }
 
     public ItemBuilder(final Material material, final int amount) {
         itemStack = new ItemStack(material, amount);
-        meta = itemStack.getItemMeta();
+        meta =  Bukkit.getItemFactory().getItemMeta(material);
 
-        setupCorrectItemMeta();
     }
 
-    private void setupCorrectItemMeta() {
-        if (itemStack.getType() == Material.FIRE_CHARGE)
-            fireworkMeta = (FireworkEffectMeta) itemStack.getItemMeta();
-
-        if (itemStack.getType() == Material.PLAYER_HEAD)
-            skullMeta = (SkullMeta) itemStack.getItemMeta();
-
-        if (itemStack.getType().name().contains("LEATHER_"))
-            leatherMeta = (LeatherArmorMeta) itemStack.getItemMeta();
-    }
-
-    public ItemBuilder setDisplayname(String name) {
-        name = TextUtil.translateColors(name);
-
-        if(meta != null)
-            meta.setDisplayName(name);
-
-        if (fireworkMeta != null)
-            fireworkMeta.setDisplayName(name);
-
-        if (skullMeta != null)
-            skullMeta.setDisplayName(name);
-
-        if (leatherMeta != null)
-            leatherMeta.setDisplayName(name);
-
+    public ItemBuilder setDisplayname(final String name) {
+        meta.displayName(TextUtil.translateComponent(name));
         return this;
     }
 
@@ -99,33 +67,13 @@ public final class ItemBuilder {
             list.add(line);
         }
 
-        if(meta != null)
-            meta.setLore(list);
-
-        if (fireworkMeta != null)
-            fireworkMeta.setLore(list);
-
-        if (skullMeta != null)
-            skullMeta.setLore(list);
-
-        if (leatherMeta != null)
-            leatherMeta.setLore(list);
+        meta.setLore(list);
 
         return this;
     }
 
     public ItemBuilder setLore(final List<String> list) {
         meta.setLore(list);
-
-        if (fireworkMeta != null)
-            fireworkMeta.setLore(list);
-
-        if (skullMeta != null)
-            skullMeta.setLore(list);
-
-        if (leatherMeta != null)
-            leatherMeta.setLore(list);
-
         return this;
     }
 
@@ -134,17 +82,7 @@ public final class ItemBuilder {
 
         Collections.addAll(list, lore);
 
-        if(meta != null)
-            meta.setLore(list);
-
-        if (fireworkMeta != null)
-            fireworkMeta.setLore(list);
-
-        if (skullMeta != null)
-            skullMeta.setLore(list);
-
-        if (leatherMeta != null)
-            leatherMeta.setLore(list);
+        meta.setLore(list);
 
         return this;
     }
@@ -153,18 +91,7 @@ public final class ItemBuilder {
         final List<String> list = meta.getLore() == null ? new ArrayList<>() : meta.getLore();
 
         list.addAll(lore);
-
-        if(meta != null)
-            meta.setLore(list);
-
-        if (fireworkMeta != null)
-            fireworkMeta.setLore(list);
-
-        if (skullMeta != null)
-            skullMeta.setLore(list);
-
-        if (leatherMeta != null)
-            leatherMeta.setLore(list);
+        meta.setLore(list);
 
         return this;
     }
@@ -172,16 +99,17 @@ public final class ItemBuilder {
     public ItemBuilder setFireWorkColor(final Color color) {
         final FireworkEffect effect = FireworkEffect.builder().withColor(color).build();
 
-        fireworkMeta = (FireworkEffectMeta) meta;
-        fireworkMeta.setEffect(effect);
-        fireworkMeta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+        if(meta instanceof FireworkEffectMeta fireworkMeta) {
+            fireworkMeta.setEffect(effect);
+            fireworkMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
 
         return this;
     }
 
     public ItemBuilder setSkullOwner(final String name) {
 
-        if (skullMeta != null) {
+        if(meta instanceof SkullMeta skullMeta) {
             final OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(name);
             skullMeta.setOwningPlayer(offlinePlayer);
         }
@@ -190,7 +118,8 @@ public final class ItemBuilder {
     }
 
     public ItemBuilder setTexturURL(final String url, final UUID uuid) {
-        if (skullMeta == null)
+
+        if(!(meta instanceof SkullMeta))
             return this;
 
         final PlayerProfile playerProfile = Bukkit.createPlayerProfile(uuid, "crownplugins");
@@ -209,7 +138,7 @@ public final class ItemBuilder {
 
     public ItemBuilder setTextur(final String texture, final UUID uuid) {
 
-        if (skullMeta == null)
+        if(!(meta instanceof SkullMeta skullMeta))
             return this;
 
         final PlayerProfile profile = Bukkit.createPlayerProfile(uuid, "crownplugins");
@@ -238,91 +167,44 @@ public final class ItemBuilder {
     }
 
     public ItemBuilder setColor(final DyeColor color) {
-        if (leatherMeta == null)
-            return this;
 
-        leatherMeta.setColor(color.getColor());
+        if(meta instanceof LeatherArmorMeta leatherArmorMeta) {
+            leatherArmorMeta.setColor(color.getColor());
+        }
 
         return this;
     }
 
     public ItemBuilder addEnchantment(final Enchantment enchantment, final int level) {
-        if(meta != null)
-            meta.addEnchant(enchantment, level, true);
-
-        if (fireworkMeta != null)
-            fireworkMeta.addEnchant(enchantment, level, true);
-
-        if (skullMeta != null)
-            skullMeta.addEnchant(enchantment, level, true);
-
-        if (leatherMeta != null)
-            leatherMeta.addEnchant(enchantment, level, true);
-
+        meta.addEnchant(enchantment, level, true);
         return this;
     }
 
     public ItemBuilder addEnchantment(final Enchantment enchantment) {
-        if(meta != null)
-            meta.addEnchant(enchantment, 1, true);
-
-        if (fireworkMeta != null)
-            fireworkMeta.addEnchant(enchantment, 1, true);
-
-        if (skullMeta != null)
-            skullMeta.addEnchant(enchantment, 1, true);
-
-        if (leatherMeta != null)
-            leatherMeta.addEnchant(enchantment, 1, true);
-
+        meta.addEnchant(enchantment, 1, true);
         return this;
     }
 
     public ItemBuilder setEnchantments(final Map<Enchantment, Integer> enchantments) {
         enchantments.keySet().forEach(enchantment -> {
             meta.addEnchant(enchantment, enchantments.get(enchantment), true);
-
-            if (leatherMeta != null)
-                leatherMeta.addEnchant(enchantment, enchantments.get(enchantment), true);
         });
 
         return this;
     }
 
     public ItemBuilder addItemFlags(final ItemFlag... flags) {
-        if(meta != null)
-            meta.addItemFlags(flags);
-
-        if (fireworkMeta != null)
-            fireworkMeta.addItemFlags(flags);
-
-        if (skullMeta != null)
-            skullMeta.addItemFlags(flags);
-
-        if (leatherMeta != null)
-            leatherMeta.addItemFlags(flags);
-
+        meta.addItemFlags(flags);
         return this;
     }
 
     public ItemBuilder setCustomModelData(final int data) {
         meta.setCustomModelData(data);
-
         return this;
     }
     
     public ItemStack build() {
         itemStack.setItemMeta(meta);
-
-        if (fireworkMeta != null)
-            itemStack.setItemMeta(fireworkMeta);
-
-        if (skullMeta != null)
-            itemStack.setItemMeta(skullMeta);
-
-        if (leatherMeta != null)
-            itemStack.setItemMeta(leatherMeta);
-
         return itemStack;
     }
 

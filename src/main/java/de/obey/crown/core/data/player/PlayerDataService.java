@@ -1,4 +1,4 @@
-package de.obey.crown.core.data.player.newer;
+package de.obey.crown.core.data.player;
 
 import com.google.common.collect.Maps;
 import de.obey.crown.core.noobf.CrownCore;
@@ -16,7 +16,7 @@ public class PlayerDataService {
     private final ExecutorService executor;
     private final Map<UUID, PlayerData> cache = Maps.newConcurrentMap();
 
-    public PlayerDataService(ExecutorService executor) {
+    public PlayerDataService(final ExecutorService executor) {
         this.executor = executor;
 
         Scheduler.runTaskTimerAsync(CrownCore.getInstance(), () -> {

@@ -2,9 +2,11 @@ package de.obey.crown.core.noobf;
 
 import de.obey.crown.core.command.CoreCommand;
 import de.obey.crown.core.command.LocationCommand;
-import de.obey.crown.core.data.player.newer.PlayerDataService;
+import de.obey.crown.core.data.player.PlayerDataService;
 import de.obey.crown.core.data.plugin.Log;
 import de.obey.crown.core.data.plugin.sound.Sounds;
+import de.obey.crown.core.data.plugin.storage.PluginStorageConfig;
+import de.obey.crown.core.data.plugin.storage.PluginStorageManager;
 import de.obey.crown.core.event.CoreStartEvent;
 import de.obey.crown.core.handler.LocationHandler;
 import de.obey.crown.core.listener.*;
@@ -22,7 +24,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -41,6 +42,7 @@ public final class CrownCore extends JavaPlugin {
     private ExecutorService executor;
     private OkHttpClient okHttpClient;
     private VersionChecker versionChecker;
+    private PluginStorageManager pluginStorageManager;
 
     private boolean placeholderapi = false;
 
@@ -56,11 +58,12 @@ public final class CrownCore extends JavaPlugin {
 
         executor = Executors.newFixedThreadPool(8, runnable -> {
             Thread thread = new Thread(runnable);
-            thread.setName("Crown-Worker-" + thread.getId());
+            thread.setName("CC-Worker-" + thread.getId());
             return thread;
         });
 
         okHttpClient = new OkHttpClient();
+        pluginStorageManager = new PluginStorageManager();
 
         pluginConfig = new PluginConfig(this);
         sounds = pluginConfig.getSounds();
@@ -98,6 +101,8 @@ public final class CrownCore extends JavaPlugin {
 
         if(playerDataService != null)
             playerDataService.saveAllData();
+
+        pluginStorageManager.shutdownConnections();
     }
 
     /***
@@ -113,12 +118,12 @@ public final class CrownCore extends JavaPlugin {
      */
     private void loadCommand() {
         final LocationCommand locationCommand = new LocationCommand(pluginConfig.getMessanger());
-        Objects.requireNonNull(getCommand("location")).setExecutor(locationCommand);
-        Objects.requireNonNull(getCommand("location")).setTabCompleter(locationCommand);
+        getCommand("location").setExecutor(locationCommand);
+        getCommand("location").setTabCompleter(locationCommand);
 
         final CoreCommand coreCommand = new CoreCommand(pluginConfig.getMessanger(), pluginConfig);
-        Objects.requireNonNull(getCommand("crowncore")).setExecutor(coreCommand);
-        Objects.requireNonNull(getCommand("crowncore")).setTabCompleter(coreCommand);
+        getCommand("crowncore").setExecutor(coreCommand);
+        getCommand("crowncore").setTabCompleter(coreCommand);
     }
 
     /***

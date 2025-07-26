@@ -3,12 +3,14 @@
 
 package de.obey.crown.core.data.plugin;
 
+import de.obey.crown.core.data.plugin.storage.PluginStorageConfig;
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.util.FileUtil;
 import lombok.Getter;
 import lombok.NonNull;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
@@ -24,6 +26,8 @@ public class CrownConfig implements CrowPlugin {
     private Sounds sounds;
 
     private File messageFile, configFile, soundFile;
+
+    private PluginStorageConfig pluginStorageConfig;
 
     public CrownConfig(@NonNull Plugin plugin) {
         this.plugin = plugin;
@@ -46,8 +50,9 @@ public class CrownConfig implements CrowPlugin {
 
     @Override
     public void createFiles() {
-        if (!plugin.getDataFolder().exists())
+        if (!plugin.getDataFolder().exists()) {
             plugin.getDataFolder().mkdir();
+        }
 
         messageFile = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
         configFile = FileUtil.getGeneratedFile(plugin, "config.yml", true);
@@ -64,9 +69,16 @@ public class CrownConfig implements CrowPlugin {
         sounds.load();
     }
 
-    public void loadConfig() {
-    }
+    public void loadConfig() {}
 
-    public void saveConfig() {
+    public void saveConfig() {}
+
+    /***
+     * Loads the storage part of the config.yml
+     * @param configuration YamlConfiguration for config file
+     */
+    public void loadPluginStorageConfig(final YamlConfiguration configuration) {
+        pluginStorageConfig = new PluginStorageConfig(this, configuration);
+        crownCore.getPluginStorageManager().registerPlayerDataPlugin(this);
     }
 }

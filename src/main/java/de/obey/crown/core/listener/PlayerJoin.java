@@ -5,7 +5,7 @@ package de.obey.crown.core.listener;
 
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.noobf.PluginConfig;
-import de.obey.crown.core.data.player.newer.PlayerDataService;
+import de.obey.crown.core.data.player.PlayerDataService;
 import de.obey.crown.core.util.Scheduler;
 import de.obey.crown.core.util.VersionChecker;
 import lombok.RequiredArgsConstructor;
