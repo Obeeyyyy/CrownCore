@@ -7,8 +7,10 @@ api-version: '1.20'
 folia-supported: true
 
 libraries:
+  - com.h2database:h2:2.3.232
+  - org.mariadb.jdbc:mariadb-java-client:3.5.4
   - com.squareup.okhttp3:okhttp:4.12.0
-  - com.zaxxer:HikariCP:5.1.0
+  - com.zaxxer:HikariCP:6.3.2
 
 softdepend:
   - PlaceholderAPI

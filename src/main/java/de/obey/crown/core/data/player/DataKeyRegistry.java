@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -43,8 +44,8 @@ public class DataKeyRegistry {
         return registry.get(plugin).get(keyName);
     }
 
-    public List<DataKey<?>> getPluginKeys(final String plugin) {
-        return (List<DataKey<?>>) registry.get(plugin).values();
+    public Collection<DataKey<?>> getPluginKeys(final String plugin) {
+        return registry.get(plugin).values();
     }
 
     public boolean pluginHasKeysw(final String plugin) {

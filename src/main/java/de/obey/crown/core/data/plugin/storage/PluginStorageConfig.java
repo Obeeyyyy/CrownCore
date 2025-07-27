@@ -18,7 +18,7 @@ public class PluginStorageConfig {
 
     public PluginStorageConfig(final CrownConfig pluginConfig, final YamlConfiguration configuration) {
         try {
-            storageType = StorageType.valueOf(FileUtil.getString(configuration, "storage.method", "yml"));
+            storageType = StorageType.valueOf(FileUtil.getString(configuration, "storage.method", "yml").toUpperCase());
         } catch (IllegalArgumentException exception) {
             storageType = StorageType.H2;
             CrownCore.log.warn("invalid storage.method for " + pluginConfig.getPlugin().getName() + " in config.yml");

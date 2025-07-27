@@ -9,6 +9,7 @@ import de.obey.crown.core.data.player.PlayerData;
 import de.obey.crown.core.data.plugin.CrownConfig;
 import de.obey.crown.core.noobf.CrownCore;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.*;
 import java.util.Map;
@@ -32,31 +33,53 @@ public class PluginStorageManager {
 
         final HikariConfig hikariConfig = new HikariConfig();
 
+        String jdbcUrl = "";
+        final Path h2DataFile = pluginConfig.getPlugin().getDataFolder().toPath().resolve(pluginName.toLowerCase() + "-playerdata");
+
+        try {
+            Class.forName("org.h2.Driver");
+            Class.forName("org.mariadb.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        hikariConfig.setUsername("sa");
+        hikariConfig.setPassword("");
+
         switch (storageConfig.getStorageType()) {
             case MYSQL, MARIADB -> {
-                final String jdbcUrl = "jdbc:" + (storageConfig.getStorageType().name().toLowerCase()) + "://" + storageConfig.getHost() + "/" + storageConfig.getDatabase() +
+                jdbcUrl = "jdbc:" + (storageConfig.getStorageType().name().toLowerCase()) + "://" + storageConfig.getHost() + "/" + storageConfig.getDatabase() +
                         "?autoReconnect=" + storageConfig.isAutoReconnect() +
                         "&useUnicode=" + storageConfig.isUseUnicode() +
                         "&characterEncoding=" + storageConfig.getCharacterEncoding() +
                         "&dontTrackOpenResources=" + storageConfig.isDontTrackOpenResources() +
                         "&holdResultsOpenOverStatementClose=" + storageConfig.isHoldResultsOpenOverStatementClose();
 
-                hikariConfig.setJdbcUrl(jdbcUrl);
                 hikariConfig.setUsername(storageConfig.getUsername());
                 hikariConfig.setPassword(storageConfig.getPassword());
             }
 
             case H2 -> {
-                final Path h2DataFile = pluginConfig.getPlugin().getDataFolder().toPath().resolve("playerData");
-                final String jdbcUrl = "jdbc:h2:" + h2DataFile.toAbsolutePath();
-                hikariConfig.setJdbcUrl(jdbcUrl);
-                hikariConfig.setUsername("obey");
-                hikariConfig.setPassword("");
+                jdbcUrl = "jdbc:h2:" + h2DataFile.toAbsolutePath();
             }
 
-            default -> CrownCore.log.warn("invalid storage.method for " + pluginName + " in config.yml");
-
+            default -> {
+                CrownCore.log.warn("invalid storage.method for " + pluginName + " in config.yml");
+                jdbcUrl = "jdbc:h2:" + h2DataFile.toAbsolutePath();
+            }
         }
+
+        CrownCore.log.debug("storage method for " + pluginName + ": " + storageConfig.getStorageType().name());
+        CrownCore.log.debug(" - " + jdbcUrl);
+
+        hikariConfig.setJdbcUrl(jdbcUrl);
+
+
+
+        hikariConfig.setMaximumPoolSize(storageConfig.getMaxPoolSize());
+        hikariConfig.setMaxLifetime(storageConfig.getMaxLifetime());
+        hikariConfig.setMinimumIdle(storageConfig.getMinIdle());
+        hikariConfig.setKeepaliveTime(storageConfig.getKeepAliveTime());
 
         hikariConfig.setPoolName("Obey-" + pluginName);
 
@@ -67,7 +90,7 @@ public class PluginStorageManager {
 
     private void createTable(final String pluginName) {
         final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
-        stringBuilder.append(pluginName).append(" (");
+        stringBuilder.append(pluginName.toLowerCase()).append(" (");
         stringBuilder.append("player_uuid CHAR(36) PRIMARY KEY, ");
         for (final DataKey<?> key : schemas.get(pluginName).getDataKeys()) {
             stringBuilder.append(key.getName()).append(" ").append(key.getSqlDataType()).append(", ");
@@ -97,7 +120,7 @@ public class PluginStorageManager {
     }
 
     private void insertDefaultValues(final UUID uuid, final PluginDataSchema schema) throws SQLException {
-        final String plugiName = schema.getPluginName();
+        final String plugiName = schema.getPluginName().toLowerCase();
         final StringBuilder keys = new StringBuilder("player_uuid");
         final StringBuilder values = new StringBuilder("?");
 
@@ -125,7 +148,7 @@ public class PluginStorageManager {
         for (final String pluginName : DataKeyRegistry.getRegistry().keySet()) {
             CrownCore.log.debug("loading player data for plugin: " + pluginName);
             final PluginDataSchema schema = schemas.get(pluginName);
-            final StringBuilder query = new StringBuilder("SELECT * FROM ").append(pluginName).append(" WHERE player_uuid = ?");
+            final StringBuilder query = new StringBuilder("SELECT * FROM ").append(pluginName.toLowerCase()).append(" WHERE player_uuid = ?");
 
             try (final Connection connection = getConnectionForPluginName(pluginName);
                  final PreparedStatement preparedStatement = connection.prepareStatement(query.toString())) {
@@ -158,7 +181,7 @@ public class PluginStorageManager {
     public PlayerData savePlayerData(final PlayerData playerData) {
         for (final String pluginName : DataKeyRegistry.getRegistry().keySet()) {
             final PluginDataSchema schema = schemas.get(pluginName);
-            final StringBuilder query = new StringBuilder("UPDATE ").append(pluginName).append(" SET ");
+            final StringBuilder query = new StringBuilder("UPDATE ").append(pluginName.toLowerCase()).append(" SET ");
 
             for (DataKey<?> key : schema.getDataKeys()) {
                 query.append(key.getName()).append(" = ?, ");
