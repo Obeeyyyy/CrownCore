@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.experimental.UtilityClass;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 @UtilityClass
@@ -37,7 +36,9 @@ public class DataKeyRegistry {
         }
     }
 
-    public DataKey<?> get(final String plugin, final String keyName) {
+    public DataKey<?> get(String plugin, final String keyName) {
+        plugin = plugin.toLowerCase();
+
         if(!registry.containsKey(plugin))
             return null;
 
@@ -48,7 +49,7 @@ public class DataKeyRegistry {
         return registry.get(plugin).values();
     }
 
-    public boolean pluginHasKeysw(final String plugin) {
+    public boolean pluginHasKeys(final String plugin) {
         return registry.containsKey(plugin);
     }
 }

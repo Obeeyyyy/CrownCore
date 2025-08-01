@@ -13,7 +13,7 @@ public class DataKey<T> {
 
     public DataKey(final String name, final Plugin plugin, final Class<T> dataType, final Object defaultValue, final String sqlDataType) {
         this.name = name;
-        this.plugin = plugin.getName();
+        this.plugin = plugin.getName().toLowerCase();
         this.dataType = dataType;
         this.defaultValue = defaultValue;
         this.sqlDataType = sqlDataType;

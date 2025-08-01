@@ -33,9 +33,6 @@ public class PlayerData {
 
 
     public void load() {
-        for (final String pluginName : DataKeyRegistry.getRegistry().keySet()) {
-
-        }
         pluginStorageManager.loadPlayerData(this);
     }
 

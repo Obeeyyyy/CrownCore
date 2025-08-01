@@ -9,7 +9,6 @@ import de.obey.crown.core.data.player.PlayerData;
 import de.obey.crown.core.data.plugin.CrownConfig;
 import de.obey.crown.core.noobf.CrownCore;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.*;
 import java.util.Map;
@@ -21,9 +20,9 @@ public class PluginStorageManager {
     private final Map<String, PluginDataSchema> schemas = Maps.newConcurrentMap();
 
     public void registerPlayerDataPlugin(final CrownConfig pluginConfig) {
-        final String pluginName = pluginConfig.getPlugin().getName();
+        final String pluginName = pluginConfig.getPlugin().getName().toLowerCase();
 
-        if(!DataKeyRegistry.pluginHasKeysw(pluginName)) {
+        if(!DataKeyRegistry.pluginHasKeys(pluginName)) {
             return;
         }
 
@@ -33,7 +32,7 @@ public class PluginStorageManager {
 
         final HikariConfig hikariConfig = new HikariConfig();
 
-        String jdbcUrl = "";
+        String jdbcUrl;
         final Path h2DataFile = pluginConfig.getPlugin().getDataFolder().toPath().resolve(pluginName.toLowerCase() + "-playerdata");
 
         try {
@@ -82,19 +81,24 @@ public class PluginStorageManager {
         hikariConfig.setKeepaliveTime(storageConfig.getKeepAliveTime());
 
         hikariConfig.setPoolName("Obey-" + pluginName);
-
         connections.put(pluginName, new HikariDataSource(hikariConfig));
+
+        CrownCore.log.debug("created connection pool - " + hikariConfig.getPoolName());
 
         createTable(pluginName);
     }
 
     private void createTable(final String pluginName) {
+        CrownCore.log.debug("creating tables for " + pluginName);
         final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
-        stringBuilder.append(pluginName.toLowerCase()).append(" (");
+
+        stringBuilder.append(pluginName).append(" (");
         stringBuilder.append("player_uuid CHAR(36) PRIMARY KEY, ");
+
         for (final DataKey<?> key : schemas.get(pluginName).getDataKeys()) {
             stringBuilder.append(key.getName()).append(" ").append(key.getSqlDataType()).append(", ");
         }
+
         stringBuilder.setLength(stringBuilder.length() - 2);
         stringBuilder.append(");");
 
@@ -120,7 +124,10 @@ public class PluginStorageManager {
     }
 
     private void insertDefaultValues(final UUID uuid, final PluginDataSchema schema) throws SQLException {
-        final String plugiName = schema.getPluginName().toLowerCase();
+        CrownCore.log.debug("inserting default values for " + uuid.toString());
+        CrownCore.log.debug(" plugin: " + schema.getPluginName());
+
+        final String pluginName = schema.getPluginName();
         final StringBuilder keys = new StringBuilder("player_uuid");
         final StringBuilder values = new StringBuilder("?");
 
@@ -129,9 +136,9 @@ public class PluginStorageManager {
             values.append(", ?");
         }
 
-        final String sql = "INSERT INTO " + plugiName+ " (" + keys + ") VALUES (" + values + ")";
+        final String sql = "INSERT INTO " + pluginName+ " (" + keys + ") VALUES (" + values + ")";
 
-        try (final Connection conn = getConnectionForPluginName(plugiName);
+        try (final Connection conn = getConnectionForPluginName(pluginName);
              final PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, uuid.toString());
@@ -145,13 +152,14 @@ public class PluginStorageManager {
     }
 
     public PlayerData loadPlayerData(final PlayerData playerData) {
-        for (final String pluginName : DataKeyRegistry.getRegistry().keySet()) {
+        for (String pluginName : DataKeyRegistry.getRegistry().keySet()) {
+            pluginName = pluginName.toLowerCase();
             CrownCore.log.debug("loading player data for plugin: " + pluginName);
             final PluginDataSchema schema = schemas.get(pluginName);
-            final StringBuilder query = new StringBuilder("SELECT * FROM ").append(pluginName.toLowerCase()).append(" WHERE player_uuid = ?");
+            String query = "SELECT * FROM " + pluginName + " WHERE player_uuid = ?";
 
             try (final Connection connection = getConnectionForPluginName(pluginName);
-                 final PreparedStatement preparedStatement = connection.prepareStatement(query.toString())) {
+                 final PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
                 preparedStatement.setString(1, playerData.getUuid().toString());
 
@@ -170,7 +178,7 @@ public class PluginStorageManager {
                     }
                 }
             } catch (final SQLException exception) {
-                CrownCore.log.warn("Exception in PluginStorageManager 151");
+                CrownCore.log.warn("Exception in PluginStorageManager 1");
                 exception.printStackTrace();
             }
         }

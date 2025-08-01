@@ -14,7 +14,7 @@ public class PluginDataSchema {
     private final List<DataKey<?>> dataKeys = new ArrayList<>();
 
     public PluginDataSchema(final String pluginName) {
-        this.pluginName = pluginName;
-        dataKeys.addAll(DataKeyRegistry.getPluginKeys(pluginName));
+        this.pluginName = pluginName.toLowerCase();
+        dataKeys.addAll(DataKeyRegistry.getPluginKeys(this.pluginName));
     }
 }
