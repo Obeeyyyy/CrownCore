@@ -19,10 +19,11 @@ public final class Scheduler {
     private boolean isFolia = false;
 
     public void initialize() {
-        if (CrownCore.getInstance().getServer().getName().toLowerCase().contains("folia")) {
+        if (CrownCore.getInstance().getServer().getName().toLowerCase().contains("folia") ||
+                CrownCore.getInstance().getServer().getName().toLowerCase().contains("luminol")) {
             isFolia = true;
 
-            CrownCore.log.debug("detected folia server");
+            CrownCore.log.debug("detected folia/luminol server");
         }
 
         executor = CrownCore.getInstance().getExecutor();
