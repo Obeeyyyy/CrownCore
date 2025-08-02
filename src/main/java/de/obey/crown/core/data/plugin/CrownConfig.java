@@ -69,6 +69,8 @@ public class CrownConfig implements CrowPlugin {
         sounds.load();
     }
 
+    public void reload() {}
+
     public void loadConfig() {}
 
     public void saveConfig() {}
@@ -79,6 +81,9 @@ public class CrownConfig implements CrowPlugin {
      */
     public void loadPluginStorageConfig(final YamlConfiguration configuration) {
         pluginStorageConfig = new PluginStorageConfig(this, configuration);
+    }
+
+    public void registerPluginWithPlayerData() {
         crownCore.getPluginStorageManager().registerPlayerDataPlugin(this);
     }
 }

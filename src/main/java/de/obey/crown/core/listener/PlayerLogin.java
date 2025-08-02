@@ -1,6 +1,6 @@
 package de.obey.crown.core.listener;
 
-import de.obey.crown.core.data.player.PlayerDataService;
+import de.obey.crown.core.data.plugin.storage.player.PlayerDataService;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

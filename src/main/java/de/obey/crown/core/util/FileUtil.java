@@ -82,10 +82,11 @@ public final class FileUtil {
             return;
         }
 
-        try {
-            configuration.save(file);
-        } catch (final IOException ignored) {
-        }
+        CrownCore.getInstance().getExecutor().execute(() -> {
+            try {
+                configuration.save(file);
+            } catch (final IOException ignored) {}
+        });
     }
 
     public int getInt(final YamlConfiguration configuration, final String path, final int defaultValue) {

@@ -17,6 +17,7 @@ public class PluginStorageConfig {
     private boolean autoReconnect = true, useUnicode = true, holdResultsOpenOverStatementClose = true, dontTrackOpenResources = true;
 
     public PluginStorageConfig(final CrownConfig pluginConfig, final YamlConfiguration configuration) {
+        CrownCore.log.debug("loading storage config for plugin: " + pluginConfig.getPlugin().getName());
         try {
             storageType = StorageType.valueOf(FileUtil.getString(configuration, "storage.method", "yml").toUpperCase());
         } catch (IllegalArgumentException exception) {
@@ -34,5 +35,7 @@ public class PluginStorageConfig {
         setMaxLifetime(FileUtil.getInt(configuration, "storage.data.pool-settings.maximum-lifetime", 1800000));
         setKeepAliveTime(FileUtil.getInt(configuration, "storage.data.pool-settings.keepalive-time", 0));
         setConnectTimeout(FileUtil.getInt(configuration, "storage.data.pool-settings.connection-timeout", 5000));
+
+        CrownCore.log.debug(" - storage method: " + storageType.name());
     }
 }

@@ -1,4 +1,4 @@
-package de.obey.crown.core.data.player;
+package de.obey.crown.core.data.plugin.storage.player;
 
 import com.google.common.collect.Maps;
 import de.obey.crown.core.noobf.CrownCore;

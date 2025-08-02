@@ -1,6 +1,7 @@
-package de.obey.crown.core.data.player;
+package de.obey.crown.core.data.plugin.storage.player;
 
 import com.google.common.collect.Maps;
+import de.obey.crown.core.data.plugin.storage.datakey.DataKey;
 import de.obey.crown.core.data.plugin.storage.PluginStorageManager;
 import de.obey.crown.core.noobf.CrownCore;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package de.obey.crown.core.data.player;
+package de.obey.crown.core.data.plugin.storage.datakey;
 
 import lombok.Getter;
 import org.bukkit.plugin.Plugin;

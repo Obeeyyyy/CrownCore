@@ -3,10 +3,12 @@ package de.obey.crown.core.data.plugin.storage;
 import com.google.common.collect.Maps;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import de.obey.crown.core.data.player.DataKey;
-import de.obey.crown.core.data.player.DataKeyRegistry;
-import de.obey.crown.core.data.player.PlayerData;
+import de.obey.crown.core.data.plugin.storage.datakey.DataKey;
+import de.obey.crown.core.data.plugin.storage.datakey.DataKeyRegistry;
+import de.obey.crown.core.data.plugin.storage.player.PlayerData;
 import de.obey.crown.core.data.plugin.CrownConfig;
+import de.obey.crown.core.data.plugin.storage.player.PlayerDataSchema;
+import de.obey.crown.core.data.plugin.storage.plugin.PluginDataSchema;
 import de.obey.crown.core.noobf.CrownCore;
 
 import java.nio.file.Path;
@@ -17,23 +19,36 @@ import java.util.UUID;
 public class PluginStorageManager {
 
     private final Map<String, HikariDataSource> connections = Maps.newConcurrentMap();
-    private final Map<String, PluginDataSchema> schemas = Maps.newConcurrentMap();
+    private final Map<String, PlayerDataSchema> playerDataSchemas = Maps.newConcurrentMap();
 
-    public void registerPlayerDataPlugin(final CrownConfig pluginConfig) {
+    /***
+     * Initiates the database connection (h2/mysql/mariadb) with the settings read out of the config.yml
+     * @param pluginConfig the CrownConfig instance to read settings from
+     */
+    private void createConnection(final CrownConfig pluginConfig) {
+        final PluginStorageConfig storageConfig = pluginConfig.getPluginStorageConfig();
         final String pluginName = pluginConfig.getPlugin().getName().toLowerCase();
 
-        if(!DataKeyRegistry.pluginHasKeys(pluginName)) {
-            return;
+        if(connections.containsKey(pluginName)) {
+            String driverClassName = "";
+            try {
+                driverClassName = connections.get(pluginName).getConnection().getMetaData().getDriverName();
+                CrownCore.log.debug("plugin db connection already exists");
+                CrownCore.log.debug(" - driver: " + driverClassName);
+                CrownCore.log.debug(" - current storage method: " + storageConfig.getStorageType().name());
+            } catch (final SQLException ignored) {}
+
+            if(driverClassName.contains(storageConfig.getStorageType().name())) {
+                return;
+            }
         }
 
-        final PluginStorageConfig storageConfig = pluginConfig.getPluginStorageConfig();
-        final PluginDataSchema schema = new PluginDataSchema(pluginName);
-        schemas.put(pluginName, schema);
+        CrownCore.log.debug(" - creating new connection");
 
         final HikariConfig hikariConfig = new HikariConfig();
 
         String jdbcUrl;
-        final Path h2DataFile = pluginConfig.getPlugin().getDataFolder().toPath().resolve(pluginName.toLowerCase() + "-playerdata");
+        final Path h2DataFile = pluginConfig.getPlugin().getDataFolder().toPath().resolve(pluginName.toLowerCase());
 
         try {
             Class.forName("org.h2.Driver");
@@ -73,29 +88,98 @@ public class PluginStorageManager {
 
         hikariConfig.setJdbcUrl(jdbcUrl);
 
-
-
         hikariConfig.setMaximumPoolSize(storageConfig.getMaxPoolSize());
         hikariConfig.setMaxLifetime(storageConfig.getMaxLifetime());
         hikariConfig.setMinimumIdle(storageConfig.getMinIdle());
         hikariConfig.setKeepaliveTime(storageConfig.getKeepAliveTime());
 
-        hikariConfig.setPoolName("Obey-" + pluginName);
+        hikariConfig.setPoolName("obey-" + pluginName);
         connections.put(pluginName, new HikariDataSource(hikariConfig));
 
         CrownCore.log.debug("created connection pool - " + hikariConfig.getPoolName());
-
-        createTable(pluginName);
     }
 
-    private void createTable(final String pluginName) {
-        CrownCore.log.debug("creating tables for " + pluginName);
+    /***
+     * Registers a plugin as a plugin using plugin data. Will read the schemas passed as params
+     * @param pluginConfig he CrownConfig instance to read settings from
+     * @param pluginDataSchema data schema passed
+     */
+    public void registerDataPlugin(final CrownConfig pluginConfig, final PluginDataSchema pluginDataSchema) {
+        final String pluginName = pluginConfig.getPlugin().getName().toLowerCase();
+
+        createConnection(pluginConfig);
+        createPluginDataTables(pluginName, pluginDataSchema);
+    }
+
+    /***
+     * Registers a plugin as a plugin using playerdata. Will read registered data keys and generate a playerdata table schema.
+     * @param pluginConfig he CrownConfig instance to read settings from
+     */
+    public void registerPlayerDataPlugin(final CrownConfig pluginConfig) {
+        final String pluginName = pluginConfig.getPlugin().getName().toLowerCase();
+
+        if(!DataKeyRegistry.pluginHasKeys(pluginName)) {
+            return;
+        }
+
+        createConnection(pluginConfig);
+
+        final PlayerDataSchema schema = new PlayerDataSchema(pluginName);
+        playerDataSchemas.put(pluginName, schema);
+
+        createPlayerDataTable(pluginName);
+    }
+
+    /***
+     * creates the plugin data tables using the passed schema
+     * @param pluginName name of plugin the passed schema was saved for
+     * @param  pluginDataSchema pluginDataSchema passed
+     */
+    private void createPluginDataTables(final String pluginName, final PluginDataSchema pluginDataSchema) {
+        CrownCore.log.debug("creating plugin data table for " + pluginName);
+        CrownCore.log.debug(" - creating table: " + pluginDataSchema.getTableName());
+        CrownCore.log.debug("   - primary key: " + pluginDataSchema.getPrimaryKeyName());
+
+        final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
+        stringBuilder.append(pluginDataSchema.getTableName()).append(" (");
+
+        for (final DataKey<?> key : pluginDataSchema.getDataKeys()) {
+            CrownCore.log.debug("   - data key: " + key.getName());
+            stringBuilder.append(key.getName()).append(" ").append(key.getSqlDataType());
+
+            if (key.getName().equalsIgnoreCase(pluginDataSchema.getPrimaryKeyName())) {
+                stringBuilder.append(" PRIMARY KEY");
+            }
+
+            stringBuilder.append(", ");
+        }
+
+        stringBuilder.setLength(stringBuilder.length() - 2);
+        stringBuilder.append(");");
+
+        try (final Connection conn = getConnectionForPluginName(pluginName);
+             final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(stringBuilder.toString());
+        } catch (final SQLException exception) {
+            CrownCore.log.warn("error creating plugin data tables: ");
+            CrownCore.log.warn(" - plugin: " + pluginName);
+            CrownCore.log.warn(" - table: " + pluginDataSchema.getTableName());
+            CrownCore.log.warn(" - exception: " + exception.getMessage());
+        }
+    }
+
+    /***
+     * creates the player data table using the generated schema
+     * @param pluginName name of plugin the schema was generated for
+     */
+    private void createPlayerDataTable(final String pluginName) {
+        CrownCore.log.debug("creating playerdata table for " + pluginName);
         final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
 
         stringBuilder.append(pluginName).append(" (");
         stringBuilder.append("player_uuid CHAR(36) PRIMARY KEY, ");
 
-        for (final DataKey<?> key : schemas.get(pluginName).getDataKeys()) {
+        for (final DataKey<?> key : playerDataSchemas.get(pluginName).getDataKeys()) {
             stringBuilder.append(key.getName()).append(" ").append(key.getSqlDataType()).append(", ");
         }
 
@@ -106,7 +190,9 @@ public class PluginStorageManager {
              final Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(stringBuilder.toString());
         } catch (final SQLException exception) {
-            exception.printStackTrace();
+            CrownCore.log.warn("error creating player data table: ");
+            CrownCore.log.warn(" - plugin: " + pluginName);
+            CrownCore.log.warn(" - exception: " + exception.getMessage());
         }
     }
 
@@ -123,7 +209,7 @@ public class PluginStorageManager {
         connections.clear();
     }
 
-    private void insertDefaultValues(final UUID uuid, final PluginDataSchema schema) throws SQLException {
+    private void insertDefaultPlayerDataValues(final UUID uuid, final PlayerDataSchema schema) throws SQLException {
         CrownCore.log.debug("inserting default values for " + uuid.toString());
         CrownCore.log.debug(" plugin: " + schema.getPluginName());
 
@@ -155,7 +241,7 @@ public class PluginStorageManager {
         for (String pluginName : DataKeyRegistry.getRegistry().keySet()) {
             pluginName = pluginName.toLowerCase();
             CrownCore.log.debug("loading player data for plugin: " + pluginName);
-            final PluginDataSchema schema = schemas.get(pluginName);
+            final PlayerDataSchema schema = playerDataSchemas.get(pluginName);
             String query = "SELECT * FROM " + pluginName + " WHERE player_uuid = ?";
 
             try (final Connection connection = getConnectionForPluginName(pluginName);
@@ -173,7 +259,7 @@ public class PluginStorageManager {
                             }
                         }
                     } else {
-                        insertDefaultValues(playerData.getUuid(), schema);
+                        insertDefaultPlayerDataValues(playerData.getUuid(), schema);
                         schema.getDataKeys().forEach(key -> playerData.getData().put(key, key.getDefaultValue()));
                     }
                 }
@@ -188,7 +274,7 @@ public class PluginStorageManager {
 
     public PlayerData savePlayerData(final PlayerData playerData) {
         for (final String pluginName : DataKeyRegistry.getRegistry().keySet()) {
-            final PluginDataSchema schema = schemas.get(pluginName);
+            final PlayerDataSchema schema = playerDataSchemas.get(pluginName);
             final StringBuilder query = new StringBuilder("UPDATE ").append(pluginName.toLowerCase()).append(" SET ");
 
             for (DataKey<?> key : schema.getDataKeys()) {
