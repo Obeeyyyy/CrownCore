@@ -10,16 +10,22 @@ import de.obey.crown.core.data.plugin.CrownConfig;
 import de.obey.crown.core.data.plugin.storage.player.PlayerDataSchema;
 import de.obey.crown.core.data.plugin.storage.plugin.PluginDataSchema;
 import de.obey.crown.core.noobf.CrownCore;
+import lombok.RequiredArgsConstructor;
 
 import java.nio.file.Path;
 import java.sql.*;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
+@RequiredArgsConstructor
 public class PluginStorageManager {
 
-    private final Map<String, HikariDataSource> connections = Maps.newConcurrentMap();
-    private final Map<String, PlayerDataSchema> playerDataSchemas = Maps.newConcurrentMap();
+    private final ExecutorService executor;
+
+    private final Map<String, HikariDataSource> connections = new ConcurrentHashMap<>();
+    private final Map<String, PlayerDataSchema> playerDataSchemas = new ConcurrentHashMap<>();
 
     /***
      * Initiates the database connection (h2/mysql/mariadb) with the settings read out of the config.yml
@@ -29,74 +35,76 @@ public class PluginStorageManager {
         final PluginStorageConfig storageConfig = pluginConfig.getPluginStorageConfig();
         final String pluginName = pluginConfig.getPlugin().getName().toLowerCase();
 
-        if(connections.containsKey(pluginName)) {
-            String driverClassName = "";
+        executor.submit(() -> {
+            if (connections.containsKey(pluginName)) {
+                String driverClassName = "";
+                try {
+                    driverClassName = connections.get(pluginName).getConnection().getMetaData().getDriverName();
+                    CrownCore.log.debug("plugin db connection already exists");
+                    CrownCore.log.debug(" - driver: " + driverClassName);
+                    CrownCore.log.debug(" - current storage method: " + storageConfig.getStorageType().name());
+                } catch (final SQLException ignored) {}
+
+                if (driverClassName.contains(storageConfig.getStorageType().name())) {
+                    return;
+                }
+            }
+
+            CrownCore.log.debug(" - creating new connection");
+
+            final HikariConfig hikariConfig = new HikariConfig();
+
+            String jdbcUrl;
+            final Path h2DataFile = pluginConfig.getPlugin().getDataFolder().toPath().resolve(pluginName.toLowerCase());
+
             try {
-                driverClassName = connections.get(pluginName).getConnection().getMetaData().getDriverName();
-                CrownCore.log.debug("plugin db connection already exists");
-                CrownCore.log.debug(" - driver: " + driverClassName);
-                CrownCore.log.debug(" - current storage method: " + storageConfig.getStorageType().name());
-            } catch (final SQLException ignored) {}
-
-            if(driverClassName.contains(storageConfig.getStorageType().name())) {
-                return;
-            }
-        }
-
-        CrownCore.log.debug(" - creating new connection");
-
-        final HikariConfig hikariConfig = new HikariConfig();
-
-        String jdbcUrl;
-        final Path h2DataFile = pluginConfig.getPlugin().getDataFolder().toPath().resolve(pluginName.toLowerCase());
-
-        try {
-            Class.forName("org.h2.Driver");
-            Class.forName("org.mariadb.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-
-        hikariConfig.setUsername("sa");
-        hikariConfig.setPassword("");
-
-        switch (storageConfig.getStorageType()) {
-            case MYSQL, MARIADB -> {
-                jdbcUrl = "jdbc:" + (storageConfig.getStorageType().name().toLowerCase()) + "://" + storageConfig.getHost() + "/" + storageConfig.getDatabase() +
-                        "?autoReconnect=" + storageConfig.isAutoReconnect() +
-                        "&useUnicode=" + storageConfig.isUseUnicode() +
-                        "&characterEncoding=" + storageConfig.getCharacterEncoding() +
-                        "&dontTrackOpenResources=" + storageConfig.isDontTrackOpenResources() +
-                        "&holdResultsOpenOverStatementClose=" + storageConfig.isHoldResultsOpenOverStatementClose();
-
-                hikariConfig.setUsername(storageConfig.getUsername());
-                hikariConfig.setPassword(storageConfig.getPassword());
+                Class.forName("org.h2.Driver");
+                Class.forName("org.mariadb.jdbc.Driver");
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
             }
 
-            case H2 -> {
-                jdbcUrl = "jdbc:h2:" + h2DataFile.toAbsolutePath();
+            hikariConfig.setUsername("sa");
+            hikariConfig.setPassword("");
+
+            switch (storageConfig.getStorageType()) {
+                case MYSQL, MARIADB -> {
+                    jdbcUrl = "jdbc:" + (storageConfig.getStorageType().name().toLowerCase()) + "://" + storageConfig.getHost() + "/" + storageConfig.getDatabase() +
+                            "?autoReconnect=" + storageConfig.isAutoReconnect() +
+                            "&useUnicode=" + storageConfig.isUseUnicode() +
+                            "&characterEncoding=" + storageConfig.getCharacterEncoding() +
+                            "&dontTrackOpenResources=" + storageConfig.isDontTrackOpenResources() +
+                            "&holdResultsOpenOverStatementClose=" + storageConfig.isHoldResultsOpenOverStatementClose();
+
+                    hikariConfig.setUsername(storageConfig.getUsername());
+                    hikariConfig.setPassword(storageConfig.getPassword());
+                }
+
+                case H2 -> {
+                    jdbcUrl = "jdbc:h2:" + h2DataFile.toAbsolutePath();
+                }
+
+                default -> {
+                    CrownCore.log.warn("invalid storage.method for " + pluginName + " in config.yml");
+                    jdbcUrl = "jdbc:h2:" + h2DataFile.toAbsolutePath();
+                }
             }
 
-            default -> {
-                CrownCore.log.warn("invalid storage.method for " + pluginName + " in config.yml");
-                jdbcUrl = "jdbc:h2:" + h2DataFile.toAbsolutePath();
-            }
-        }
+            CrownCore.log.debug("storage method for " + pluginName + ": " + storageConfig.getStorageType().name());
+            CrownCore.log.debug(" - " + jdbcUrl);
 
-        CrownCore.log.debug("storage method for " + pluginName + ": " + storageConfig.getStorageType().name());
-        CrownCore.log.debug(" - " + jdbcUrl);
+            hikariConfig.setJdbcUrl(jdbcUrl);
 
-        hikariConfig.setJdbcUrl(jdbcUrl);
+            hikariConfig.setMaximumPoolSize(storageConfig.getMaxPoolSize());
+            hikariConfig.setMaxLifetime(storageConfig.getMaxLifetime());
+            hikariConfig.setMinimumIdle(storageConfig.getMinIdle());
+            hikariConfig.setKeepaliveTime(storageConfig.getKeepAliveTime());
 
-        hikariConfig.setMaximumPoolSize(storageConfig.getMaxPoolSize());
-        hikariConfig.setMaxLifetime(storageConfig.getMaxLifetime());
-        hikariConfig.setMinimumIdle(storageConfig.getMinIdle());
-        hikariConfig.setKeepaliveTime(storageConfig.getKeepAliveTime());
+            hikariConfig.setPoolName("obey-" + pluginName);
+            connections.put(pluginName, new HikariDataSource(hikariConfig));
 
-        hikariConfig.setPoolName("obey-" + pluginName);
-        connections.put(pluginName, new HikariDataSource(hikariConfig));
-
-        CrownCore.log.debug("created connection pool - " + hikariConfig.getPoolName());
+            CrownCore.log.debug("created connection pool - " + hikariConfig.getPoolName());
+        });
     }
 
     /***
@@ -140,32 +148,35 @@ public class PluginStorageManager {
         CrownCore.log.debug(" - creating table: " + pluginDataSchema.getTableName());
         CrownCore.log.debug("   - primary key: " + pluginDataSchema.getPrimaryKeyName());
 
-        final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
-        stringBuilder.append(pluginDataSchema.getTableName()).append(" (");
+        executor.submit(() -> {
 
-        for (final DataKey<?> key : pluginDataSchema.getDataKeys()) {
-            CrownCore.log.debug("   - data key: " + key.getName());
-            stringBuilder.append(key.getName()).append(" ").append(key.getSqlDataType());
+            final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
+            stringBuilder.append(pluginDataSchema.getTableName()).append(" (");
 
-            if (key.getName().equalsIgnoreCase(pluginDataSchema.getPrimaryKeyName())) {
-                stringBuilder.append(" PRIMARY KEY");
+            for (final DataKey<?> key : pluginDataSchema.getDataKeys()) {
+                CrownCore.log.debug("   - data key: " + key.getName());
+                stringBuilder.append(key.getName()).append(" ").append(key.getSqlDataType());
+
+                if (key.getName().equalsIgnoreCase(pluginDataSchema.getPrimaryKeyName())) {
+                    stringBuilder.append(" PRIMARY KEY");
+                }
+
+                stringBuilder.append(", ");
             }
 
-            stringBuilder.append(", ");
-        }
+            stringBuilder.setLength(stringBuilder.length() - 2);
+            stringBuilder.append(");");
 
-        stringBuilder.setLength(stringBuilder.length() - 2);
-        stringBuilder.append(");");
-
-        try (final Connection conn = getConnectionForPluginName(pluginName);
-             final Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate(stringBuilder.toString());
-        } catch (final SQLException exception) {
-            CrownCore.log.warn("error creating plugin data tables: ");
-            CrownCore.log.warn(" - plugin: " + pluginName);
-            CrownCore.log.warn(" - table: " + pluginDataSchema.getTableName());
-            CrownCore.log.warn(" - exception: " + exception.getMessage());
-        }
+            try (final Connection conn = getConnectionForPluginName(pluginName);
+                 final Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate(stringBuilder.toString());
+            } catch (final SQLException exception) {
+                CrownCore.log.warn("error creating plugin data tables: ");
+                CrownCore.log.warn(" - plugin: " + pluginName);
+                CrownCore.log.warn(" - table: " + pluginDataSchema.getTableName());
+                CrownCore.log.warn(" - exception: " + exception.getMessage());
+            }
+        });
     }
 
     /***
@@ -173,27 +184,29 @@ public class PluginStorageManager {
      * @param pluginName name of plugin the schema was generated for
      */
     private void createPlayerDataTable(final String pluginName) {
-        CrownCore.log.debug("creating playerdata table for " + pluginName);
-        final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
+        executor.submit(() -> {
+            CrownCore.log.debug("creating playerdata table for " + pluginName);
+            final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
 
-        stringBuilder.append(pluginName).append(" (");
-        stringBuilder.append("player_uuid CHAR(36) PRIMARY KEY, ");
+            stringBuilder.append(pluginName).append(" (");
+            stringBuilder.append("player_uuid CHAR(36) PRIMARY KEY, ");
 
-        for (final DataKey<?> key : playerDataSchemas.get(pluginName).getDataKeys()) {
-            stringBuilder.append(key.getName()).append(" ").append(key.getSqlDataType()).append(", ");
-        }
+            for (final DataKey<?> key : playerDataSchemas.get(pluginName).getDataKeys()) {
+                stringBuilder.append(key.getName()).append(" ").append(key.getSqlDataType()).append(", ");
+            }
 
-        stringBuilder.setLength(stringBuilder.length() - 2);
-        stringBuilder.append(");");
+            stringBuilder.setLength(stringBuilder.length() - 2);
+            stringBuilder.append(");");
 
-        try (final Connection conn = getConnectionForPluginName(pluginName);
-             final Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate(stringBuilder.toString());
-        } catch (final SQLException exception) {
-            CrownCore.log.warn("error creating player data table: ");
-            CrownCore.log.warn(" - plugin: " + pluginName);
-            CrownCore.log.warn(" - exception: " + exception.getMessage());
-        }
+            try (final Connection conn = getConnectionForPluginName(pluginName);
+                 final Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate(stringBuilder.toString());
+            } catch (final SQLException exception) {
+                CrownCore.log.warn("error creating player data table: ");
+                CrownCore.log.warn(" - plugin: " + pluginName);
+                CrownCore.log.warn(" - exception: " + exception.getMessage());
+            }
+        });
     }
 
     public Connection getConnectionForPluginName(final String name) throws SQLException {
@@ -222,7 +235,7 @@ public class PluginStorageManager {
             values.append(", ?");
         }
 
-        final String sql = "INSERT INTO " + pluginName+ " (" + keys + ") VALUES (" + values + ")";
+        final String sql = "INSERT INTO " + pluginName + " (" + keys + ") VALUES (" + values + ")";
 
         try (final Connection conn = getConnectionForPluginName(pluginName);
              final PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -234,9 +247,18 @@ public class PluginStorageManager {
             }
 
             stmt.executeUpdate();
+        } catch (final SQLException exception) {
+            CrownCore.log.warn("error inserting default values: ");
+            CrownCore.log.warn(" - plugin: " + pluginName);
+            CrownCore.log.warn(" - exception: " + exception.getMessage());
         }
     }
 
+    /***
+     * loads playerdata from storage - only use in async calls
+     * @param playerData instance to load data for
+     * @return playerdata instance
+     */
     public PlayerData loadPlayerData(final PlayerData playerData) {
         for (String pluginName : DataKeyRegistry.getRegistry().keySet()) {
             pluginName = pluginName.toLowerCase();
@@ -264,14 +286,20 @@ public class PluginStorageManager {
                     }
                 }
             } catch (final SQLException exception) {
-                CrownCore.log.warn("Exception in PluginStorageManager 1");
-                exception.printStackTrace();
+                CrownCore.log.warn("error loading player data: ");
+                CrownCore.log.warn(" - plugin: " + pluginName);
+                CrownCore.log.warn(" - exception: " + exception.getMessage());
             }
         }
 
         return playerData;
     }
 
+    /***
+     * saved playerdata into storage - only use in async calls
+     * @param playerData instance to save data for
+     * @return playerdata instance
+     */
     public PlayerData savePlayerData(final PlayerData playerData) {
         for (final String pluginName : DataKeyRegistry.getRegistry().keySet()) {
             final PlayerDataSchema schema = playerDataSchemas.get(pluginName);
@@ -294,8 +322,10 @@ public class PluginStorageManager {
 
                 preparedStatement.setString(index, playerData.getUuid().toString());
                 preparedStatement.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
+            } catch (final SQLException exception) {
+                CrownCore.log.warn("error saving player data: ");
+                CrownCore.log.warn(" - plugin: " + pluginName);
+                CrownCore.log.warn(" - exception: " + exception.getMessage());
             }
         }
 

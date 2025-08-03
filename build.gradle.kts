@@ -53,7 +53,7 @@ dependencies {
 
     compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
-    compileOnly("com.zaxxer:HikariCP:6.3.2")
+    compileOnly("com.zaxxer:HikariCP:6.2.1")
     compileOnly("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.h2database:h2:2.3.232")
 }

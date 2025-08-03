@@ -62,7 +62,7 @@ public final class CrownCore extends JavaPlugin {
         });
 
         okHttpClient = new OkHttpClient();
-        pluginStorageManager = new PluginStorageManager();
+        pluginStorageManager = new PluginStorageManager(executor);
 
         pluginConfig = new PluginConfig(this);
         sounds = pluginConfig.getSounds();
