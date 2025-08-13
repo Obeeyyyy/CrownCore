@@ -19,11 +19,12 @@ public final class Scheduler {
     private boolean isFolia = false;
 
     public void initialize() {
-        if (CrownCore.getInstance().getServer().getName().toLowerCase().contains("folia") ||
-                CrownCore.getInstance().getServer().getName().toLowerCase().contains("luminol")) {
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            CrownCore.log.debug("detected folia server");
             isFolia = true;
-
-            CrownCore.log.debug("detected folia/luminol server");
+        } catch (final ClassNotFoundException ignored) {
+            isFolia = false;
         }
 
         executor = CrownCore.getInstance().getExecutor();

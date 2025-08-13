@@ -1,6 +1,5 @@
 package de.obey.crown.core.data.plugin.storage;
 
-import com.google.common.collect.Maps;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import de.obey.crown.core.data.plugin.storage.datakey.DataKey;
@@ -14,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 
 import java.nio.file.Path;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +27,7 @@ public class PluginStorageManager {
 
     private final Map<String, HikariDataSource> connections = new ConcurrentHashMap<>();
     private final Map<String, PlayerDataSchema> playerDataSchemas = new ConcurrentHashMap<>();
+    private final Map<String, List<PluginDataSchema>> pluginDataSchemas = new ConcurrentHashMap<>();
 
     /***
      * Initiates the database connection (h2/mysql/mariadb) with the settings read out of the config.yml
@@ -107,16 +109,26 @@ public class PluginStorageManager {
         });
     }
 
+    public void loadPluginDataPlugins() {
+        createPluginDataTables();
+    }
+
     /***
-     * Registers a plugin as a plugin using plugin data. Will read the schemas passed as params
+     * Registers a plugins data schema. Will read the schemas passed as params
      * @param pluginConfig he CrownConfig instance to read settings from
      * @param pluginDataSchema data schema passed
      */
-    public void registerDataPlugin(final CrownConfig pluginConfig, final PluginDataSchema pluginDataSchema) {
+    public void registerPluginDataPlugin(final CrownConfig pluginConfig, final PluginDataSchema pluginDataSchema) {
         final String pluginName = pluginConfig.getPlugin().getName().toLowerCase();
+        final List<PluginDataSchema> schemas = pluginDataSchemas.containsKey(pluginName) ? pluginDataSchemas.get(pluginName) : new ArrayList<>();
+
+        if(!schemas.contains(pluginDataSchema)) {
+            schemas.add(pluginDataSchema);
+        }
 
         createConnection(pluginConfig);
-        createPluginDataTables(pluginName, pluginDataSchema);
+
+        pluginDataSchemas.put(pluginName, schemas);
     }
 
     /***
@@ -139,42 +151,47 @@ public class PluginStorageManager {
     }
 
     /***
-     * creates the plugin data tables using the passed schema
-     * @param pluginName name of plugin the passed schema was saved for
-     * @param  pluginDataSchema pluginDataSchema passed
+     * creates the plugin data tables using the registered schemas
      */
-    private void createPluginDataTables(final String pluginName, final PluginDataSchema pluginDataSchema) {
-        CrownCore.log.debug("creating plugin data table for " + pluginName);
-        CrownCore.log.debug(" - creating table: " + pluginDataSchema.getTableName());
-        CrownCore.log.debug("   - primary key: " + pluginDataSchema.getPrimaryKeyName());
-
-        executor.submit(() -> {
-
-            final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
-            stringBuilder.append(pluginDataSchema.getTableName()).append(" (");
-
-            for (final DataKey<?> key : pluginDataSchema.getDataKeys()) {
-                CrownCore.log.debug("   - data key: " + key.getName());
-                stringBuilder.append(key.getName()).append(" ").append(key.getSqlDataType());
-
-                if (key.getName().equalsIgnoreCase(pluginDataSchema.getPrimaryKeyName())) {
-                    stringBuilder.append(" PRIMARY KEY");
-                }
-
-                stringBuilder.append(", ");
+    private void createPluginDataTables() {
+        pluginDataSchemas.forEach((pluginName, schemas) -> {
+            if(!connections.containsKey(pluginName)) {
+                return;
             }
 
-            stringBuilder.setLength(stringBuilder.length() - 2);
-            stringBuilder.append(");");
+            CrownCore.log.debug(" > creating plugin data tables for " + pluginName);
+            for (final PluginDataSchema pluginDataSchema : schemas) {
+                CrownCore.log.debug(" - creating table: " + pluginDataSchema.getTableName());
+                CrownCore.log.debug("   - primary key: " + pluginDataSchema.getPrimaryKeyName());
 
-            try (final Connection conn = getConnectionForPluginName(pluginName);
-                 final Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate(stringBuilder.toString());
-            } catch (final SQLException exception) {
-                CrownCore.log.warn("error creating plugin data tables: ");
-                CrownCore.log.warn(" - plugin: " + pluginName);
-                CrownCore.log.warn(" - table: " + pluginDataSchema.getTableName());
-                CrownCore.log.warn(" - exception: " + exception.getMessage());
+                executor.submit(() -> {
+                    final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
+                    stringBuilder.append(pluginDataSchema.getTableName()).append(" (");
+
+                    for (final DataKey<?> key : pluginDataSchema.getDataKeys()) {
+                        CrownCore.log.debug("   - data key: " + key.getName());
+                        stringBuilder.append(key.getName()).append(" ").append(key.getSqlDataType());
+
+                        if (key.getName().equalsIgnoreCase(pluginDataSchema.getPrimaryKeyName())) {
+                            stringBuilder.append(" PRIMARY KEY");
+                        }
+
+                        stringBuilder.append(", ");
+                    }
+
+                    stringBuilder.setLength(stringBuilder.length() - 2);
+                    stringBuilder.append(");");
+
+                    try (final Connection conn = getConnectionForPluginName(pluginName);
+                         final Statement stmt = conn.createStatement()) {
+                        stmt.executeUpdate(stringBuilder.toString());
+                    } catch (final SQLException exception) {
+                        CrownCore.log.warn("error creating plugin data tables: ");
+                        CrownCore.log.warn(" - plugin: " + pluginName);
+                        CrownCore.log.warn(" - table: " + pluginDataSchema.getTableName());
+                        CrownCore.log.warn(" - exception: " + exception.getMessage());
+                    }
+                });
             }
         });
     }

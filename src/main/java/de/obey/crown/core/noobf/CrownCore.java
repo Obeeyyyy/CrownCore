@@ -83,15 +83,7 @@ public final class CrownCore extends JavaPlugin {
         versionChecker.retrieveNewestPluginVersions();
         playerDataService = new PlayerDataService(executor);
 
-        load();
-
-        // load locations
-        Scheduler.runTaskLater(this, () -> {
-            LocationHandler.loadLocations();
-            Teleporter.initialize();
-            sendConsoleMessage();
-            getServer().getPluginManager().callEvent(new CoreStartEvent(versionChecker));
-        }, 2);
+        initializeCore();
     }
 
     @Override
@@ -107,9 +99,17 @@ public final class CrownCore extends JavaPlugin {
     /***
      * Loads commands and listener.
      */
-    public void load() {
+    public void initializeCore() {
         loadListener();
         loadCommand();
+
+        Scheduler.runTaskLater(this, () -> {
+            LocationHandler.loadLocations();
+            Teleporter.initialize();
+            getPluginStorageManager().loadPluginDataPlugins();
+            sendConsoleMessage();
+            getServer().getPluginManager().callEvent(new CoreStartEvent(versionChecker));
+        }, 2);
     }
 
     /***

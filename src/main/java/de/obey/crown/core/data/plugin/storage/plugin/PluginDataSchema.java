@@ -2,7 +2,6 @@ package de.obey.crown.core.data.plugin.storage.plugin;
 
 import de.obey.crown.core.data.plugin.CrownConfig;
 import de.obey.crown.core.data.plugin.storage.datakey.DataKey;
-import de.obey.crown.core.data.plugin.storage.datakey.DataKeyRegistry;
 import de.obey.crown.core.noobf.CrownCore;
 import lombok.Getter;
 
@@ -26,6 +25,6 @@ public class PluginDataSchema {
     }
 
     public void register() {
-        CrownCore.getInstance().getPluginStorageManager().registerDataPlugin(crownConfig, this);
+        CrownCore.getInstance().getPluginStorageManager().registerPluginDataPlugin(crownConfig, this);
     }
 }

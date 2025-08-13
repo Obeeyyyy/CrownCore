@@ -3,6 +3,7 @@ package de.obey.crown.core.data.plugin.storage;
 import de.obey.crown.core.data.plugin.CrownConfig;
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.util.FileUtil;
+import de.obey.crown.core.util.Scheduler;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -37,5 +38,7 @@ public class PluginStorageConfig {
         setConnectTimeout(FileUtil.getInt(configuration, "storage.data.pool-settings.connection-timeout", 5000));
 
         CrownCore.log.debug(" - storage method: " + storageType.name());
+
+        CrownCore.getInstance().getPluginStorageManager().loadPluginDataPlugins();
     }
 }
