@@ -9,6 +9,7 @@ import de.obey.crown.core.data.plugin.CrownConfig;
 import de.obey.crown.core.data.plugin.storage.player.PlayerDataSchema;
 import de.obey.crown.core.data.plugin.storage.plugin.PluginDataSchema;
 import de.obey.crown.core.noobf.CrownCore;
+import de.obey.crown.core.noobf.PluginConfig;
 import lombok.RequiredArgsConstructor;
 
 import java.nio.file.Path;
@@ -28,6 +29,7 @@ public class PluginStorageManager {
     private final Map<String, HikariDataSource> connections = new ConcurrentHashMap<>();
     private final Map<String, PlayerDataSchema> playerDataSchemas = new ConcurrentHashMap<>();
     private final Map<String, List<PluginDataSchema>> pluginDataSchemas = new ConcurrentHashMap<>();
+    private final Map<String, CrownConfig> pluginConfigs = new ConcurrentHashMap<>();
 
     /***
      * Initiates the database connection (h2/mysql/mariadb) with the settings read out of the config.yml
@@ -126,7 +128,10 @@ public class PluginStorageManager {
             schemas.add(pluginDataSchema);
         }
 
-        createConnection(pluginConfig);
+        if(!pluginConfigs.containsKey(pluginName)) {
+            pluginConfigs.put(pluginName, pluginConfig);
+            createConnection(pluginConfig);
+        }
 
         pluginDataSchemas.put(pluginName, schemas);
     }
@@ -156,7 +161,11 @@ public class PluginStorageManager {
     private void createPluginDataTables() {
         pluginDataSchemas.forEach((pluginName, schemas) -> {
             if(!connections.containsKey(pluginName)) {
-                return;
+                if(!pluginConfigs.containsKey(pluginName)) {
+                    return;
+                }
+
+                createConnection(pluginConfigs.get(pluginName));
             }
 
             CrownCore.log.debug(" > creating plugin data tables for " + pluginName);
