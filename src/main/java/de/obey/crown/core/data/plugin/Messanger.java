@@ -35,7 +35,6 @@ import java.util.Map;
 public final class Messanger {
 
     private final CrownCore crownCore = CrownCore.getInstance();
-    private final boolean placeholderapi = crownCore.isPlaceholderapi();
 
     private final Plugin plugin;
     private Sounds sounds;

@@ -6,6 +6,7 @@ import de.obey.crown.core.noobf.CrownCore;
 import lombok.Getter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Getter
@@ -26,5 +27,13 @@ public class PluginDataSchema {
 
     public void register() {
         CrownCore.getInstance().getPluginStorageManager().registerPluginDataPlugin(crownConfig, this);
+    }
+
+    public void add(final DataKey<?> dataKey) {
+        dataKeys.add(dataKey);
+    }
+
+    public void add(final DataKey<?>... list) {
+        dataKeys.addAll(Arrays.asList(list));
     }
 }

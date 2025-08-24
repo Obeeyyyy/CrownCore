@@ -8,8 +8,11 @@ import de.obey.crown.core.data.plugin.storage.player.PlayerData;
 import de.obey.crown.core.data.plugin.CrownConfig;
 import de.obey.crown.core.data.plugin.storage.player.PlayerDataSchema;
 import de.obey.crown.core.data.plugin.storage.plugin.PluginDataSchema;
+import de.obey.crown.core.event.PlayerDataLoadEvent;
+import de.obey.crown.core.event.PlayerDataSaveEvent;
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.noobf.PluginConfig;
+import de.obey.crown.core.util.Scheduler;
 import lombok.RequiredArgsConstructor;
 
 import java.nio.file.Path;
@@ -115,6 +118,12 @@ public class PluginStorageManager {
         createPluginDataTables();
     }
 
+    public void loadPlayerDataPlugins() {
+        for (final String pluginName : playerDataSchemas.keySet()) {
+            createPlayerDataTable(pluginName);
+        }
+    }
+
     /***
      * Registers a plugins data schema. Will read the schemas passed as params
      * @param pluginConfig he CrownConfig instance to read settings from
@@ -147,12 +156,13 @@ public class PluginStorageManager {
             return;
         }
 
-        createConnection(pluginConfig);
+        if(!pluginConfigs.containsKey(pluginName)) {
+            pluginConfigs.put(pluginName, pluginConfig);
+            createConnection(pluginConfig);
+        }
 
         final PlayerDataSchema schema = new PlayerDataSchema(pluginName);
         playerDataSchemas.put(pluginName, schema);
-
-        createPlayerDataTable(pluginName);
     }
 
     /***
@@ -224,9 +234,12 @@ public class PluginStorageManager {
             stringBuilder.setLength(stringBuilder.length() - 2);
             stringBuilder.append(");");
 
-            try (final Connection conn = getConnectionForPluginName(pluginName);
+            try (final Connection conn = getConnectionForPluginName(pluginName.toLowerCase());
                  final Statement stmt = conn.createStatement()) {
                 stmt.executeUpdate(stringBuilder.toString());
+
+                CrownCore.log.debug(" - executed statement: " + stringBuilder);
+
             } catch (final SQLException exception) {
                 CrownCore.log.warn("error creating player data table: ");
                 CrownCore.log.warn(" - plugin: " + pluginName);
@@ -263,6 +276,8 @@ public class PluginStorageManager {
 
         final String sql = "INSERT INTO " + pluginName + " (" + keys + ") VALUES (" + values + ")";
 
+        CrownCore.log.debug(" - query: " + sql);
+
         try (final Connection conn = getConnectionForPluginName(pluginName);
              final PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -289,8 +304,11 @@ public class PluginStorageManager {
         for (String pluginName : DataKeyRegistry.getRegistry().keySet()) {
             pluginName = pluginName.toLowerCase();
             CrownCore.log.debug("loading player data for plugin: " + pluginName);
+
             final PlayerDataSchema schema = playerDataSchemas.get(pluginName);
             String query = "SELECT * FROM " + pluginName + " WHERE player_uuid = ?";
+
+            CrownCore.log.debug(" - query: " + query);
 
             try (final Connection connection = getConnectionForPluginName(pluginName);
                  final PreparedStatement preparedStatement = connection.prepareStatement(query)) {
@@ -317,6 +335,10 @@ public class PluginStorageManager {
                 CrownCore.log.warn(" - exception: " + exception.getMessage());
             }
         }
+
+        CrownCore.log.debug("calling player data load event");
+        Scheduler.callEvent(CrownCore.getInstance(), new PlayerDataLoadEvent(playerData));
+        CrownCore.log.debug("called player data load event");
 
         return playerData;
     }
@@ -354,6 +376,8 @@ public class PluginStorageManager {
                 CrownCore.log.warn(" - exception: " + exception.getMessage());
             }
         }
+
+        Scheduler.callEvent(CrownCore.getInstance(), new PlayerDataSaveEvent(playerData));
 
         return playerData;
     }

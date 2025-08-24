@@ -32,13 +32,11 @@ public final class Scheduler {
 
     public void callEvent(final Plugin plugin, final Event event) {
         if (isFolia) {
-
-            Bukkit.getGlobalRegionScheduler().execute(plugin, () -> {
-                Bukkit.getPluginManager().callEvent(event);
-            });
-
+            CrownCore.getInstance().getServer().getGlobalRegionScheduler().execute(plugin, () -> Bukkit.getPluginManager().callEvent(event));
             return;
         }
+
+        Bukkit.getScheduler().runTask(plugin, () -> CrownCore.getInstance().getServer().getPluginManager().callEvent(event));
     }
 
     public Runnable runTask(final Plugin plugin, final Runnable task) {

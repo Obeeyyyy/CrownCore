@@ -3,6 +3,7 @@ package de.obey.crown.core.data.plugin.storage.player;
 import com.google.common.collect.Maps;
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.util.Scheduler;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -14,6 +15,8 @@ import java.util.concurrent.ExecutorService;
 public class PlayerDataService {
 
     private final ExecutorService executor;
+
+    @Getter
     private final Map<UUID, PlayerData> cache = Maps.newConcurrentMap();
 
     public PlayerDataService(final ExecutorService executor) {

@@ -98,4 +98,8 @@ public class PlayerData {
         return runtimeData.get(key);
     }
 
+    public boolean hasRuntimeData(final String key) {
+        return runtimeData.containsKey(key);
+    }
+
 }

@@ -58,16 +58,6 @@ dependencies {
     implementation("com.h2database:h2:2.3.232")
 }
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath("com.guardsquare:proguard-gradle:7.7.0")
-    }
-}
-
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
     sourceCompatibility = JavaVersion.VERSION_17

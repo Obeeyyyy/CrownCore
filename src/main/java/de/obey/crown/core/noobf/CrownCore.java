@@ -90,9 +90,6 @@ public final class CrownCore extends JavaPlugin {
     public void onDisable() {
         LocationHandler.saveLocations();
 
-        if(playerDataService != null)
-            playerDataService.saveAllData();
-
         pluginStorageManager.shutdownConnections();
     }
 
@@ -103,10 +100,12 @@ public final class CrownCore extends JavaPlugin {
         loadListener();
         loadCommand();
 
+        getPluginStorageManager().loadPluginDataPlugins();
+        getPluginStorageManager().loadPlayerDataPlugins();
+
         Scheduler.runTaskLater(this, () -> {
             LocationHandler.loadLocations();
             Teleporter.initialize();
-            getPluginStorageManager().loadPluginDataPlugins();
             sendConsoleMessage();
             getServer().getPluginManager().callEvent(new CoreStartEvent(versionChecker));
         }, 2);
