@@ -42,7 +42,7 @@ public class PluginStorageManager {
         final PluginStorageConfig storageConfig = pluginConfig.getPluginStorageConfig();
         final String pluginName = pluginConfig.getPlugin().getName().toLowerCase();
 
-        executor.submit(() -> {
+        executor.execute(() -> {
             if (connections.containsKey(pluginName)) {
                 String driverClassName = "";
                 try {

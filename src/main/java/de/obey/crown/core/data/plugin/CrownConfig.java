@@ -32,12 +32,6 @@ public class CrownConfig implements CrowPlugin {
     public CrownConfig(@NonNull Plugin plugin) {
         this.plugin = plugin;
 
-        if (Bukkit.getPluginManager().getPlugin("CrownCore") == null) {
-            crownCore.getLogger().warning(plugin.getName() + " depends on the CrownCore, please install it.");
-            Bukkit.getPluginManager().disablePlugin(plugin);
-            return;
-        }
-
         createFiles();
 
         sounds = new Sounds(plugin);
