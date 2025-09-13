@@ -30,10 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Getter
@@ -56,8 +53,9 @@ public final class Messanger {
         loadCoreMessages();
         loadCorePlaceholders();
         loadPluginPlaceholders(configuration);
-        loadMultiLineMessages(configuration);
-        loadMessages(configuration);
+
+        checkForMissingMultiLineMessageEntries();
+        checkForMissingMessageEntries();
     }
 
     private void loadPluginPlaceholders(final YamlConfiguration configuration) {
@@ -104,61 +102,132 @@ public final class Messanger {
         }
     }
 
-    private void generateMessageEntryIfMissing(final String key, final String[] placeholders) {
+    private void checkForMissingMessageEntries() {
         crownCore.getExecutor().submit(() -> {
-            if (!messages.containsKey(key)) {
-                final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
-                final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+            final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
+            final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+            final YamlConfiguration defaults = new YamlConfiguration();
 
+            try (final InputStream stream = plugin.getResource("messages.yml")) {
+                if (stream != null) {
+                    defaults.load(new InputStreamReader(stream));
+                }
 
-                final YamlConfiguration defaults = new YamlConfiguration();
-                try (final InputStream stream = plugin.getResource("messages.yml")) {
-                    if (stream != null) {
-                        defaults.load(new InputStreamReader(stream));
+                if (!defaults.contains("messages")) {
+                    return;
+                }
+
+                final Set<String> messageKeys = defaults.getConfigurationSection("messages").getKeys(false);
+
+                if (messageKeys.isEmpty()) {
+                    return;
+                }
+
+                for (final String messageKey : messageKeys) {
+                    if(configuration.contains("messages." + messageKey)) {
+                        continue;
                     }
-                } catch (final IOException exception) {
-                    exception.printStackTrace();
-                } catch (InvalidConfigurationException exception) {
-                    throw new RuntimeException(exception);
+
+                    CrownCore.log.info("generated missing message key '" + messageKey + "' for plugin " + plugin.getName());
+
+                    configuration.set("messages." + messageKey, defaults.getString("messages." + messageKey));
                 }
 
-                if(defaults.contains("messages." + key)) {
-                    final String value =  defaults.getString("messages." + key);
-                    configuration.set("messages." + key, value);
-                    messages.put(key, value);
-                }
-
+                loadMessages(configuration);
                 FileUtil.saveConfigurationIntoFile(configuration, file);
-            }
+
+            } catch (final IOException | InvalidConfigurationException ignored) {}
         });
     }
 
-    private void generateMultiLineMessageEntryIfMissing(final String key, final String[] placeholders) {
+    private void checkForMissingMultiLineMessageEntries() {
         crownCore.getExecutor().submit(() -> {
-            if (!multiLineMessages.containsKey(key)) {
-                final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
-                final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+            final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
+            final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+            final YamlConfiguration defaults = new YamlConfiguration();
 
-                final YamlConfiguration defaults = new YamlConfiguration();
-                try (final InputStream stream = plugin.getResource("messages.yml")) {
-                    if (stream != null) {
-                        defaults.load(new InputStreamReader(stream));
+            try (final InputStream stream = plugin.getResource("messages.yml")) {
+                if (stream != null) {
+                    defaults.load(new InputStreamReader(stream));
+                }
+
+                if (!defaults.contains("multi-line-messages")) {
+                    return;
+                }
+
+                final Set<String> messageKeys = defaults.getConfigurationSection("multi-line-messages").getKeys(false);
+
+                if (messageKeys.isEmpty()) {
+                    return;
+                }
+
+                for (final String messageKey : messageKeys) {
+                    if(configuration.contains("multi-line-messages." + messageKey)) {
+                        continue;
                     }
-                } catch (final IOException exception) {
-                    exception.printStackTrace();
-                } catch (InvalidConfigurationException exception) {
-                    throw new RuntimeException(exception);
+
+                    CrownCore.log.info("generated missing multi-line-message key '" + messageKey + "' for plugin " + plugin.getName());
+
+                    configuration.set("multi-line-messages." + messageKey, defaults.getStringList("multi-line-messages." + messageKey));
                 }
 
-                if(defaults.contains("multi-line-messages." + key)) {
-                    final List<String> value =  defaults.getStringList("multi-line-messages." + key);
-                    configuration.set("multi-line-messages." + key, value);
-                    multiLineMessages.put(key, new ArrayList<>(value));
-                }
-
+                loadMultiLineMessages(configuration);
                 FileUtil.saveConfigurationIntoFile(configuration, file);
-            }
+            } catch (final IOException | InvalidConfigurationException ignored) {}
         });
+    }
+
+
+    private void generateMessageEntryIfMissing(final String key) {
+        if (!messages.containsKey(key)) {
+            final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
+            final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+            final YamlConfiguration defaults = new YamlConfiguration();
+
+            try (final InputStream stream = plugin.getResource("messages.yml")) {
+                if (stream != null) {
+                    defaults.load(new InputStreamReader(stream));
+                }
+            } catch (final IOException exception) {
+                exception.printStackTrace();
+            } catch (final InvalidConfigurationException exception) {
+                throw new RuntimeException(exception);
+            }
+
+            if (defaults.contains("messages." + key)) {
+                final String value = defaults.getString("messages." + key);
+                configuration.set("messages." + key, value);
+                messages.put(key, value);
+            }
+
+            FileUtil.saveConfigurationIntoFile(configuration, file);
+        }
+    }
+
+    private void generateMultiLineMessageEntryIfMissing(final String key) {
+        if (!multiLineMessages.containsKey(key)) {
+            final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
+            final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+
+            final YamlConfiguration defaults = new YamlConfiguration();
+            try (final InputStream stream = plugin.getResource("messages.yml")) {
+                if (stream != null) {
+                    defaults.load(new InputStreamReader(stream));
+                }
+            } catch (final IOException exception) {
+                exception.printStackTrace();
+            } catch (final InvalidConfigurationException exception) {
+                throw new RuntimeException(exception);
+            }
+
+            if (defaults.contains("multi-line-messages." + key)) {
+                final List<String> value = defaults.getStringList("multi-line-messages." + key);
+                configuration.set("multi-line-messages." + key, value);
+                multiLineMessages.put(key, new ArrayList<>(value));
+            }
+
+            FileUtil.saveConfigurationIntoFile(configuration, file);
+        }
     }
 
     private void sendLineToEveryPlayer(final String line) {
@@ -201,7 +270,7 @@ public final class Messanger {
     }
 
     public String getRawMessage(final String key, final String[] placeholders, final String... replacements) {
-        generateMessageEntryIfMissing(key, placeholders);
+        generateMessageEntryIfMissing(key);
 
         if (messages.get(key).equalsIgnoreCase(""))
             return "";
@@ -228,7 +297,7 @@ public final class Messanger {
 
 
     public String getMessageWithPlaceholderAPI(final OfflinePlayer player, final String key, final String[] placeholders, final String... replacements) {
-        generateMessageEntryIfMissing(key, placeholders);
+        generateMessageEntryIfMissing(key);
 
         if (messages.get(key).equalsIgnoreCase(""))
             return "";
@@ -251,7 +320,7 @@ public final class Messanger {
     }
 
     public ArrayList<String> getMultiLineMessage(final String key, final String[] placeholders, final String... replacements) {
-        generateMultiLineMessageEntryIfMissing(key, placeholders);
+        generateMultiLineMessageEntryIfMissing(key);
 
         final ArrayList<String> lines = multiLineMessages.get(key);
         final ArrayList<String> temp = new ArrayList<>();

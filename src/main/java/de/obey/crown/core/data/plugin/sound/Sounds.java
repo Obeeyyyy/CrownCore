@@ -40,8 +40,10 @@ public final class Sounds {
 
                 try {
                     final SoundData soundData = new SoundData();
+                    final Sound sound = Sound.valueOf(data[0]);
 
-                    soundData.setSound(data[0]);
+
+                    soundData.setSound(sound);
 
                     if (data.length > 1) {
                         try {
@@ -78,7 +80,8 @@ public final class Sounds {
             configuration.set("sounds." + key, value);
 
             final SoundData soundData = new SoundData();
-            soundData.setSound("ENTITY_GENERIC_EXPLODE");
+            //soundData.setSound("ENTITY_GENERIC_EXPLODE");
+            soundData.setSound(Sound.ENTITY_GENERIC_EXPLODE);
             soundData.setVolume(0.5f);
             soundData.setPitch(3f);
 
