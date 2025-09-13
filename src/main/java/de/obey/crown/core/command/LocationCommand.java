@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.List;
 
 @RequiredArgsConstructor
-@NonNull
 public final class LocationCommand implements CommandExecutor, TabCompleter {
 
     private final String hi = "https://dsc.gg/crownplugins";

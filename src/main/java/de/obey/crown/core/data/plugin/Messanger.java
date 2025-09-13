@@ -21,13 +21,18 @@ import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -38,7 +43,7 @@ public final class Messanger {
     private final CrownCore crownCore = CrownCore.getInstance();
 
     private final Plugin plugin;
-    private Sounds sounds;
+    private final Sounds sounds;
 
     private String prefix, whiteColor, accentColor;
     private final Map<String, String> messages = Maps.newConcurrentMap();
@@ -47,8 +52,6 @@ public final class Messanger {
     public void load() {
         final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
-
-        sounds = crownCore.getSounds();
 
         loadCoreMessages();
         loadCorePlaceholders();
@@ -102,46 +105,60 @@ public final class Messanger {
     }
 
     private void generateMessageEntryIfMissing(final String key, final String[] placeholders) {
-        if (!messages.containsKey(key)) {
-            final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
-            final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+        crownCore.getExecutor().submit(() -> {
+            if (!messages.containsKey(key)) {
+                final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
+                final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
-            String value = "";
 
-            if (placeholders != null) {
-                for (String placeholder : placeholders) {
-                    value = value + "%" + placeholder + "%";
+                final YamlConfiguration defaults = new YamlConfiguration();
+                try (final InputStream stream = plugin.getResource("messages.yml")) {
+                    if (stream != null) {
+                        defaults.load(new InputStreamReader(stream));
+                    }
+                } catch (final IOException exception) {
+                    exception.printStackTrace();
+                } catch (InvalidConfigurationException exception) {
+                    throw new RuntimeException(exception);
                 }
+
+                if(defaults.contains("messages." + key)) {
+                    final String value =  defaults.getString("messages." + key);
+                    configuration.set("messages." + key, value);
+                    messages.put(key, value);
+                }
+
+                FileUtil.saveConfigurationIntoFile(configuration, file);
             }
-
-            configuration.set("messages." + key, value);
-            messages.put(key, value);
-
-            FileUtil.saveConfigurationIntoFile(configuration, file);
-        }
+        });
     }
 
     private void generateMultiLineMessageEntryIfMissing(final String key, final String[] placeholders) {
-        if (!multiLineMessages.containsKey(key)) {
-            final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
-            final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+        crownCore.getExecutor().submit(() -> {
+            if (!multiLineMessages.containsKey(key)) {
+                final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
+                final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
-            String value = "";
-
-            if (placeholders != null) {
-                for (String placeholder : placeholders) {
-                    value = value + "%" + placeholder + "%";
+                final YamlConfiguration defaults = new YamlConfiguration();
+                try (final InputStream stream = plugin.getResource("messages.yml")) {
+                    if (stream != null) {
+                        defaults.load(new InputStreamReader(stream));
+                    }
+                } catch (final IOException exception) {
+                    exception.printStackTrace();
+                } catch (InvalidConfigurationException exception) {
+                    throw new RuntimeException(exception);
                 }
+
+                if(defaults.contains("multi-line-messages." + key)) {
+                    final List<String> value =  defaults.getStringList("multi-line-messages." + key);
+                    configuration.set("multi-line-messages." + key, value);
+                    multiLineMessages.put(key, new ArrayList<>(value));
+                }
+
+                FileUtil.saveConfigurationIntoFile(configuration, file);
             }
-
-            final ArrayList<String> lines = new ArrayList<>();
-            lines.add(value);
-
-            configuration.set("multi-line-messages." + key, lines);
-            multiLineMessages.put(key, lines);
-
-            FileUtil.saveConfigurationIntoFile(configuration, file);
-        }
+        });
     }
 
     private void sendLineToEveryPlayer(final String line) {
