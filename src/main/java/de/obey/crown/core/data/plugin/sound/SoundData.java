@@ -11,6 +11,6 @@ import org.bukkit.Sound;
 @Setter
 public final class SoundData {
 
-    private String sound; // TODO change to string
+    private String sound;
     private float volume = 1f, pitch = 1f;
 }
