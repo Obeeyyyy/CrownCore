@@ -198,6 +198,9 @@ public final class Messanger {
                 final String value = defaults.getString("messages." + key);
                 configuration.set("messages." + key, value);
                 messages.put(key, value);
+            } else {
+                configuration.set("messages." + key, "");
+                messages.put(key, "");
             }
 
             FileUtil.saveConfigurationIntoFile(configuration, file);
@@ -224,6 +227,9 @@ public final class Messanger {
                 final List<String> value = defaults.getStringList("multi-line-messages." + key);
                 configuration.set("multi-line-messages." + key, value);
                 multiLineMessages.put(key, new ArrayList<>(value));
+            } else {
+                configuration.set("multi-line-messages." + key, new ArrayList<>());
+                multiLineMessages.put(key, new ArrayList<>());
             }
 
             FileUtil.saveConfigurationIntoFile(configuration, file);
