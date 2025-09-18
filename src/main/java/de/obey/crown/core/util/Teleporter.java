@@ -202,7 +202,7 @@ public class Teleporter {
                 return;
             }
 
-            final BossBar bossBar = Bukkit.createBossBar(messanger.getMessage("telportation-message", new String[]{"remaining"}, TextUtil.formatTimeString(cooldown)),
+            final BossBar bossBar = Bukkit.createBossBar(messanger.getMessage("teleportation-message", new String[]{"remaining"}, TextUtil.formatTimeString(cooldown)),
                     BarColor.BLUE, BarStyle.SEGMENTED_10);
 
             bossBar.setProgress(0);
@@ -210,7 +210,7 @@ public class Teleporter {
 
             bossaBars.put(player, bossBar);
         } else {
-            messanger.sendActionbar(player, "telportation-message", new String[]{"remaining"}, TextUtil.formatTimeString(remaining));
+            messanger.sendActionbar(player, "teleportation-message", new String[]{"remaining"}, TextUtil.formatTimeString(remaining));
         }
     }
 

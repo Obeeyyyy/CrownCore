@@ -20,7 +20,7 @@ messages:
   location-set: "%prefix% You have set the location named %accent%%name%%white%!"
   location-deleted: "%prefix% You have deleted the location named %accent%%name%%white%!"
   location-invalid: "%prefix% There is no location named %accent%%name%%white%!"
-  telportation-message: '%prefix% &fTeleporting in %accent%&o%remaining%%white%!'
+  teleportation-message: '%prefix% &fTeleporting in %accent%&o%remaining%%white%!'
   teleported-message: '%prefix% &fTeleportation complete.'
   teleportation-cancelled: '%prefix% &c&oTeleportation cancelled.'
   not-enough-money: "%prefix% You dont have enough money, you are missing %accent%-$%missing%%white%."

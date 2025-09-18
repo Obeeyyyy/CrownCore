@@ -32,4 +32,4 @@ message-cooldown: 0
 number-formatting: "en_US"
 
 # set the format to use for time parsing
-time-formatting: "h:mm:ss"
+time-formatting: "hh:mm:ss"
