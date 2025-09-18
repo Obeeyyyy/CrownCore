@@ -19,6 +19,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import okhttp3.OkHttpClient;
+import org.bstats.bukkit.Metrics;
+import org.bstats.charts.CustomChart;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -83,6 +85,7 @@ public final class CrownCore extends JavaPlugin {
         versionChecker.retrieveNewestPluginVersions();
         playerDataService = new PlayerDataService(executor);
 
+        initializeBStats();
         initializeCore();
     }
 
@@ -91,6 +94,13 @@ public final class CrownCore extends JavaPlugin {
         LocationHandler.saveLocations();
 
         pluginStorageManager.shutdownConnections();
+    }
+
+    /***
+     * Initializes metrics for bStats
+     */
+    private void initializeBStats()  {
+        new Metrics(this, 27306);
     }
 
     /***
