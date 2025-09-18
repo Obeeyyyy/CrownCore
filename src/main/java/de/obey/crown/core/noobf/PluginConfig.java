@@ -30,6 +30,7 @@ public final class PluginConfig extends CrownConfig {
     private int teleportDelay, messageDelay, commandDelay;
     private boolean instantTeleport = false, instantRespawn = true, teleportOnJoin, updateReminder = true;
     private List<String> instantTeleportWorlds;
+    private String timeFormat;
 
     public PluginConfig(@NonNull Plugin plugin) {
         super(plugin);
@@ -51,10 +52,14 @@ public final class PluginConfig extends CrownConfig {
         CrownCore.log.setDebug(FileUtil.getBoolean(configuration, "debug-mode", false));
 
         Locale locale = LocaleUtils.toLocale(FileUtil.getString(configuration, "number-formatting", "en_US"));
-        if(locale == null)
+        if(locale == null) {
             locale = Locale.ENGLISH;
+        }
 
         TextUtil.setDecimalFormat(new DecimalFormat("#,###.##", new DecimalFormatSymbols(locale)));
+
+        setTimeFormat(FileUtil.getString(configuration, "time-formatting", "hh:mm:ss"));
+
         FileUtil.saveConfigurationIntoFile(configuration, file);
     }
 

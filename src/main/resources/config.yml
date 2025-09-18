@@ -30,3 +30,6 @@ message-cooldown: 0
 
 # set the language default for number formatting. EX: en-US -> 10,000.00
 number-formatting: "en_US"
+
+# set the format to use for time parsing
+time-formatting: "h:mm:ss"

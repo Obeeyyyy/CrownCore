@@ -4,6 +4,7 @@
 package de.obey.crown.core.util;
 
 import com.google.common.collect.Maps;
+import de.obey.crown.core.noobf.CrownCore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.UtilityClass;
@@ -143,33 +144,25 @@ public final class TextUtil {
     }
 
     public String formatTimeString(long millis) {
-        return formatTimeString(millis, true, true);
-    }
+        final long totalSeconds = millis / 1000;
 
-    public String formatTimeString(long millis, final boolean showSeconds, final boolean showMilliseconds) {
-        int days = 0, hours = 0, minutes = 0, seconds = 0;
+        final long days = totalSeconds / 86400;
+        final long hours = (totalSeconds % 86400) / 3600;
+        final long minutes = (totalSeconds % 3600) / 60;
+        final long seconds = totalSeconds % 60;
+        final long milliseconds = millis % 1000;
 
-        while (millis >= 1000) {
-            seconds++;
-            millis -= 1000;
-        }
-
-        while (seconds >= 60) {
-            minutes++;
-            seconds -= 60;
-        }
-
-        while (minutes >= 60) {
-            hours++;
-            minutes -= 60;
-        }
-
-        while (hours >= 24) {
-            days++;
-            hours -= 24;
-        }
-
-        return (days > 0 ? days + "d " : "") + (hours > 0 ? hours + "h " : "") + (minutes > 0 ? minutes + "m " : "") + (showSeconds ? (seconds > 0 ? seconds + "." + (millis / 100) + "s" : (showMilliseconds ? "0." + (millis / 100) + "s" : "")) : "");
+        return CrownCore.getInstance().getPluginConfig().getTimeFormat()
+                .replace("dd", String.format("%02d", days))
+                .replace("d", String.valueOf(days))
+                .replace("hh", String.format("%02d", hours))
+                .replace("h", String.valueOf(hours))
+                .replace("mm", String.format("%02d", minutes))
+                .replace("m", String.valueOf(minutes))
+                .replace("ss", String.format("%02d", seconds))
+                .replace("s", String.valueOf(seconds))
+                .replace("SSS", String.format("%03d", milliseconds))
+                .replace("S", String.valueOf(milliseconds));
     }
 
     public String formatNumber(final long value) {
