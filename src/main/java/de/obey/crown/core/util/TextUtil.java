@@ -143,6 +143,29 @@ public final class TextUtil {
                 location.getPitch();
     }
 
+    public String formatTimeStringWithFormat(long millis, final String format) {
+        final long totalSeconds = millis / 1000;
+
+        final long days = totalSeconds / 86400;
+        final long hours = (totalSeconds % 86400) / 3600;
+        final long minutes = (totalSeconds % 3600) / 60;
+        final long seconds = totalSeconds % 60;
+        final long milliseconds = millis % 1000;
+
+        return format
+                .replace("dd", String.format("%02d", days))
+                .replace("d", String.valueOf(days))
+                .replace("hh", String.format("%02d", hours))
+                .replace("h", String.valueOf(hours))
+                .replace("mm", String.format("%02d", minutes))
+                .replace("m", String.valueOf(minutes))
+                .replace("ss", String.format("%02d", seconds))
+                .replace("s", String.valueOf(seconds))
+                .replace("SSS", String.format("%03d", milliseconds))
+                .replace("S", String.valueOf(milliseconds));
+    }
+
+
     public String formatTimeString(long millis) {
         final long totalSeconds = millis / 1000;
 
