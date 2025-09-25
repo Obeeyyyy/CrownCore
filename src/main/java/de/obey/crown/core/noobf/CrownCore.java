@@ -24,6 +24,7 @@ import org.bstats.charts.CustomChart;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.geysermc.floodgate.api.FloodgateApi;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,6 +45,8 @@ public final class CrownCore extends JavaPlugin {
     private OkHttpClient okHttpClient;
     private VersionChecker versionChecker;
     private PluginStorageManager pluginStorageManager;
+
+    private FloodgateApi floodgateApi;
 
     private boolean placeholderapi = false;
 
@@ -79,6 +82,10 @@ public final class CrownCore extends JavaPlugin {
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             placeholderapi = true;
             new Placeholders().register();
+        }
+
+        if(getServer().getPluginManager().getPlugin("floodgate") != null) {
+            floodgateApi = FloodgateApi.getInstance();
         }
 
         versionChecker = new VersionChecker(executor, okHttpClient);

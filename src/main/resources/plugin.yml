@@ -15,6 +15,7 @@ libraries:
 softdepend:
   - PlaceholderAPI
   - Vault
+  - floodgate
 
 loadbefore:
   - FancyNpcs

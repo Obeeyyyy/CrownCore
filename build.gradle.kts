@@ -45,6 +45,7 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://jitpack.io")
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots")
+    maven("https://repo.opencollab.dev/main/")
 }
 
 dependencies {
@@ -58,6 +59,7 @@ dependencies {
     compileOnly("com.zaxxer:HikariCP:6.2.1")
     compileOnly("com.squareup.okhttp3:okhttp:4.12.0")
     compileOnly("com.h2database:h2:2.3.232")
+    compileOnly("org.geysermc.floodgate:api:2.2.4-SNAPSHOT")
 
     implementation("org.bstats:bstats-bukkit:3.0.2")
 }

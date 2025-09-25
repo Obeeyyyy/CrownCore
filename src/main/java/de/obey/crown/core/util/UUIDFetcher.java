@@ -70,6 +70,7 @@ public class UUIDFetcher {
 
     public @Nullable UUID getUniqueId(@NotNull String userName) {
         CrownCore.log.debug("(!) fetching uuid for name " + userName);
+
         if (!isValidMinecraftUserName(userName)) {
             CrownCore.log.debug(" - name is invalid (not a minecraft username)");
             return null;
