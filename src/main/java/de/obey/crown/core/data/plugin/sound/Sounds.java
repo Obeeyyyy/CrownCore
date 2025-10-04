@@ -37,38 +37,42 @@ public final class Sounds {
                     continue;
 
                 final String[] data = value.split(":");
+                final SoundData soundData = new SoundData();
+                final int indexOffset = data[0].equalsIgnoreCase("minecraft") ? 1 : 0;
 
                 try {
-                    final SoundData soundData = new SoundData();
                     final Sound sound = Sound.valueOf(data[0]);
 
+                    configuration.set("sounds." + key, sound.getKey().toString() + ":" + data[1 + indexOffset] + ":" + data[2 + indexOffset]);
+                    soundData.setSound(sound.getKey().toString());
 
-                    soundData.setSound(sound);
-
-                    if (data.length > 1) {
-                        try {
-                            final float volume = Float.parseFloat(data[1]);
-                            soundData.setVolume(volume);
-                        } catch (final NumberFormatException exception) {
-                           CrownCore.log.warn("Invalid sound volume value @ " + key);
-                        }
-                    }
-
-                    if (data.length > 2) {
-                        try {
-                            final float pitch = Float.parseFloat(data[2]);
-                            soundData.setPitch(pitch);
-                        } catch (final NumberFormatException exception) {
-                            CrownCore.log.warn("Invalid sound pitch value @ " + key);
-                        }
-                    }
-                    
-                    sounds.put(key, soundData);
                 } catch (final IllegalArgumentException exception) {
-                    CrownCore.log.warn("Invalid sound @ " + key);
+                    soundData.setSound(data[0] + ":" + data[1]);
                 }
+
+                if (data.length > 1) {
+                    try {
+                        final float volume = Float.parseFloat(data[1 + indexOffset]);
+                        soundData.setVolume(volume);
+                    } catch (final NumberFormatException exception) {
+                        CrownCore.log.warn("Invalid sound volume value @ " + key);
+                    }
+                }
+
+                if (data.length > 2) {
+                    try {
+                        final float pitch = Float.parseFloat(data[2 + indexOffset]);
+                        soundData.setPitch(pitch);
+                    } catch (final NumberFormatException exception) {
+                        CrownCore.log.warn("Invalid sound pitch value @ " + key);
+                    }
+                }
+
+                sounds.put(key, soundData);
             }
         }
+
+        FileUtil.saveConfigurationIntoFile(configuration, file);
     }
 
     private void generateMessageEntryIfMissing(final String key) {
@@ -76,12 +80,12 @@ public final class Sounds {
             final File file = FileUtil.getGeneratedFile(plugin, "sounds.yml", true);
             final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
-            String value = "ENTITY_GENERIC_EXPLODE:0.5:3.0";
+            String value = "minecraft:entity.generic.explode:0.5:3.0";
             configuration.set("sounds." + key, value);
 
             final SoundData soundData = new SoundData();
-            //soundData.setSound("ENTITY_GENERIC_EXPLODE");
-            soundData.setSound(Sound.ENTITY_GENERIC_EXPLODE);
+            soundData.setSound("minecraft:entity.generic.explode");
+
             soundData.setVolume(0.5f);
             soundData.setPitch(3f);
 

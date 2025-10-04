@@ -73,7 +73,7 @@ public final class TextUtil {
         return formatted + suffixes[index];
     }
 
-    public double getDoubleFromStringwithSuffix(String text) {
+    public double getDoubleFromStringWithSuffix(String text) {
         text = text.toLowerCase();
 
         if (text.contains("k")) {
@@ -193,7 +193,18 @@ public final class TextUtil {
     }
 
     public String formatNumber(final double value) {
+
         return decimalFormat.format(value);
+    }
+
+    public String formatNumber(final long value, final String format) {
+        final DecimalFormat temp = new DecimalFormat(format);
+        return temp.format(value);
+    }
+
+    public String formatNumber(final double value, final String format) {
+        final DecimalFormat temp = new DecimalFormat(format);
+        return temp.format(value);
     }
 
     public String translateHexColors(String message) {

@@ -20,7 +20,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import okhttp3.OkHttpClient;
 import org.bstats.bukkit.Metrics;
-import org.bstats.charts.CustomChart;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;

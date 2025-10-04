@@ -151,6 +151,15 @@ public final class FileUtil {
 
         return defaultValue;
     }
+    public List<Double> getDoubleList(final YamlConfiguration configuration, final String path, final List<Double> defaultValue) {
+        if (configuration.contains(path)) {
+            return (List<Double>) configuration.getList(path);
+        }
+
+        configuration.set(path, defaultValue);
+
+        return defaultValue;
+    }
 
     public List<ItemStack> getItemStackList(final YamlConfiguration configuration, final String path, final List<ItemStack> defaultValue) {
         if (!configuration.contains((path)))

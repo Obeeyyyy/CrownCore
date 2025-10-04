@@ -278,8 +278,9 @@ public final class Messanger {
     public String getRawMessage(final String key, final String[] placeholders, final String... replacements) {
         generateMessageEntryIfMissing(key);
 
-        if (messages.get(key).equalsIgnoreCase(""))
+        if (messages.get(key).equalsIgnoreCase("")) {
             return "";
+        }
 
         String message = messages.get(key);
 
@@ -295,8 +296,9 @@ public final class Messanger {
     }
 
     public String getMessageWithPlaceholderAPI(final OfflinePlayer player, final String key) {
-        if (player == null)
+        if (player == null) {
             return getMessageWithPlaceholderAPI(null, key, null);
+        }
 
         return getMessageWithPlaceholderAPI(player.getPlayer(), key, null);
     }
@@ -305,8 +307,9 @@ public final class Messanger {
     public String getMessageWithPlaceholderAPI(final OfflinePlayer player, final String key, final String[] placeholders, final String... replacements) {
         generateMessageEntryIfMissing(key);
 
-        if (messages.get(key).equalsIgnoreCase(""))
+        if (messages.get(key).equalsIgnoreCase("")) {
             return "";
+        }
 
         String message = messages.get(key);
 
@@ -354,8 +357,9 @@ public final class Messanger {
     public void sendNonConfigMessage(final CommandSender sender, final String message) {
         String line = message;
 
-        if (sender instanceof Player player)
+        if (sender instanceof Player player) {
             line = PlaceholderAPI.setPlaceholders(player, line);
+        }
 
         sender.sendMessage(TextUtil.translateColors(line));
     }
