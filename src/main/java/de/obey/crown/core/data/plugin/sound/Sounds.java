@@ -11,12 +11,17 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Map;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Getter
@@ -27,8 +32,12 @@ public final class Sounds {
     private final Map<String, SoundData> sounds = Maps.newConcurrentMap();
 
     public void load() {
+
+
         final File file = FileUtil.getGeneratedFile(plugin, "sounds.yml", true);
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+
+        checkForMussingEntries(file, configuration);
 
         if (configuration.contains("sounds")) {
             for (final String key : configuration.getConfigurationSection("sounds").getKeys(false)) {
@@ -73,6 +82,41 @@ public final class Sounds {
         }
 
         FileUtil.saveConfigurationIntoFile(configuration, file);
+    }
+
+    private void checkForMussingEntries(final File file, final YamlConfiguration configuration) {
+        CrownCore.getInstance().getExecutor().submit(() -> {
+            final YamlConfiguration defaults = new YamlConfiguration();
+
+            try (final InputStream stream = plugin.getResource("sounds.yml")) {
+                if (stream != null) {
+                    defaults.load(new InputStreamReader(stream));
+                }
+
+                if (!defaults.contains("sounds")) {
+                    return;
+                }
+
+                final Set<String> soundKeys = defaults.getConfigurationSection("sounds").getKeys(false);
+
+                if (soundKeys.isEmpty()) {
+                    return;
+                }
+
+                for (final String soundKey : soundKeys) {
+                    if(configuration.contains("sounds." + soundKey)) {
+                        continue;
+                    }
+
+                    CrownCore.log.info("generated missing sound key '" + soundKey + "' for plugin " + plugin.getName());
+
+                    configuration.set("sounds." + soundKey, defaults.getString("sounds." + soundKey));
+                }
+
+                FileUtil.saveConfigurationIntoFile(configuration, file);
+
+            } catch (final IOException | InvalidConfigurationException ignored) {}
+        });
     }
 
     private void generateMessageEntryIfMissing(final String key) {

@@ -27,14 +27,17 @@ public final class PlayerJoin implements Listener {
 
         playerDataService.loadAsync(event.getPlayer().getUniqueId()).thenAccept((data) -> data.join(event.getPlayer()));
 
-        if (!pluginConfig.isUpdateReminder())
+        if (!pluginConfig.isUpdateReminder()) {
             return;
+        }
 
-        if (!event.getPlayer().hasPermission("core.admin"))
+        if (!event.getPlayer().hasPermission("core.admin")) {
             return;
+        }
 
-        if (versionChecker.getOutdatedPlugins().isEmpty())
+        if (versionChecker.getOutdatedPlugins().isEmpty()) {
             return;
+        }
 
         final Player player = event.getPlayer();
 
