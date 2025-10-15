@@ -84,14 +84,14 @@ public class Teleporter {
             return;
         }
 
-        if (isTeleporting.contains(player.getUniqueId()))
+        if (isTeleporting.contains(player.getUniqueId())) {
             return;
+        }
 
         final long cooldown = crownPluginConfig.getTeleportDelay() * 1000L;
 
         if (location == null)
             return;
-
 
         if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
             teleportInstant(player, location);
@@ -101,6 +101,15 @@ public class Teleporter {
         if (crownPluginConfig.getInstantTeleportWorlds().contains(player.getWorld().getName())) {
             teleportInstant(player, location);
             return;
+        }
+
+        if(!crownPluginConfig.getInstantTeleportRegions().isEmpty()) {
+            for (final String region : crownPluginConfig.getInstantTeleportRegions()) {
+                if(WorldGuardUtil.isPlayerInRegion(player, region)) {
+                    teleportInstant(player, location);
+                    return;
+                }
+            }
         }
 
         final TeleportEffect effect = new TeleportEffect(Particle.CHERRY_LEAVES, 5);
@@ -117,7 +126,7 @@ public class Teleporter {
             final Location saved = player.getLocation();
             long remain = cooldown;
             int ticks = 0;
-            int microticks = 0;
+            int microTicks = 0;
             float pitch = 0.6f;
 
             @Override
@@ -133,15 +142,15 @@ public class Teleporter {
                     return;
                 }
 
-                if (microticks < 20) {
-                    microticks++;
+                if (microTicks < 20) {
+                    microTicks++;
                     remain -= 50;
 
                     sendTeleportMessage(player, ticks, cooldown, remain);
                     return;
                 }
 
-                microticks = 0;
+                microTicks = 0;
 
                 if ((ticks + 1) >= crownPluginConfig.getTeleportDelay()) {
                     teleportInstant(player, location);
@@ -197,12 +206,12 @@ public class Teleporter {
                 final BossBar bossBar = bossaBars.get(player);
 
                 bossBar.setProgress((double) ticks / (cooldown / 1000d));
-                bossBar.setTitle(messanger.getMessage("telportation-message", new String[]{"remaining"}, TextUtil.formatTimeString(remaining)));
+                bossBar.setTitle(messanger.getMessage("telportation-message", new String[]{"remaining"}, TextUtil.formatTimeStringWithFormat(remaining, crownPluginConfig.getTeleportationTimeFormat())));
 
                 return;
             }
 
-            final BossBar bossBar = Bukkit.createBossBar(messanger.getMessage("teleportation-message", new String[]{"remaining"}, TextUtil.formatTimeString(cooldown)),
+            final BossBar bossBar = Bukkit.createBossBar(messanger.getMessage("teleportation-message", new String[]{"remaining"}, TextUtil.formatTimeStringWithFormat(cooldown, crownPluginConfig.getTeleportationTimeFormat())),
                     BarColor.BLUE, BarStyle.SEGMENTED_10);
 
             bossBar.setProgress(0);
@@ -210,7 +219,7 @@ public class Teleporter {
 
             bossaBars.put(player, bossBar);
         } else {
-            messanger.sendActionbar(player, "teleportation-message", new String[]{"remaining"}, TextUtil.formatTimeString(remaining));
+            messanger.sendActionbar(player, "teleportation-message", new String[]{"remaining"}, TextUtil.formatTimeStringWithFormat(remaining, crownPluginConfig.getTeleportationTimeFormat()));
         }
     }
 

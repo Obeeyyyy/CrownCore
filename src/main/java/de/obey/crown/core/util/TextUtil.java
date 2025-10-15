@@ -152,6 +152,8 @@ public final class TextUtil {
         final long seconds = totalSeconds % 60;
         final long milliseconds = millis % 1000;
 
+        final long tenthmilliseconds = milliseconds / 100;
+
         return format
                 .replace("dd", String.format("%02d", days))
                 .replace("d", String.valueOf(days))
@@ -162,7 +164,8 @@ public final class TextUtil {
                 .replace("ss", String.format("%02d", seconds))
                 .replace("s", String.valueOf(seconds))
                 .replace("SSS", String.format("%03d", milliseconds))
-                .replace("S", String.valueOf(milliseconds));
+                .replace("S", String.valueOf(milliseconds))
+                .replace("t", String.valueOf(tenthmilliseconds));
     }
 
 
@@ -175,7 +178,7 @@ public final class TextUtil {
         final long seconds = totalSeconds % 60;
         final long milliseconds = millis % 1000;
 
-        return CrownCore.getInstance().getPluginConfig().getTimeFormat()
+        return CrownCore.getInstance().getPluginConfig().getDefaultTimeFormat()
                 .replace("dd", String.format("%02d", days))
                 .replace("d", String.valueOf(days))
                 .replace("hh", String.format("%02d", hours))

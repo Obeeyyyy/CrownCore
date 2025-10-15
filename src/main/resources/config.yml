@@ -8,28 +8,23 @@
 update-reminder: true
 debug-mode: false
 
-# this is the teleport delay in s
-teleport-delay: 5
+teleport:
+  delay: 5 # this is the teleport delay in s
+  message-type: bossbar # message type: bossbar, actionbar
 
-# set this to true if you don't want to use the teleport animation
-# also players in gmc will always be teleported without the animation
-instant-teleport: false
+# these are case sensitive
+instant-teleport:
+  always: false # set this to true if you don't want to use the teleport animation, also players in gmc will always be teleported without the animation
+  worlds: [] # players in these worlds will be teleported without a delay
+  regions: [] # players in these regions will be teleported without a delay
 
-# players in this worlds will be teleported without a delay
-# this is casesensitive
-instant-teleport-worlds: [ ]
-
-# message type: bossbar, actionbar
-teleport-message-type: bossbar
-
-# cooldown before sending another command in milliseconds
-command-cooldown: 0
-
-# cooldown before sending another chat message in milliseconds
-message-cooldown: 0
+cooldown:
+  message: 0 # cooldown before being able to send another chat message in milliseconds
+  command: 0 # cooldown before being able to send another command in milliseconds
 
 # set the language default for number formatting. EX: en-US -> 10,000.00
 number-formatting: "en_US"
 
-# set the format to use for time parsing
-time-formatting: "hh:mm:ss"
+time-formats:
+  default: "hh:mm:ss" # the default format to use when nothing else is specified
+  teleportation: "ss.t" # the format for the teleportation messages

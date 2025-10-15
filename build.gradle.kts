@@ -46,6 +46,7 @@ repositories {
     maven("https://jitpack.io")
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots")
     maven("https://repo.opencollab.dev/main/")
+    maven ("https://maven.enginehub.org/repo/")
 }
 
 dependencies {
@@ -60,6 +61,7 @@ dependencies {
     compileOnly("com.squareup.okhttp3:okhttp:4.12.0")
     compileOnly("com.h2database:h2:2.3.232")
     compileOnly("org.geysermc.floodgate:api:2.2.4-SNAPSHOT")
+    compileOnly ("com.sk89q.worldguard:worldguard-bukkit:7.0.9")
 
     implementation("org.bstats:bstats-bukkit:3.0.2")
 }

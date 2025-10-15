@@ -30,7 +30,8 @@ public final class PluginConfig extends CrownConfig {
     private int teleportDelay, messageDelay, commandDelay;
     private boolean instantTeleport = false, instantRespawn = true, teleportOnJoin, updateReminder = true;
     private List<String> instantTeleportWorlds;
-    private String timeFormat;
+    private List<String> instantTeleportRegions;
+    private String defaultTimeFormat, teleportationTimeFormat;
 
     public PluginConfig(@NonNull Plugin plugin) {
         super(plugin);
@@ -41,12 +42,13 @@ public final class PluginConfig extends CrownConfig {
         final File file = FileUtil.getFile(this.getPlugin().getDataFolder().getPath(), "config.yml");
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
-        setTeleportMessageType(FileUtil.getString(configuration, "teleport-message-type", "actionbar").equalsIgnoreCase("actionbar") ? TeleportMessageType.ACTIONBAR : TeleportMessageType.BOSSBAR);
-        setInstantTeleport(FileUtil.getBoolean(configuration, "instant-teleport", false));
-        setTeleportDelay(FileUtil.getInt(configuration, "teleport-delay", 10));
-        setInstantTeleportWorlds(FileUtil.getStringArrayList(configuration, "instant-teleport-worlds", new ArrayList<>()));
-        setMessageDelay(FileUtil.getInt(configuration, "message-cooldown", 0));
-        setCommandDelay(FileUtil.getInt(configuration, "command-cooldown", 0));
+        setTeleportMessageType(FileUtil.getString(configuration, "teleport.message-type", "actionbar").equalsIgnoreCase("actionbar") ? TeleportMessageType.ACTIONBAR : TeleportMessageType.BOSSBAR);
+        setInstantTeleport(FileUtil.getBoolean(configuration, "instant-teleport.always", false));
+        setTeleportDelay(FileUtil.getInt(configuration, "teleport.delay", 10));
+        setInstantTeleportWorlds(FileUtil.getStringArrayList(configuration, "instant-teleport.worlds", new ArrayList<>()));
+        setInstantTeleportRegions(FileUtil.getStringArrayList(configuration, "instant-teleport.regions", new ArrayList<>()));
+        setMessageDelay(FileUtil.getInt(configuration, "cooldown.message", 0));
+        setCommandDelay(FileUtil.getInt(configuration, "cooldown.command", 0));
         setUpdateReminder(FileUtil.getBoolean(configuration, "update-reminder", true));
 
         CrownCore.log.setDebug(FileUtil.getBoolean(configuration, "debug-mode", false));
@@ -58,7 +60,8 @@ public final class PluginConfig extends CrownConfig {
 
         TextUtil.setDecimalFormat(new DecimalFormat("#,###.##", new DecimalFormatSymbols(locale)));
 
-        setTimeFormat(FileUtil.getString(configuration, "time-formatting", "hh:mm:ss"));
+        setDefaultTimeFormat(FileUtil.getString(configuration, "time-formats.default", "hh:mm:ss"));
+        setTeleportationTimeFormat(FileUtil.getString(configuration, "time-formats.teleportation", "ss.t"));
 
         FileUtil.saveConfigurationIntoFile(configuration, file);
     }
