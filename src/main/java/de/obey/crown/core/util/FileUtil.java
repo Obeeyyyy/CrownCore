@@ -42,8 +42,7 @@ public final class FileUtil {
         if (!file.exists() && create) {
             try {
                 file.createNewFile();
-            } catch (final IOException ignored) {
-            }
+            } catch (final IOException ignored) {}
         }
 
         return file;

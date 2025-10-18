@@ -144,51 +144,50 @@ public final class TextUtil {
     }
 
     public String formatTimeStringWithFormat(long millis, final String format) {
-        final long totalSeconds = millis / 1000;
+        if (format == null || format.isEmpty()) {
+            return "";
+        }
 
-        final long days = totalSeconds / 86400;
-        final long hours = (totalSeconds % 86400) / 3600;
-        final long minutes = (totalSeconds % 3600) / 60;
-        final long seconds = totalSeconds % 60;
-        final long milliseconds = millis % 1000;
+        long totalSeconds = millis / 1000;
+        long milliseconds = millis % 1000;
 
-        final long tenthmilliseconds = milliseconds / 100;
+        long days = 0, hours = 0, minutes = 0, seconds = 0;
+
+        if (format.contains("dd") || format.contains("d")) {
+            days = totalSeconds / 86400;
+            totalSeconds %= 86400;
+        }
+        if (format.contains("hh") || format.contains("h")) {
+            hours = totalSeconds / 3600;
+            totalSeconds %= 3600;
+        }
+        if (format.contains("mm") || format.contains("m")) {
+            minutes = totalSeconds / 60;
+            totalSeconds %= 60;
+        }
+
+        seconds = totalSeconds;
+
+        final String oneDecimal = String.format(Locale.US, "%01d", milliseconds / 100);
+        final String twoDecimals = String.format(Locale.US, "%02d", milliseconds / 10);
 
         return format
                 .replace("dd", String.format("%02d", days))
-                .replace("d", String.valueOf(days))
                 .replace("hh", String.format("%02d", hours))
-                .replace("h", String.valueOf(hours))
                 .replace("mm", String.format("%02d", minutes))
-                .replace("m", String.valueOf(minutes))
                 .replace("ss", String.format("%02d", seconds))
-                .replace("s", String.valueOf(seconds))
                 .replace("SSS", String.format("%03d", milliseconds))
-                .replace("S", String.valueOf(milliseconds))
-                .replace("t", String.valueOf(tenthmilliseconds));
+                .replace("tt", twoDecimals)
+                .replace("d", String.valueOf(days))
+                .replace("h", String.valueOf(hours))
+                .replace("m", String.valueOf(minutes))
+                .replace("s", String.valueOf(seconds))
+                .replace("t", oneDecimal)
+                .replace("S", String.valueOf(milliseconds));
     }
 
-
     public String formatTimeString(long millis) {
-        final long totalSeconds = millis / 1000;
-
-        final long days = totalSeconds / 86400;
-        final long hours = (totalSeconds % 86400) / 3600;
-        final long minutes = (totalSeconds % 3600) / 60;
-        final long seconds = totalSeconds % 60;
-        final long milliseconds = millis % 1000;
-
-        return CrownCore.getInstance().getPluginConfig().getDefaultTimeFormat()
-                .replace("dd", String.format("%02d", days))
-                .replace("d", String.valueOf(days))
-                .replace("hh", String.format("%02d", hours))
-                .replace("h", String.valueOf(hours))
-                .replace("mm", String.format("%02d", minutes))
-                .replace("m", String.valueOf(minutes))
-                .replace("ss", String.format("%02d", seconds))
-                .replace("s", String.valueOf(seconds))
-                .replace("SSS", String.format("%03d", milliseconds))
-                .replace("S", String.valueOf(milliseconds));
+        return formatTimeStringWithFormat(millis, CrownCore.getInstance().getPluginConfig().getDefaultTimeFormat());
     }
 
     public String formatNumber(final long value) {

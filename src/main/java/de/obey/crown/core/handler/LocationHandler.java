@@ -14,6 +14,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @UtilityClass
 public final class LocationHandler {
@@ -34,21 +35,53 @@ public final class LocationHandler {
         saveLocations();
     }
 
-    public void loadLocations() {
+    /***
+     * Converts location data from config.yml into locations.yml
+     */
+    public YamlConfiguration convertLocations() {
         final File file = FileUtil.getFile(CrownCore.getInstance().getDataFolder().getPath() + "/", "config.yml");
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
-        if (!configuration.contains("locations"))
+        final File locationsFile = FileUtil.getCreatedFile(CrownCore.getInstance(), "locations.yml", true);
+        final YamlConfiguration locationsConfiguration = YamlConfiguration.loadConfiguration(locationsFile);
+
+        if(!configuration.contains("locations")) {
+            return locationsConfiguration;
+        }
+
+
+        for (final String key : configuration.getConfigurationSection("locations").getKeys(false)) {
+            locationsConfiguration.set("locations." + key, configuration.getString("locations." + key));
+        }
+
+        configuration.set("locations", null);
+
+        FileUtil.saveConfigurationIntoFile(configuration, file);
+        FileUtil.saveConfigurationIntoFile(locationsConfiguration, locationsFile);
+
+        return locationsConfiguration;
+    }
+
+    /***
+     * Loads location data from locations.yml file
+     */
+    public void loadLocations() {
+        final YamlConfiguration configuration = convertLocations();
+
+        if (!configuration.contains("locations")) {
             return;
+        }
 
         for (final String name : configuration.getConfigurationSection("locations").getKeys(false)) {
             locations.put(name, TextUtil.parseStringToLocation(configuration.getString("locations." + name)));
         }
-
     }
 
+    /***
+     * Saves location data into locations.yml
+     */
     public void saveLocations() {
-        final File file = FileUtil.getFile(CrownCore.getInstance().getDataFolder().getPath() + "/", "config.yml");
+        final File file = FileUtil.getCreatedFile(CrownCore.getInstance(), "locations.yml", true);
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
         if (locations.isEmpty())

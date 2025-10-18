@@ -1,5 +1,5 @@
 name: CrownCore
-version: 1.4.8
+version: 1.5.0
 main: de.obey.crown.core.noobf.CrownCore
 author: Obey
 website: https://builtbybit.com/resources/crowncore.52753/
@@ -17,6 +17,7 @@ softdepend:
   - Vault
   - floodgate
   - WorldGuard
+  - LuckPerms
 
 loadbefore:
   - FancyNpcs

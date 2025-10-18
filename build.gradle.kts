@@ -62,6 +62,7 @@ dependencies {
     compileOnly("com.h2database:h2:2.3.232")
     compileOnly("org.geysermc.floodgate:api:2.2.4-SNAPSHOT")
     compileOnly ("com.sk89q.worldguard:worldguard-bukkit:7.0.9")
+    compileOnly("net.luckperms:api:5.4")
 
     implementation("org.bstats:bstats-bukkit:3.0.2")
 }

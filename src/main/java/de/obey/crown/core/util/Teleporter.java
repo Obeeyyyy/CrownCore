@@ -27,14 +27,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 @UtilityClass
 public class Teleporter {
 
-    private final ArrayList<UUID> isTeleporting = new ArrayList<UUID>();
-    private final Map<Player, BossBar> bossaBars = Maps.newConcurrentMap();
+    private final List<UUID> isTeleporting = new ArrayList<UUID>();
+    private final Map<Player, BossBar> bossBars = Maps.newConcurrentMap();
 
     private PluginConfig crownPluginConfig;
     private Messanger messanger;
@@ -58,8 +59,9 @@ public class Teleporter {
     }
 
     public void teleportInstant(final Player player, final Location location) {
-        if (location == null)
+        if (location == null) {
             return;
+        }
 
         player.teleport(location);
         sounds.playSoundToPlayer(player, "teleport-instant-1");
@@ -78,8 +80,16 @@ public class Teleporter {
     }
 
     public void teleportWithAnimation(final Player player, final Location location) {
+        if (location == null) {
+            return;
+        }
 
         if (crownPluginConfig.isInstantTeleport()) {
+            teleportInstant(player, location);
+            return;
+        }
+
+        if(player.hasPermission("instant.teleport")) {
             teleportInstant(player, location);
             return;
         }
@@ -87,11 +97,6 @@ public class Teleporter {
         if (isTeleporting.contains(player.getUniqueId())) {
             return;
         }
-
-        final long cooldown = crownPluginConfig.getTeleportDelay() * 1000L;
-
-        if (location == null)
-            return;
 
         if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
             teleportInstant(player, location);
@@ -112,6 +117,7 @@ public class Teleporter {
             }
         }
 
+        final long cooldown = crownPluginConfig.getTeleportDelay() * 1000L;
         final TeleportEffect effect = new TeleportEffect(Particle.CHERRY_LEAVES, 5);
 
         sendTeleportMessage(player, 0, cooldown, cooldown);
@@ -172,17 +178,17 @@ public class Teleporter {
     }
 
     private void removeBossbar(final Player player) {
-        if (bossaBars.containsKey(player)) {
-            bossaBars.get(player).removeAll();
-            bossaBars.remove(player);
+        if (bossBars.containsKey(player)) {
+            bossBars.get(player).removeAll();
+            bossBars.remove(player);
         }
     }
 
     private void sendTeleportCompletedMessage(final Player player) {
         if (crownPluginConfig.getTeleportMessageType() == TeleportMessageType.BOSSBAR) {
 
-            if (bossaBars.containsKey(player)) {
-                final BossBar bossBar = bossaBars.get(player);
+            if (bossBars.containsKey(player)) {
+                final BossBar bossBar = bossBars.get(player);
                 bossBar.setTitle(messanger.getMessage("teleported-message"));
                 return;
             }
@@ -193,7 +199,7 @@ public class Teleporter {
             bossBar.setProgress(0);
             bossBar.addPlayer(player);
 
-            bossaBars.put(player, bossBar);
+            bossBars.put(player, bossBar);
         } else {
             messanger.sendActionbar(player, "teleported-message");
         }
@@ -202,8 +208,8 @@ public class Teleporter {
     private void sendTeleportMessage(final Player player, final int ticks, final long cooldown, final long remaining) {
         if (crownPluginConfig.getTeleportMessageType() == TeleportMessageType.BOSSBAR) {
 
-            if (bossaBars.containsKey(player)) {
-                final BossBar bossBar = bossaBars.get(player);
+            if (bossBars.containsKey(player)) {
+                final BossBar bossBar = bossBars.get(player);
 
                 bossBar.setProgress((double) ticks / (cooldown / 1000d));
                 bossBar.setTitle(messanger.getMessage("telportation-message", new String[]{"remaining"}, TextUtil.formatTimeStringWithFormat(remaining, crownPluginConfig.getTeleportationTimeFormat())));
@@ -217,7 +223,7 @@ public class Teleporter {
             bossBar.setProgress(0);
             bossBar.addPlayer(player);
 
-            bossaBars.put(player, bossBar);
+            bossBars.put(player, bossBar);
         } else {
             messanger.sendActionbar(player, "teleportation-message", new String[]{"remaining"}, TextUtil.formatTimeStringWithFormat(remaining, crownPluginConfig.getTeleportationTimeFormat()));
         }
