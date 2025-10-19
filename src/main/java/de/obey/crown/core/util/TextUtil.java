@@ -20,6 +20,8 @@ import org.bukkit.entity.Player;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -131,6 +133,13 @@ public final class TextUtil {
                 Double.parseDouble(parts[4]),
                 Float.parseFloat(parts[5]),
                 Float.parseFloat(parts[6]));
+    }
+
+    public String unixTimeStampToIso8601(long timestamp) {
+        final Instant instant = Instant.ofEpochSecond(timestamp);
+        final ZonedDateTime dateTime = instant.atZone(ZoneId.systemDefault());
+
+        return dateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
 
     public String parseLocationToString(final Location location) {
