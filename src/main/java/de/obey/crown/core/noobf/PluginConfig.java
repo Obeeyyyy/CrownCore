@@ -27,7 +27,7 @@ public final class PluginConfig extends CrownConfig {
 
     private TeleportMessageType teleportMessageType;
 
-    private int teleportDelay, messageDelay, commandDelay;
+    private int teleportDelay, messageDelay, commandDelay, dataCacheTime;
     private boolean instantTeleport = false, instantRespawn = true, teleportOnJoin, updateReminder = true;
     private List<String> instantTeleportWorlds;
     private List<String> instantTeleportRegions;
@@ -42,6 +42,7 @@ public final class PluginConfig extends CrownConfig {
         final File file = FileUtil.getFile(this.getPlugin().getDataFolder().getPath(), "config.yml");
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
+        setDataCacheTime(FileUtil.getInt(configuration, "data-cache-time", 3600000));
         setTeleportMessageType(FileUtil.getString(configuration, "teleport.message-type", "actionbar").equalsIgnoreCase("actionbar") ? TeleportMessageType.ACTIONBAR : TeleportMessageType.BOSSBAR);
         setInstantTeleport(FileUtil.getBoolean(configuration, "instant-teleport.always", false));
         setTeleportDelay(FileUtil.getInt(configuration, "teleport.delay", 10));
@@ -69,7 +70,9 @@ public final class PluginConfig extends CrownConfig {
     @Override
     public void saveConfig() {
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(getConfigFile());
+
         configuration.set("debug-mode", CrownCore.log.isDebug());
+
         FileUtil.saveConfigurationIntoFile(configuration, getConfigFile());
     }
 }

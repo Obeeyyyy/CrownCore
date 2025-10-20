@@ -8,6 +8,9 @@
 update-reminder: true
 debug-mode: false
 
+# the time in ms a players data will stay in the cache after leaving
+data-cache-time: 3600000
+
 teleport:
   delay: 5 # this is the teleport delay in s
   message-type: bossbar # message type: bossbar, actionbar

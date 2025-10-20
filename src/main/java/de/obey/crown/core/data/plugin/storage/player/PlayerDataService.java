@@ -2,6 +2,7 @@ package de.obey.crown.core.data.plugin.storage.player;
 
 import com.google.common.collect.Maps;
 import de.obey.crown.core.noobf.CrownCore;
+import de.obey.crown.core.noobf.PluginConfig;
 import de.obey.crown.core.util.Scheduler;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -14,12 +15,14 @@ import java.util.concurrent.ExecutorService;
 
 public class PlayerDataService {
 
+    private final PluginConfig pluginConfig;
     private final ExecutorService executor;
 
     @Getter
     private final Map<UUID, PlayerData> cache = Maps.newConcurrentMap();
 
-    public PlayerDataService(final ExecutorService executor) {
+    public PlayerDataService(final PluginConfig pluginConfig, final ExecutorService executor) {
+        this.pluginConfig = pluginConfig;
         this.executor = executor;
 
         Scheduler.runTaskTimerAsync(CrownCore.getInstance(), () -> {
@@ -28,20 +31,29 @@ public class PlayerDataService {
                 final Player player = Bukkit.getPlayer(data.getUuid());
                 saveAsync(data.getUuid());
 
-                if(player != null && player.isOnline())
+                if(player != null && player.isOnline()) {
                     continue;
+                }
 
                 if(data.isUnload()) {
                     cache.remove(data.getUuid());
                     continue;
                 }
 
-                if(System.currentTimeMillis() - data.getLastseen() >= 1000 * 60 * 60) {
+                if(System.currentTimeMillis() - data.getLastseen() >= pluginConfig.getDataCacheTime()) {
                     data.setUnload(true);
+
+                    if(pluginConfig.getDataCacheTime() <= 0) {
+                        cache.remove(data.getUuid());
+                    }
                 }
 
             }
         }, 20*60, 20*60);
+    }
+
+    public void unloadFromCache(final UUID uuid) {
+        cache.remove(uuid);
     }
 
     public PlayerData get(final UUID uuid) {

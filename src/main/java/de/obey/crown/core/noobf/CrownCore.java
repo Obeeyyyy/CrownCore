@@ -90,7 +90,7 @@ public final class CrownCore extends JavaPlugin {
 
         versionChecker = new VersionChecker(executor, okHttpClient);
         versionChecker.retrieveNewestPluginVersions();
-        playerDataService = new PlayerDataService(executor);
+        playerDataService = new PlayerDataService(pluginConfig, executor);
 
         initializeBStats();
         initializeCore();
@@ -151,7 +151,7 @@ public final class CrownCore extends JavaPlugin {
         pluginManager.registerEvents(new PlayerChat(pluginConfig, sounds), this);
         pluginManager.registerEvents(new PlayerJoin(pluginConfig, versionChecker, playerDataService), this);
         pluginManager.registerEvents(new PlayerLogin(playerDataService), this);
-        pluginManager.registerEvents(new PlayerQuit(playerDataService), this);
+        pluginManager.registerEvents(new PlayerQuit(pluginConfig, playerDataService), this);
     }
 
     /***
