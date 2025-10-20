@@ -12,6 +12,7 @@ import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -135,7 +136,7 @@ public final class TextUtil {
                 Float.parseFloat(parts[6]));
     }
 
-    public String unixTimeStampToIso8601(long timestamp) {
+    public String unixTeStampToIso8601(long timestamp) {
         final Instant instant = Instant.ofEpochSecond(timestamp);
         final ZonedDateTime dateTime = instant.atZone(ZoneId.systemDefault());
 
@@ -299,8 +300,9 @@ public final class TextUtil {
 
             String hexColor = matcher.group();
 
-            if(hexColor.startsWith("&"))
+            if(hexColor.startsWith("&")) {
                 hexColor = hexColor.substring(1);
+            }
 
             final TextColor textColor = TextColor.fromCSSHexString(hexColor);
 
@@ -326,7 +328,7 @@ public final class TextUtil {
             mainComponent = mainComponent.append(Component.text(translateLegacyColors(message.substring(lastIndex))));
         }
 
-        return mainComponent;
+        return mainComponent.decoration(TextDecoration.ITALIC, false);
     }
 
     public String translateLegacyColors(String message) {
@@ -334,14 +336,17 @@ public final class TextUtil {
     }
 
     public String translateCorePlaceholderRaw(String message) {
-        if (message == null)
+        if (message == null) {
             return "";
+        }
 
-        if (message.isEmpty())
+        if (message.isEmpty()) {
             return message;
+        }
 
-        if (rawPlaceholders.isEmpty())
+        if (rawPlaceholders.isEmpty()) {
             return message;
+        }
 
         for (final String key : rawPlaceholders.keySet()) {
             if (message.contains(key)) {
