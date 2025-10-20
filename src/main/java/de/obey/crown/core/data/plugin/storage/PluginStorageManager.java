@@ -189,16 +189,10 @@ public class PluginStorageManager {
 
                     for (final DataKey<?> key : pluginDataSchema.getDataKeys()) {
                         CrownCore.log.debug("   - data key: " + key.getName());
-                        stringBuilder.append(key.getName()).append(" ").append(key.getSqlDataType());
-
-                        if (key.getName().equalsIgnoreCase(pluginDataSchema.getPrimaryKeyName())) {
-                            stringBuilder.append(" PRIMARY KEY");
-                        }
-
-                        stringBuilder.append(", ");
+                        stringBuilder.append(key.getName()).append(" ").append(key.getSqlDataType()).append(", ");
                     }
 
-                    stringBuilder.setLength(stringBuilder.length() - 2);
+                    stringBuilder.append("PRIMARY KEY (").append(pluginDataSchema.getPrimaryKeyName()).append(")");
                     stringBuilder.append(");");
 
                     try (final Connection conn = getConnectionForPluginName(pluginName);
