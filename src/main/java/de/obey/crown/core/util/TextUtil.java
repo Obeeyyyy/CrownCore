@@ -136,11 +136,10 @@ public final class TextUtil {
                 Float.parseFloat(parts[6]));
     }
 
-    public String unixTeStampToIso8601(long timestamp) {
+    public String unixTimeStampToIso8601(long timestamp) {
         final Instant instant = Instant.ofEpochSecond(timestamp);
-        final ZonedDateTime dateTime = instant.atZone(ZoneId.systemDefault());
-
-        return dateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        return instant.atOffset(ZoneOffset.UTC)
+                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
 
     public String parseLocationToString(final Location location) {

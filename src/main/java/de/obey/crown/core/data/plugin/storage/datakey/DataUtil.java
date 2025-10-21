@@ -33,4 +33,16 @@ public class DataUtil {
         return CrownCore.getInstance().getPlayerDataService().loadAsync(uuid).thenAccept((data) -> data.set(dataKey, data.get(dataKey) - amount));
     }
 
+    public CompletableFuture<Void> setLong(final UUID uuid, final long amount, final DataKey<Long> dataKey) {
+        return CrownCore.getInstance().getPlayerDataService().loadAsync(uuid).thenAccept((data) -> data.set(dataKey, amount));
+    }
+
+    public CompletableFuture<Void> setDouble(final UUID uuid, final double amount, final DataKey<Double> dataKey) {
+        return CrownCore.getInstance().getPlayerDataService().loadAsync(uuid).thenAccept((data) -> data.set(dataKey, amount));
+    }
+
+    public CompletableFuture<Void> setInteger(final UUID uuid, final int amount, final DataKey<Integer> dataKey) {
+        return CrownCore.getInstance().getPlayerDataService().loadAsync(uuid).thenAccept((data) -> data.set(dataKey, amount));
+    }
+
 }
