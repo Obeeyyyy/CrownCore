@@ -14,15 +14,13 @@ public class PluginDataSchema {
 
     private final String pluginName;
     private final String tableName;
-    private final String primaryKeyName;
     private final List<DataKey<?>> dataKeys = new ArrayList<>();
     private final CrownConfig crownConfig;
 
-    public PluginDataSchema(final CrownConfig crownConfig, final String tableName, final String primaryKeyName) {
+    public PluginDataSchema(final CrownConfig crownConfig, final String tableName) {
         this.crownConfig = crownConfig;
         this.pluginName = crownConfig.getPlugin().getName().toLowerCase();
         this.tableName = tableName;
-        this.primaryKeyName = primaryKeyName;
     }
 
     public void register() {

@@ -17,10 +17,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.nio.file.Path;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
@@ -181,18 +178,46 @@ public class PluginStorageManager {
             CrownCore.log.debug(" > creating plugin data tables for " + pluginName);
             for (final PluginDataSchema pluginDataSchema : schemas) {
                 CrownCore.log.debug(" - creating table: " + pluginDataSchema.getTableName());
-                CrownCore.log.debug("   - primary key: " + pluginDataSchema.getPrimaryKeyName());
 
                 executor.submit(() -> {
                     final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
                     stringBuilder.append(pluginDataSchema.getTableName()).append(" (");
 
-                    for (final DataKey<?> key : pluginDataSchema.getDataKeys()) {
+                    final List<String> primaryKeys = new ArrayList<>();
+
+                    for (final Iterator<DataKey<?>> iterator = pluginDataSchema.getDataKeys().iterator(); iterator.hasNext(); ) {
+                        final DataKey<?> key = iterator.next();
+
                         CrownCore.log.debug("   - data key: " + key.getName());
-                        stringBuilder.append(key.getName()).append(" ").append(key.getSqlDataType()).append(", ");
+
+                        final StringBuilder column = new StringBuilder(key.getName())
+                                .append(" ")
+                                .append(key.getSqlDataType());
+
+                        if (key.isAutoIncrement()) column.append(" AUTO_INCREMENT");
+                        if (key.isNotNull()) column.append(" NOT NULL");
+                        if (key.isUnique()) column.append(" UNIQUE");
+                        if (key.getDefaultValue() != null) {
+                            column.append(" DEFAULT '").append(key.getDefaultValue()).append("'");
+                        }
+
+                        stringBuilder.append(column);
+
+                        if (iterator.hasNext()) {
+                            stringBuilder.append(", ");
+                        }
+
+                        if (key.isPrimaryKey()) {
+                            primaryKeys.add(key.getName());
+                        }
                     }
 
-                    stringBuilder.append("PRIMARY KEY (").append(pluginDataSchema.getPrimaryKeyName()).append(")");
+                    if (!primaryKeys.isEmpty()) {
+                        stringBuilder.append(", PRIMARY KEY (")
+                                .append(String.join(", ", primaryKeys))
+                                .append(")");
+                    }
+
                     stringBuilder.append(");");
 
                     try (final Connection conn = getConnectionForPluginName(pluginName);

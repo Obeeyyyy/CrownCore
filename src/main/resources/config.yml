@@ -29,5 +29,5 @@ cooldown:
 number-formatting: "en_US"
 
 time-formats:
-  default: "hh:mm:ss" # the default format to use when nothing else is specified
-  teleportation: "ss.t" # the format for the teleportation messages
+  default: "%hh%:%mm%:%ss%" # the default format to use when nothing else is specified
+  teleportation: "%ss%.%t%" # the format for the teleportation messages

@@ -181,18 +181,18 @@ public final class TextUtil {
         final String twoDecimals = String.format(Locale.US, "%02d", milliseconds / 10);
 
         return format
-                .replace("dd", String.format("%02d", days))
-                .replace("hh", String.format("%02d", hours))
-                .replace("mm", String.format("%02d", minutes))
-                .replace("ss", String.format("%02d", seconds))
-                .replace("SSS", String.format("%03d", milliseconds))
-                .replace("tt", twoDecimals)
-                .replace("d", String.valueOf(days))
-                .replace("h", String.valueOf(hours))
-                .replace("m", String.valueOf(minutes))
-                .replace("s", String.valueOf(seconds))
-                .replace("t", oneDecimal)
-                .replace("S", String.valueOf(milliseconds));
+                .replace("%dd%", String.format("%02d", days))
+                .replace("%hh%", String.format("%02d", hours))
+                .replace("%mm%", String.format("%02d", minutes))
+                .replace("%ss%", String.format("%02d", seconds))
+                .replace("%SSS%", String.format("%03d", milliseconds))
+                .replace("%tt%", twoDecimals)
+                .replace("%d%", String.valueOf(days))
+                .replace("%h%", String.valueOf(hours))
+                .replace("%m%", String.valueOf(minutes))
+                .replace("%s%", String.valueOf(seconds))
+                .replace("%t%", oneDecimal)
+                .replace("%S%", String.valueOf(milliseconds));
     }
 
     public String formatTimeString(long millis) {
