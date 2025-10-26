@@ -125,8 +125,9 @@ public final class TextUtil {
         final String[] parts = data.split("#");
         final World world = Bukkit.getWorld(parts[1]);
 
-        if (world == null)
+        if (world == null) {
             return null;
+        }
 
         return new Location(world,
                 Double.parseDouble(parts[2]),

@@ -75,7 +75,13 @@ public final class LocationHandler {
         }
 
         for (final String name : configuration.getConfigurationSection("locations").getKeys(false)) {
-            locations.put(name, TextUtil.parseStringToLocation(configuration.getString("locations." + name)));
+            final Location location = TextUtil.parseStringToLocation(configuration.getString("locations." + name));
+
+            if(location == null) {
+                continue;
+            }
+
+            locations.put(name, location);
         }
     }
 
