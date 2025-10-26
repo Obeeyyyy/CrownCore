@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 public final class LocationHandler {
 
     @Getter
-    private final Map<String, Location> locations = Maps.newConcurrentMap();
+    private Map<String, Location> locations;
 
     public Location getLocation(final String name) {
         return locations.get(name);
@@ -39,6 +39,8 @@ public final class LocationHandler {
      * Converts location data from config.yml into locations.yml
      */
     public YamlConfiguration convertLocations() {
+        locations = Maps.newConcurrentMap();
+
         final File file = FileUtil.getFile(CrownCore.getInstance().getDataFolder().getPath() + "/", "config.yml");
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
@@ -84,8 +86,9 @@ public final class LocationHandler {
         final File file = FileUtil.getCreatedFile(CrownCore.getInstance(), "locations.yml", true);
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
-        if (locations.isEmpty())
+        if (locations.isEmpty()) {
             return;
+        }
 
         configuration.set("locations", null);
 
