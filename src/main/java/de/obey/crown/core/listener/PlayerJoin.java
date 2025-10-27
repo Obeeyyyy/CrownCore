@@ -41,7 +41,7 @@ public final class PlayerJoin implements Listener {
 
         final Player player = event.getPlayer();
 
-        Scheduler.runTaskLater(CrownCore.getInstance(), () -> {
+        Scheduler.runGlobalTaskLater(CrownCore.getInstance(), () -> {
             for (final Plugin plugin : versionChecker.getOutdatedPlugins()) {
                 final String pluginName = plugin.getName();
                 final String newest = versionChecker.getNewestVersions().get(pluginName);

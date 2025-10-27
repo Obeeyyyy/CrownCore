@@ -9,7 +9,7 @@ public class DataKey<T> {
 
     private final String name, plugin;
     private final Class<T> dataType;
-    private final Object defaultValue;
+    private T defaultValue;
     private final String sqlDataType;
 
     private boolean primaryKey = false;
@@ -17,11 +17,18 @@ public class DataKey<T> {
     private boolean notNull = false;
     private boolean unique = false;
 
-    public DataKey(final String name, final Plugin plugin, final Class<T> dataType, final Object defaultValue, final String sqlDataType) {
+    public DataKey(final String name, final Plugin plugin, final Class<T> dataType, final T defaultValue, final String sqlDataType) {
         this.name = name;
         this.plugin = plugin.getName().toLowerCase();
         this.dataType = dataType;
-        this.defaultValue = defaultValue;
+        this.defaultValue = (T) defaultValue;
+        this.sqlDataType = sqlDataType;
+    }
+
+    public DataKey(final String name, final Plugin plugin, final Class<T> dataType, final String sqlDataType) {
+        this.name = name;
+        this.plugin = plugin.getName().toLowerCase();
+        this.dataType = dataType;
         this.sqlDataType = sqlDataType;
     }
 }

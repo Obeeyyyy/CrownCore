@@ -4,18 +4,23 @@
 package de.obey.crown.core.util;
 
 import de.obey.crown.core.noobf.CrownCore;
+import de.obey.crown.core.util.task.CrownTask;
+import de.obey.crown.core.util.task.CrownTaskImpl;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import lombok.experimental.UtilityClass;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @UtilityClass
 public final class Scheduler {
 
-    private  ExecutorService executor;
     private boolean isFolia = false;
 
     public void initialize() {
@@ -26,77 +31,119 @@ public final class Scheduler {
         } catch (final ClassNotFoundException ignored) {
             isFolia = false;
         }
-
-        executor = CrownCore.getInstance().getExecutor();
     }
 
-    public void callEvent(final Plugin plugin, final Event event) {
+    //region events
+
+    public CrownTask callEvent(final Plugin plugin, final Event event) {
         if (isFolia) {
-            CrownCore.getInstance().getServer().getGlobalRegionScheduler().execute(plugin, () -> Bukkit.getPluginManager().callEvent(event));
-            return;
+            final ScheduledTask st = Bukkit.getGlobalRegionScheduler().run(plugin, scheduledTask ->
+                    Bukkit.getPluginManager().callEvent(event));
+
+            return new CrownTaskImpl(st);
         }
 
-        Bukkit.getScheduler().runTask(plugin, () -> CrownCore.getInstance().getServer().getPluginManager().callEvent(event));
+        final BukkitTask bt = Bukkit.getScheduler().runTask(plugin, () ->
+                Bukkit.getPluginManager().callEvent(event));
+
+        return new CrownTaskImpl(bt);
     }
 
-    public Runnable runTask(final Plugin plugin, final Runnable task) {
+    //endregion
+
+    //region globaltasks
+
+    public CrownTask runGlobalTask(final Plugin plugin, final Runnable task) {
         if (isFolia) {
-            Bukkit.getGlobalRegionScheduler().execute(plugin, task);
-            return task;
-        }
+            final ScheduledTask st = Bukkit.getGlobalRegionScheduler().run(plugin, scheduledTask -> task.run());
 
-        Bukkit.getScheduler().runTask(plugin, task);
-        return task;
+            return new CrownTaskImpl(st);
+        }
+        return new CrownTaskImpl(Bukkit.getScheduler().runTask(plugin, task));
     }
 
-    public Runnable runTaskAsync(final Plugin plugin, final Runnable task) {
+    public CrownTask runGlobalTaskLater(final Plugin plugin, final Runnable task, final long delay) {
         if (isFolia) {
-            Bukkit.getAsyncScheduler().runNow(plugin, (scheduledTask) -> executor.execute(task));
-            return task;
-        }
+            final ScheduledTask st = Bukkit.getGlobalRegionScheduler().runDelayed(plugin, scheduledTask -> task.run(), delay);
 
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, task);
-        return task;
+            return new CrownTaskImpl(st);
+        }
+        return new CrownTaskImpl(Bukkit.getScheduler().runTaskLater(plugin, task, delay));
     }
 
-    public Runnable runTaskLater(final Plugin plugin, final Runnable task, final long delay) {
+    public CrownTask runGlobalTaskTimer(final Plugin plugin, final Runnable task, final long delay, final long period) {
         if (isFolia) {
-            Bukkit.getGlobalRegionScheduler().runDelayed(plugin, (scheduledTask) -> task.run(), delay);
-            return task;
+            ScheduledTask st = Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, scheduledTask -> task.run(), delay, period);
+            return new CrownTaskImpl(st);
         }
-
-        Bukkit.getScheduler().runTaskLater(plugin, task, delay);
-        return task;
+        return new CrownTaskImpl(Bukkit.getScheduler().runTaskTimer(plugin, task, delay, period));
     }
 
-    public Runnable runTaskLaterAsync(final Plugin plugin, final Runnable task, final long delay) {
+    //endregion
+
+    //region entity tasks
+
+    public CrownTask runEntityTask(final Plugin plugin, final Entity entity, final Runnable task) {
         if (isFolia) {
-            Bukkit.getGlobalRegionScheduler().runDelayed(plugin, (scheduledTask) -> executor.execute(task), delay);
-            return task;
-        }
+            final boolean scheduled = entity.getScheduler().execute(plugin, task, null, 0L);
+            return new CrownTask() {
+                @Override
+                public void cancel() { /* nothing to cancel */ }
 
-        Bukkit.getScheduler().runTaskLater(plugin, task, delay);
-        return task;
+                @Override
+                public boolean isCancelled() { return !scheduled; }
+            };
+        }
+        return new CrownTaskImpl(Bukkit.getScheduler().runTask(plugin, task));
     }
 
-    public Runnable runTaskTimer(final Plugin plugin, final Runnable task, final long delay, final long period) {
+    public CrownTask runEntityTaskLater(final Plugin plugin, final Entity entity, final Runnable task, final long delay) {
         if (isFolia) {
-            Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, (scheduledTask) -> task.run(), delay, period);
-            return task;
+            final ScheduledTask st = entity.getScheduler().runDelayed(plugin, scheduledTask -> task.run(), null, delay);
+            return new CrownTaskImpl(st);
         }
-        
-        Bukkit.getScheduler().runTaskTimer(plugin, task, delay, period);
-        return task;
+        return new CrownTaskImpl(Bukkit.getScheduler().runTaskLater(plugin, task, delay));
     }
 
-    public Runnable runTaskTimerAsync(final Plugin plugin, final Runnable task, final long delay, final long period) {
+    public CrownTask runEntityTaskTimer(final Plugin plugin, final Entity entity, final Runnable task, final long delay, final long period) {
         if (isFolia) {
-            Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, (scheduledTask) -> executor.execute(task), delay, period);
-            return task;
+            final ScheduledTask st = entity.getScheduler().runAtFixedRate(plugin, scheduledTask -> task.run(), null, delay, period);
+            return new CrownTaskImpl(st);
         }
-
-        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, task, delay, period);
-        return task;
+        return new CrownTaskImpl(Bukkit.getScheduler().runTaskTimer(plugin, task, delay, period));
     }
+
+    //endregion
+
+    //region async tasks
+
+    public CrownTask runAsyncTask(final Plugin plugin, final Runnable task) {
+        if (isFolia) {
+            final ScheduledTask st = Bukkit.getAsyncScheduler().runNow(plugin, scheduledTask -> task.run());
+            return new CrownTaskImpl(st);
+        }
+        return new CrownTaskImpl(Bukkit.getScheduler().runTaskAsynchronously(plugin, task));
+    }
+
+    public CrownTask runAsyncTaskLater(final Plugin plugin, final Runnable task, final long delay) {
+        if (isFolia) {
+            final long millis = delay * 50;
+            final ScheduledTask st = Bukkit.getAsyncScheduler().runDelayed(plugin, scheduledTask -> task.run(), millis, TimeUnit.MILLISECONDS);
+            return new CrownTaskImpl(st);
+        }
+        return new CrownTaskImpl(Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, task, delay));
+    }
+
+    public CrownTask runAsyncTaskTimer(final Plugin plugin, final Runnable task, final long delay, final long period) {
+        if (isFolia) {
+            final long millisDelay = delay * 50;
+            final long millisPeriod = period * 50;
+            final ScheduledTask st = Bukkit.getAsyncScheduler().runAtFixedRate(plugin, scheduledTask -> task.run(), millisDelay, millisPeriod, TimeUnit.MILLISECONDS);
+            return new CrownTaskImpl(st);
+        }
+        return new CrownTaskImpl(Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, task, delay, period));
+    }
+
+    //endregion
 
 }

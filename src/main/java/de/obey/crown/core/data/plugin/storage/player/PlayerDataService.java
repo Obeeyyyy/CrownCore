@@ -25,7 +25,7 @@ public class PlayerDataService {
         this.pluginConfig = pluginConfig;
         this.executor = executor;
 
-        Scheduler.runTaskTimerAsync(CrownCore.getInstance(), () -> {
+        Scheduler.runAsyncTaskTimer(CrownCore.getInstance(), () -> {
             CrownCore.log.debug("playerDataService task - cache size: " + cache.size());
             for (final PlayerData data : cache.values()) {
                 final Player player = Bukkit.getPlayer(data.getUuid());

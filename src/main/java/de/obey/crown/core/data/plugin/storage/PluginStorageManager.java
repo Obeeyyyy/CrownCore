@@ -194,12 +194,16 @@ public class PluginStorageManager {
                                 .append(" ")
                                 .append(key.getSqlDataType());
 
-                        if (key.isAutoIncrement()) column.append(" AUTO_INCREMENT");
                         if (key.isNotNull()) column.append(" NOT NULL");
-                        if (key.isUnique()) column.append(" UNIQUE");
                         if (key.getDefaultValue() != null) {
-                            column.append(" DEFAULT '").append(key.getDefaultValue()).append("'");
+                            if (Number.class.isAssignableFrom(key.getDataType()) || key.getDataType() == Boolean.class) {
+                                column.append(" DEFAULT ").append(key.getDefaultValue());
+                            } else {
+                                column.append(" DEFAULT '").append(key.getDefaultValue()).append("'");
+                            }
                         }
+                        if (key.isAutoIncrement()) column.append(" AUTO_INCREMENT");
+                        if (key.isUnique()) column.append(" UNIQUE");
 
                         stringBuilder.append(column);
 

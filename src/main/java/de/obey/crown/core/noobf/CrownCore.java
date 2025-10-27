@@ -120,7 +120,7 @@ public final class CrownCore extends JavaPlugin {
         getPluginStorageManager().loadPluginDataPlugins();
         getPluginStorageManager().loadPlayerDataPlugins();
 
-        Scheduler.runTaskLater(this, () -> {
+        Scheduler.runGlobalTaskLater(this, () -> {
             LocationHandler.loadLocations();
             Teleporter.initialize();
             sendConsoleMessage();
