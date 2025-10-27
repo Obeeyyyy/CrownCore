@@ -95,8 +95,9 @@ public class PlayerDataService {
     }
 
     public void saveAllData() {
-        if(cache.isEmpty())
+        if(cache.isEmpty()) {
             return;
+        }
 
         cache.values().forEach(PlayerData::save);
     }
