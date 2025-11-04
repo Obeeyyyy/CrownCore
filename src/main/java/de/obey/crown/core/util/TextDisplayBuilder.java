@@ -68,7 +68,7 @@ public class TextDisplayBuilder {
             text = text + line + "\n";
         }
 
-        textDisplay.text(Component.text(text));
+        textDisplay.text(TextUtil.translateComponent(text));
         return this;
     }
 

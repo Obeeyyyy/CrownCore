@@ -24,6 +24,7 @@ public final class PlayerJoin implements Listener {
 
     @EventHandler
     public void on(final PlayerJoinEvent event) {
+        event.getPlayer().closeInventory();
 
         playerDataService.loadAsync(event.getPlayer().getUniqueId()).thenAccept((data) -> data.join(event.getPlayer()));
 

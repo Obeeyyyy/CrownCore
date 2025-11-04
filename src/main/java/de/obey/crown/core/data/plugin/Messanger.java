@@ -350,6 +350,28 @@ public final class Messanger {
         return temp;
     }
 
+    public ArrayList<String> getRawMultiLineMessage(final String key, final String[] placeholders, final String... replacements) {
+        generateMultiLineMessageEntryIfMissing(key);
+
+        final ArrayList<String> lines = multiLineMessages.get(key);
+        final ArrayList<String> temp = new ArrayList<>();
+
+        for (String line : lines) {
+            if (placeholders != null) {
+                int count = 0;
+                for (final String placeholder : placeholders) {
+                    line = line.replace("%" + placeholder + "%", replacements[count]);
+                    count++;
+                }
+            }
+
+            line = TextUtil.translateCorePlaceholderRaw(line);
+            temp.add(line);
+        }
+
+        return temp;
+    }
+
     /*                           */
     /*     sending messages      */
     /*                           */

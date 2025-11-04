@@ -15,6 +15,8 @@ public class PlayerQuit implements Listener {
 
     @EventHandler
     public void on(final PlayerQuitEvent event) {
+        event.getPlayer().closeInventory();
+
         playerDataService.saveAsync(event.getPlayer().getUniqueId()).thenRun(() -> {
             if(pluginConfig.getDataCacheTime() <= 0) {
                 playerDataService.unloadFromCache(event.getPlayer().getUniqueId());
