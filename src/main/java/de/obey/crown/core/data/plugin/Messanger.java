@@ -673,6 +673,25 @@ public final class Messanger {
         return number;
     }
 
+    public long isValidLong(final String input) {
+        try {
+            return Long.parseLong(input);
+        } catch (final NumberFormatException exception) {
+            return -9999;
+        }
+    }
+
+    public long isValidLong(final CommandSender sender, final String input, final long min) {
+        final long number = isValidLong(input);
+
+        if (number < min) {
+            sendMessage(sender, "invalid-number", new String[]{"min"}, TextUtil.formatNumber(min));
+        }
+
+        return number;
+    }
+
+
     public double isValidDouble(final String input) {
         try {
             return Double.parseDouble(input);
