@@ -65,8 +65,18 @@ public final class VersionChecker {
         final String pluginName = plugin.getName();
         final String pluginVersion = plugin.getDescription().getVersion();
 
-        if (newestVersions.containsKey(pluginName))
+        if (newestVersions.containsKey(pluginName)) {
+
+            try {
+                final int currentValue = Integer.parseInt(pluginVersion.replace(".", ""));
+                final int checkingAgainstValue = Integer.parseInt(newestVersions.get(pluginName).replace(".", ""));
+
+                if (currentValue > checkingAgainstValue)
+                    return true;
+            } catch (final NumberFormatException ignored) {}
+
             return newestVersions.get(pluginName).equalsIgnoreCase(pluginVersion);
+        }
 
         return true;
     }

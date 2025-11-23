@@ -9,6 +9,7 @@ messages:
   command-cooldown: "%prefix% Please wait %accent%%remaining%%white% before executing another command."
   message-cooldown: "%prefix% Please wait %accent%%remaining%%white% before sending another message."
   invalid-number: "%prefix% Please enter a valid number."
+  invalid-input: "%prefix% Invalid input. Follow this format %format%."
   invalid-name: "%prefix% Please enter a name with less than 10 letters and no spaces."
   invalid-license: "%prefix% Your license for %accent%%plugin%%white% is invalid."
   no-item-in-hand: "%prefix% You need to hold an item in your hand."

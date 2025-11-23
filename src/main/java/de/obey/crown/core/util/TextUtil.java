@@ -39,6 +39,8 @@ public final class TextUtil {
     private final Pattern HEX_PATTERN_TWO = Pattern.compile("&#[A-Fa-f0-9]{6}");
     private final Pattern HEX_COMBINED = Pattern.compile("&#[A-Fa-f0-9]{6}|#[A-Fa-f0-9]{6}");
 
+    private final Pattern durationStringPattern = Pattern.compile("(\\d+)\\s*(d|h|m|s)");
+
     @Setter
     private DecimalFormat decimalFormat = new DecimalFormat("#,###.##", new DecimalFormatSymbols(Locale.ENGLISH));
 
@@ -49,6 +51,29 @@ public final class TextUtil {
         }
         return value;
     }
+
+    public long parseDurationStringToMillis(String input) {
+        long totalMillis = 0;
+
+        input = input.toLowerCase().trim();
+
+        final Matcher matcher = durationStringPattern.matcher(input);
+
+        while (matcher.find()) {
+            final long value = Long.parseLong(matcher.group(1));
+            final String unit = matcher.group(2);
+
+            switch (unit) {
+                case "d": totalMillis += value * 24L * 60L * 60L * 1000L; break;
+                case "h": totalMillis += value * 60L * 60L * 1000L; break;
+                case "m": totalMillis += value * 60L * 1000L; break;
+                case "s": totalMillis += value * 1000L; break;
+            }
+        }
+
+        return totalMillis;
+    }
+
 
     public boolean containsOnlyLettersAndNumbers(final String input) {
         return input.matches("\\w+");
@@ -205,7 +230,6 @@ public final class TextUtil {
     }
 
     public String formatNumber(final double value) {
-
         return decimalFormat.format(value);
     }
 
