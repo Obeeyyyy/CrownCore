@@ -61,8 +61,8 @@ public final class PluginConfig extends CrownConfig {
 
         TextUtil.setDecimalFormat(new DecimalFormat("#,###.##", new DecimalFormatSymbols(locale)));
 
-        setDefaultTimeFormat(FileUtil.getString(configuration, "time-formats.default", "hh:mm:ss"));
-        setTeleportationTimeFormat(FileUtil.getString(configuration, "time-formats.teleportation", "ss.t"));
+        setDefaultTimeFormat(FileUtil.getString(configuration, "time-formats.default", "%hh%:%mm%:%ss%"));
+        setTeleportationTimeFormat(FileUtil.getString(configuration, "time-formats.teleportation", "%ss%.%t%s"));
 
         FileUtil.saveConfigurationIntoFile(configuration, file);
     }
