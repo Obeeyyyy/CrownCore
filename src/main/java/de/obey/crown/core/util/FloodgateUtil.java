@@ -8,6 +8,7 @@ package de.obey.crown.core.util;
 */
 
 import com.google.common.collect.Maps;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.geysermc.floodgate.api.FloodgateApi;
@@ -23,6 +24,7 @@ public class FloodgateUtil {
     private static final Map<String, UUID> CACHE = Maps.newConcurrentMap();
     public static FloodgateApi floodgateApi;
 
+    @Getter
     private static boolean floodgateEnabled = false;
 
     public static void init() {
@@ -30,6 +32,13 @@ public class FloodgateUtil {
 
         if(floodgateEnabled)
             floodgateApi = FloodgateApi.getInstance();
+    }
+
+    public static String getBedrockPrefix() {
+        if(!floodgateEnabled)
+            return ".";
+
+        return floodgateApi.getPlayerPrefix();
     }
 
     public static CompletableFuture<Boolean> isBedrockPlayer(final String username) {
@@ -59,23 +68,6 @@ public class FloodgateUtil {
 
         CACHE.put(name.toLowerCase(), uuid);
         return CompletableFuture.completedFuture(uuid);
-    }
-
-    private static UUID resolveBedrockByNameFloodgate(String name) {
-        try {
-            Object player = floodgateApi.getClass()
-                    .getMethod("getPlayer", String.class)
-                    .invoke(floodgateApi, name);
-
-            if (player == null) return null;
-
-            return (UUID) player.getClass()
-                    .getMethod("getCorrectUniqueId")
-                    .invoke(player);
-
-        } catch (Exception ignored) {
-            return null;
-        }
     }
 
     private static UUID resolveFromOnlinePlayer(final Player player) {
