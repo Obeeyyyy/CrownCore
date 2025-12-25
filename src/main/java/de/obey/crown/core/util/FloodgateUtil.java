@@ -42,13 +42,13 @@ public class FloodgateUtil {
     }
 
     public static CompletableFuture<Boolean> isBedrockPlayer(final String username) {
-        if(FloodgateUtil.floodgateApi == null)
+        if(!username.startsWith(getBedrockPrefix()))
             return CompletableFuture.completedFuture(false);
 
-        if(!username.startsWith(floodgateApi.getPlayerPrefix()))
-            return CompletableFuture.completedFuture(false);
+        if(!floodgateEnabled)
+            return CompletableFuture.completedFuture(true);
 
-        return FloodgateUtil.floodgateApi.getUuidFor(username).thenApply(Objects::nonNull);
+        return floodgateApi.getUuidFor(username).thenApply(Objects::nonNull);
     }
 
     public static CompletableFuture<UUID> getUuidByName(String username) {
