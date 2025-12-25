@@ -16,196 +16,253 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public final class ItemBuilder {
 
-    private final String hi = "https://dsc.gg/crownplugins";
-    private final String how = "https://dsc.gg/crownplugins";
-    private final String are = "https://dsc.gg/crownplugins";
-    private final String you = "https://dsc.gg/crownplugins";
-    private final String doing = "https://dsc.gg/crownplugins";
+    /* base */
+    private final Material material;
+    private int amount = 1;
 
-    private final ItemStack itemStack;
-    private final ItemMeta meta;
+    /* display */
+    private String name;
+    private List<String> lore;
 
-    public ItemBuilder(final ItemStack itemStack) {
-        this.itemStack = itemStack;
-        meta =  Bukkit.getItemFactory().getItemMeta(itemStack.getType());
+    /* visuals */
+    private boolean glow;
+    private Integer customModelData;
+    private DyeColor leatherColor;
+    private Color fireworkColor;
+
+    /* skull */
+    private String skullOwner;
+    private String skullTexture;
+    private UUID skullUUID;
+
+    /* enchants & flags */
+    private final Map<Enchantment, Integer> enchantments = new HashMap<>();
+    private final Set<ItemFlag> flags = new HashSet<>();
+
+    public ItemBuilder(Material material) {
+        this.material = material;
     }
 
-    public ItemBuilder(final Material material) {
-        itemStack = new ItemStack(material);
-        meta =  Bukkit.getItemFactory().getItemMeta(material);
-
+    public ItemBuilder(Material material, int amount) {
+        this.material = material;
+        this.amount = Math.max(1, amount);
     }
 
-    public ItemBuilder(final Material material, final int amount) {
-        itemStack = new ItemStack(material, amount);
-        meta =  Bukkit.getItemFactory().getItemMeta(material);
-
-    }
-
-    public ItemBuilder setDisplayname(final String name) {
-        meta.displayName(TextUtil.translateComponent(name));
-        return this;
-    }
+    /* settters */
 
     public ItemBuilder amount(int amount) {
-        itemStack.setAmount(amount);
+        this.amount = Math.max(1, amount);
         return this;
     }
 
-    public ItemBuilder setLore(final String... lore) {
-        final List<String> list = new ArrayList<>();
-
-        for (String line : lore) {
-            line = TextUtil.translateColors(line);
-            list.add(line);
-        }
-
-        meta.setLore(list);
-
+    /* for backwards comp*/
+    @Deprecated
+    public ItemBuilder setDisplayname(String name) {
+        this.name = name;
         return this;
     }
 
-    public ItemBuilder setLore(final List<String> list) {
-        meta.setLore(list);
+    public ItemBuilder name(String name) {
+        this.name = name;
         return this;
     }
 
-    public ItemBuilder addLore(final String... lore) {
-        final List<String> list = meta.getLore() == null ? new ArrayList<>() : meta.getLore();
-
-        Collections.addAll(list, lore);
-
-        meta.setLore(list);
-
+    /* for backwards comp*/
+    @Deprecated
+    public ItemBuilder setLore(List<String> lore) {
+        this.lore = lore;
         return this;
     }
 
-    public ItemBuilder addLore(final List<String> lore) {
-        final List<String> list = meta.getLore() == null ? new ArrayList<>() : meta.getLore();
-
-        list.addAll(lore);
-        meta.setLore(list);
-
+    /* for backwards comp*/
+    @Deprecated
+    public ItemBuilder setLore(String... lore) {
+        this.lore.clear();
+        Collections.addAll(this.lore, lore);
         return this;
     }
 
-    public ItemBuilder setFireWorkColor(final Color color) {
-        final FireworkEffect effect = FireworkEffect.builder().withColor(color).build();
-
-        if(meta instanceof FireworkEffectMeta fireworkMeta) {
-            fireworkMeta.setEffect(effect);
-            fireworkMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-        }
-
+    public ItemBuilder lore(String... lore) {
+        this.lore.clear();
+        Collections.addAll(this.lore, lore);
         return this;
     }
 
-    public ItemBuilder setSkullOwner(final String name) {
-
-        if(meta instanceof SkullMeta skullMeta) {
-            final OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(name);
-            skullMeta.setOwningPlayer(offlinePlayer);
-        }
-
+    public ItemBuilder lore(List<String> lore) {
+        this.lore = lore;
         return this;
     }
 
-    public ItemBuilder setTexturURL(final String url, final UUID uuid) {
-
-        if(!(meta instanceof SkullMeta))
-            return this;
-
-        final PlayerProfile playerProfile = Bukkit.createPlayerProfile(uuid, "crownplugins");
-        final PlayerTextures playerTextures = playerProfile.getTextures();
-
-        try {
-            playerTextures.setSkin(new URL("http://textures.minecraft.net/texture/" + url));
-
-            playerProfile.setTextures(playerTextures);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-
+    public ItemBuilder addLore(List<String> extra) {
+        if (this.lore == null)
+            this.lore = new ArrayList<>();
+        this.lore.addAll(extra);
         return this;
     }
 
-    public ItemBuilder setTextur(final String texture, final UUID uuid) {
-
-        if(!(meta instanceof SkullMeta skullMeta))
-            return this;
-
-        final PlayerProfile profile = Bukkit.createPlayerProfile(uuid, "crownplugins");
-        final PlayerTextures textures = profile.getTextures();
-        final String fullTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUv" + texture;
-
-        // Decode the Base64 string
-        byte[] decodedBytes = Base64.getDecoder().decode(fullTexture);
-        // Parse the JSON object
-
-        final JsonObject json = new Gson().fromJson(new String(decodedBytes, StandardCharsets.UTF_8), JsonObject.class);
-        final JsonObject texturesJson = json.getAsJsonObject("textures");
-        final JsonObject skinJson = texturesJson.getAsJsonObject("SKIN");
-
-        String textureUrl = skinJson.get("url").getAsString();
-
-        try {
-            textures.setSkin(new URL(textureUrl));
-        } catch (MalformedURLException ignored) {
-        }
-
-        profile.setTextures(textures);
-        skullMeta.setOwnerProfile(profile);
-
+    public ItemBuilder glow(boolean glow) {
+        this.glow = glow;
         return this;
     }
 
-    public ItemBuilder setColor(final DyeColor color) {
-
-        if(meta instanceof LeatherArmorMeta leatherArmorMeta) {
-            leatherArmorMeta.setColor(color.getColor());
-        }
-
+    public ItemBuilder customModelData(Integer data) {
+        this.customModelData = data;
         return this;
     }
 
-    public ItemBuilder addEnchantment(final Enchantment enchantment, final int level) {
-        meta.addEnchant(enchantment, level, true);
+    public ItemBuilder color(DyeColor color) {
+        this.leatherColor = color;
         return this;
     }
 
-    public ItemBuilder addEnchantment(final Enchantment enchantment) {
-        meta.addEnchant(enchantment, 1, true);
+    public ItemBuilder fireworkColor(Color color) {
+        this.fireworkColor = color;
         return this;
     }
 
-    public ItemBuilder setEnchantments(final Map<Enchantment, Integer> enchantments) {
-        enchantments.keySet().forEach(enchantment -> {
-            meta.addEnchant(enchantment, enchantments.get(enchantment), true);
-        });
-
+    public ItemBuilder skullOwner(String name) {
+        this.skullOwner = name;
         return this;
     }
 
-    public ItemBuilder addItemFlags(final ItemFlag... flags) {
-        meta.addItemFlags(flags);
+    /* for backwards comp*/
+    @Deprecated
+    public ItemBuilder setSkullOwner(String name) {
+        this.skullOwner = name;
         return this;
     }
 
-    public ItemBuilder setCustomModelData(final int data) {
-        meta.setCustomModelData(data);
+    public ItemBuilder skullTexture(String texture, UUID uuid) {
+        this.skullTexture = texture;
+        this.skullUUID = uuid;
         return this;
     }
-    
+
+    /* for backwards comp*/
+    @Deprecated
+    public ItemBuilder setTextur(String texture, UUID uuid) {
+        this.skullTexture = texture;
+        this.skullUUID = uuid;
+        return this;
+    }
+
+    public ItemBuilder enchant(Enchantment enchant, int level) {
+        enchantments.put(enchant, level);
+        return this;
+    }
+
+    public ItemBuilder flag(ItemFlag flag) {
+        flags.add(flag);
+        return this;
+    }
+
+    /* build functions */
+
     public ItemStack build() {
-        itemStack.setItemMeta(meta);
-        return itemStack;
+        return buildInternal(null);
     }
 
+    public ItemStack build(final OfflinePlayer player) {
+        return buildInternal(player);
+    }
+
+    private ItemStack buildInternal(final OfflinePlayer player) {
+        final ItemStack item = new ItemStack(material, amount);
+        final ItemMeta meta = item.getItemMeta();
+        if (meta == null) return item;
+
+        /* display */
+        if (name != null) {
+            final String resolved = player == null ? name : PlaceholderUtil.resolve(player, name);
+            meta.displayName(TextUtil.translateComponent(resolved));
+        }
+
+        /* lore */
+        if (lore != null) {
+            final List<String> resolvedLore = new ArrayList<>();
+            for (String line : lore) {
+                resolvedLore.add(TextUtil.translateColors(player == null ? line : PlaceholderUtil.resolve(player, line)));
+            }
+            meta.setLore(resolvedLore);
+        }
+
+        /* enchants */
+        enchantments.forEach((e, lvl) -> meta.addEnchant(e, lvl, true));
+
+        if (glow) {
+            meta.addEnchant(Enchantment.DURABILITY, 1, true);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
+        /* flags */
+        flags.forEach(meta::addItemFlags);
+
+        /* custom model data */
+        if (customModelData != null)
+            meta.setCustomModelData(customModelData);
+
+        /* leather armor */
+        if (leatherColor != null && meta instanceof LeatherArmorMeta leather) {
+            leather.setColor(leatherColor.getColor());
+        }
+
+        /* firework */
+        if (fireworkColor != null && meta instanceof FireworkEffectMeta firework) {
+            firework.setEffect(FireworkEffect.builder().withColor(fireworkColor).build());
+            firework.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
+        /* skull owner */
+        if (skullOwner != null && meta instanceof SkullMeta skull) {
+            final String resolved = player == null ? skullOwner : PlaceholderUtil.resolve(player, skullOwner);
+            skull.setOwner(resolved);
+            skull.setOwningPlayer(Bukkit.getOfflinePlayer(resolved));
+        }
+
+        /* skull texture */
+        if (skullTexture != null && meta instanceof SkullMeta skull) {
+            applySkullTexture(skull);
+        }
+
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    /* skull util*/
+
+    private void applySkullTexture(SkullMeta skull) {
+        final PlayerProfile profile = Bukkit.createPlayerProfile(
+                skullUUID != null ? skullUUID : UUID.randomUUID(),
+                "crownplugins"
+        );
+
+        final PlayerTextures textures = profile.getTextures();
+        final String full = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUv"
+                + skullTexture;
+
+        try {
+            byte[] decoded = Base64.getDecoder().decode(full);
+            JsonObject json = new Gson().fromJson(
+                    new String(decoded, StandardCharsets.UTF_8),
+                    JsonObject.class
+            );
+
+            String url = json
+                    .getAsJsonObject("textures")
+                    .getAsJsonObject("SKIN")
+                    .get("url")
+                    .getAsString();
+
+            textures.setSkin(new URL(url));
+            profile.setTextures(textures);
+            skull.setOwnerProfile(profile);
+
+        } catch (final Exception ignored) {}
+    }
 }

@@ -1,5 +1,5 @@
 name: CrownCore
-version: 1.5.6
+version: 1.5.7
 main: de.obey.crown.core.noobf.CrownCore
 author: Obey
 website: https://builtbybit.com/resources/crowncore.52753/
@@ -26,5 +26,33 @@ loadbefore:
 commands:
   location:
     description: Command to manage locations
+    permission: core.command.location
   crowncore:
     description: Command for core
+    permission: core.command.core
+  crowngui:
+    description: Command for managing crown guis
+    permission: core.command.gui
+
+permissions:
+  core.command.gui:
+    description: Permission for the /crowngui command
+    default: op
+  core.command.location:
+    description: Permission for the /location command
+    default: op
+  core.command.core:
+    description: Permission for the /crowncore command
+    default: op
+  core.instant.teleport:
+    description: Players with this permission will bypass all teleportation cooldowns
+    default: false
+  core.version.checker:
+    description: Players with this permission will get the version checker notifications
+    default: op
+  core.anti.messagedelay:
+    description: Players with this permission will bypass the message delay
+    default: op
+  core.anti.commanddelay:
+    description: Players with this permission will bypass the command delay
+    default: op

@@ -89,7 +89,7 @@ public class Teleporter {
             return;
         }
 
-        if(player.hasPermission("instant.teleport")) {
+        if(player.hasPermission("core.instant.teleport")) {
             teleportInstant(player, location);
             return;
         }

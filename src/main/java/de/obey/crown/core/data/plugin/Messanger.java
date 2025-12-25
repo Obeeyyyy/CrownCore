@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.util.FileUtil;
+import de.obey.crown.core.util.FloodgateUtil;
 import de.obey.crown.core.util.TextUtil;
 import de.obey.crown.core.util.VaultHook;
 import lombok.Getter;
@@ -25,12 +26,15 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.geysermc.floodgate.api.FloodgateApi;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
 @Getter
@@ -603,8 +607,27 @@ public final class Messanger {
         return false;
     }
 
+    public CompletableFuture<Boolean> isBedrockPlayer(final CommandSender sender, final String name) {
+        return FloodgateUtil.isBedrockPlayer(name).thenApply((state) -> {
+
+            if(!state) {
+                if (sender instanceof Player player)
+                    sounds.playSoundToPlayer(player, "player-invalid");
+
+                sendMessage(sender, "player-invalid", new String[]{"name"}, name);
+            }
+
+            return state;
+        });
+    }
+
     public boolean isValidPlayerName(final CommandSender sender, final String name) {
-        if (!name.matches("[a-zA-z0-9]{3,16}")) {
+
+        final String bedrockPrefix = FloodgateApi.getInstance().getPlayerPrefix();
+        final String escapedPrefix = Pattern.quote(bedrockPrefix);
+        final String regex = "^(?:" + escapedPrefix + ")?[A-Za-z0-9_]{3,16}$";
+
+        if (!name.matches(regex)) {
 
             if (sender instanceof Player player)
                 sounds.playSoundToPlayer(player, "player-invalid");

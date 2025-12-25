@@ -31,7 +31,7 @@ public final class PluginConfig extends CrownConfig {
     private boolean instantTeleport = false, instantRespawn = true, teleportOnJoin, updateReminder = true;
     private List<String> instantTeleportWorlds;
     private List<String> instantTeleportRegions;
-    private String defaultTimeFormat, teleportationTimeFormat;
+    private String defaultTimeFormat, teleportationTimeFormat, bedrockPrefix;
 
     public PluginConfig(@NonNull Plugin plugin) {
         super(plugin);

@@ -31,7 +31,7 @@ public final class CoreCommand implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        if (!messanger.hasPermission(sender, "command.core.admin"))
+        if (!messanger.hasPermission(sender, "core.command.core"))
             return false;
 
         if (args.length == 1) {
@@ -83,7 +83,7 @@ public final class CoreCommand implements CommandExecutor, TabCompleter {
 
         final ArrayList<String> list = new ArrayList<>();
 
-        if (!sender.hasPermission("command.core.reload"))
+        if (!sender.hasPermission("core.command.core"))
             return list;
 
         if (args.length == 1) {

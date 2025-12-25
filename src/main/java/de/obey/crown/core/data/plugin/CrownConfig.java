@@ -4,6 +4,7 @@
 package de.obey.crown.core.data.plugin;
 
 import de.obey.crown.core.data.plugin.storage.PluginStorageConfig;
+import de.obey.crown.core.gui.GuiLoader;
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.util.FileUtil;
@@ -31,12 +32,14 @@ public class CrownConfig implements CrowPlugin {
 
     public CrownConfig(@NonNull Plugin plugin) {
         this.plugin = plugin;
+        CrownPluginRegistry.register(plugin);
 
         createFiles();
 
         sounds = new Sounds(plugin);
         messanger = new Messanger(plugin, sounds);
 
+        loadGuis();
         loadConfig();
         loadMessages();
         loadSounds();
@@ -61,6 +64,10 @@ public class CrownConfig implements CrowPlugin {
     @Override
     public void loadSounds() {
         sounds.load();
+    }
+
+    public void loadGuis() {
+        GuiLoader.loadAll(plugin);
     }
 
     public void reload() {}

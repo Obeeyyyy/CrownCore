@@ -36,7 +36,7 @@ public final class LocationCommand implements CommandExecutor, TabCompleter {
         if (!(sender instanceof Player player))
             return false;
 
-        if (!messanger.hasPermission(sender, "command.location"))
+        if (!messanger.hasPermission(sender, "core.command.location"))
             return false;
 
         if (args.length == 1) {
@@ -170,7 +170,7 @@ public final class LocationCommand implements CommandExecutor, TabCompleter {
         if (!(sender instanceof Player))
             return list;
 
-        if (!sender.hasPermission("command.location"))
+        if (!sender.hasPermission("core.command.location"))
             return list;
 
         if (args.length == 1) {

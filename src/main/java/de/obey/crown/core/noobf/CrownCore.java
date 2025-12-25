@@ -2,17 +2,18 @@ package de.obey.crown.core.noobf;
 
 import de.obey.crown.core.command.CoreCommand;
 import de.obey.crown.core.command.LocationCommand;
+import de.obey.crown.core.data.plugin.Messanger;
 import de.obey.crown.core.data.plugin.storage.player.PlayerDataService;
 import de.obey.crown.core.data.plugin.Log;
 import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.data.plugin.storage.PluginStorageManager;
 import de.obey.crown.core.event.CoreStartEvent;
+import de.obey.crown.core.gui.command.CrownGuiCommand;
+import de.obey.crown.core.gui.listener.GuiClickListener;
+import de.obey.crown.core.gui.listener.GuiCloseListener;
 import de.obey.crown.core.handler.LocationHandler;
 import de.obey.crown.core.listener.*;
-import de.obey.crown.core.util.Scheduler;
-import de.obey.crown.core.util.Teleporter;
-import de.obey.crown.core.util.UUIDFetcher;
-import de.obey.crown.core.util.VersionChecker;
+import de.obey.crown.core.util.*;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -36,33 +37,33 @@ public final class CrownCore extends JavaPlugin {
     public static final Log log = new Log();
     private static CrownCore crownCore;
 
-    /***
-     * Fixed thread pool.
-     * Threads: 8
-     * Used for all core and child plugins tasks.
-     */
     private ExecutorService executor;
     private OkHttpClient okHttpClient;
     private VersionChecker versionChecker;
     private PluginStorageManager pluginStorageManager;
 
-    private FloodgateApi floodgateApi;
-
-    private boolean placeholderapi = false;
-
     private PluginConfig pluginConfig;
+    private Messanger messanger;
     private Sounds sounds;
 
     private PlayerDataService playerDataService;
 
+    /***
+     * Ran when the plugin is loaded.
+     */
     @Override
     public void onLoad() {
         crownCore = this;
         log.setPlugin(this);
 
+        /***
+         * Fixed thread pool.
+         * Threads: 8
+         * Used for all core and child plugins tasks.
+         */
         executor = Executors.newFixedThreadPool(8, runnable -> {
             Thread thread = new Thread(runnable);
-            thread.setName("CC-Worker-" + thread.getId());
+            thread.setName("CrownCore-Worker-" + thread.getId());
             return thread;
         });
 
@@ -70,23 +71,19 @@ public final class CrownCore extends JavaPlugin {
         pluginStorageManager = new PluginStorageManager(executor);
 
         pluginConfig = new PluginConfig(this);
+        messanger = pluginConfig.getMessanger();
         sounds = pluginConfig.getSounds();
     }
 
+    /***
+     * Ran when the plugin is enabled.
+     */
     @Override
     public void onEnable() {
         Scheduler.initialize();
         UUIDFetcher.initHTTPClient(okHttpClient);
-
-        // check if placeholderapi is present
-        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            placeholderapi = true;
-            new Placeholders().register();
-        }
-
-        if(getServer().getPluginManager().getPlugin("floodgate") != null) {
-            floodgateApi = FloodgateApi.getInstance();
-        }
+        PlaceholderUtil.init();
+        FloodgateUtil.init();
 
         versionChecker = new VersionChecker(executor, okHttpClient);
         versionChecker.retrieveNewestPluginVersions();
@@ -96,11 +93,14 @@ public final class CrownCore extends JavaPlugin {
         initializeCore();
     }
 
+    /***
+     * Ran when the plugin is disabled. Saves Locations and shutdowns connections.
+     */
     @Override
     public void onDisable() {
         LocationHandler.saveLocations();
-
         pluginStorageManager.shutdownConnections();
+        executor.shutdown();
     }
 
     /***
@@ -132,13 +132,17 @@ public final class CrownCore extends JavaPlugin {
      * Loads commands.
      */
     private void loadCommand() {
-        final LocationCommand locationCommand = new LocationCommand(pluginConfig.getMessanger());
+        final LocationCommand locationCommand = new LocationCommand(messanger);
         getCommand("location").setExecutor(locationCommand);
         getCommand("location").setTabCompleter(locationCommand);
 
-        final CoreCommand coreCommand = new CoreCommand(pluginConfig.getMessanger(), pluginConfig);
+        final CoreCommand coreCommand = new CoreCommand(messanger, pluginConfig);
         getCommand("crowncore").setExecutor(coreCommand);
         getCommand("crowncore").setTabCompleter(coreCommand);
+
+        final CrownGuiCommand crownGuiCommand = new CrownGuiCommand(messanger);
+        getCommand("crowngui").setExecutor(crownGuiCommand);
+        getCommand("crowngui").setTabCompleter(crownGuiCommand);
     }
 
     /***
@@ -152,6 +156,8 @@ public final class CrownCore extends JavaPlugin {
         pluginManager.registerEvents(new PlayerJoin(pluginConfig, versionChecker, playerDataService), this);
         pluginManager.registerEvents(new PlayerLogin(playerDataService), this);
         pluginManager.registerEvents(new PlayerQuit(pluginConfig, playerDataService), this);
+        pluginManager.registerEvents(new GuiClickListener(), this);
+        pluginManager.registerEvents(new GuiCloseListener(), this);
     }
 
     /***

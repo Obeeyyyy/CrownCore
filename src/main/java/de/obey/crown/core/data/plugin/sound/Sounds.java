@@ -32,12 +32,10 @@ public final class Sounds {
     private final Map<String, SoundData> sounds = Maps.newConcurrentMap();
 
     public void load() {
-
-
         final File file = FileUtil.getGeneratedFile(plugin, "sounds.yml", true);
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
-        checkForMussingEntries(file, configuration);
+        checkForMissingEntries(file, configuration);
 
         if (configuration.contains("sounds")) {
             for (final String key : configuration.getConfigurationSection("sounds").getKeys(false)) {
@@ -84,7 +82,7 @@ public final class Sounds {
         FileUtil.saveConfigurationIntoFile(configuration, file);
     }
 
-    private void checkForMussingEntries(final File file, final YamlConfiguration configuration) {
+    private void checkForMissingEntries(final File file, final YamlConfiguration configuration) {
         CrownCore.getInstance().getExecutor().submit(() -> {
             final YamlConfiguration defaults = new YamlConfiguration();
 

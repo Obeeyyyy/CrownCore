@@ -32,7 +32,7 @@ public final class PlayerJoin implements Listener {
             return;
         }
 
-        if (!event.getPlayer().hasPermission("core.admin")) {
+        if (!event.getPlayer().hasPermission("core.version.checker")) {
             return;
         }
 
