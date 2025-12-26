@@ -51,23 +51,25 @@ public class FloodgateUtil {
         return floodgateApi.getUuidFor(username).thenApply(Objects::nonNull);
     }
 
-    public static CompletableFuture<UUID> getUuidByName(String username) {
+    public static CompletableFuture<UUID> getUuidByName(final String username) {
         final String name = username.trim();
 
         if (CACHE.containsKey(name.toLowerCase()))
             return CompletableFuture.completedFuture(CACHE.get(name.toLowerCase()));
 
         final Player online = Bukkit.getPlayerExact(name);
-        if (online == null)
-            return CompletableFuture.completedFuture(null);
+        if (online != null) {
 
-        final UUID uuid = resolveFromOnlinePlayer(online);
+            final UUID uuid = resolveFromOnlinePlayer(online);
 
-        if(uuid == null)
-            return CompletableFuture.completedFuture(null);
+            if (uuid == null)
+                return CompletableFuture.completedFuture(null);
 
-        CACHE.put(name.toLowerCase(), uuid);
-        return CompletableFuture.completedFuture(uuid);
+            CACHE.put(name.toLowerCase(), uuid);
+            return CompletableFuture.completedFuture(uuid);
+        }
+
+        return floodgateApi.getUuidFor(name);
     }
 
     private static UUID resolveFromOnlinePlayer(final Player player) {

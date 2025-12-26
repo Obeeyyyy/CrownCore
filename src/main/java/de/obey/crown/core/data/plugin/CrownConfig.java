@@ -70,9 +70,22 @@ public class CrownConfig implements CrowPlugin {
         GuiLoader.loadAll(plugin);
     }
 
-    public void reload() {}
+    public void reload() {
+        loadConfig();
+        loadMessages();
+        loadSounds();
 
-    public void loadConfig() {}
+        if(pluginStorageConfig != null) {
+            crownCore.getPluginStorageManager().createPluginDataTables(plugin.getName(), true);
+        }
+    }
+
+    public void loadConfig() {
+        final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(getConfigFile());
+
+        if(configuration.contains("storage"))
+            pluginStorageConfig = new PluginStorageConfig(this, configuration);
+    }
 
     public void saveConfig() {}
 
@@ -80,6 +93,7 @@ public class CrownConfig implements CrowPlugin {
      * Loads the storage part of the config.yml
      * @param configuration YamlConfiguration for config file
      */
+    @Deprecated
     public void loadPluginStorageConfig(final YamlConfiguration configuration) {
         pluginStorageConfig = new PluginStorageConfig(this, configuration);
     }

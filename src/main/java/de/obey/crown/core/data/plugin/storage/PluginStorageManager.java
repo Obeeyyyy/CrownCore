@@ -11,13 +11,13 @@ import de.obey.crown.core.data.plugin.storage.plugin.PluginDataSchema;
 import de.obey.crown.core.event.PlayerDataLoadEvent;
 import de.obey.crown.core.event.PlayerDataSaveEvent;
 import de.obey.crown.core.noobf.CrownCore;
-import de.obey.crown.core.noobf.PluginConfig;
 import de.obey.crown.core.util.Scheduler;
 import lombok.RequiredArgsConstructor;
 
 import java.nio.file.Path;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
@@ -35,11 +35,16 @@ public class PluginStorageManager {
      * Initiates the database connection (h2/mysql/mariadb) with the settings read out of the config.yml
      * @param pluginConfig the CrownConfig instance to read settings from
      */
-    private void createConnection(final CrownConfig pluginConfig) {
+    public CompletableFuture<Boolean> createConnection(final CrownConfig pluginConfig) {
         final PluginStorageConfig storageConfig = pluginConfig.getPluginStorageConfig();
+
+        if(storageConfig == null)
+            return CompletableFuture.completedFuture(false);
+
         final String pluginName = pluginConfig.getPlugin().getName().toLowerCase();
 
-        executor.execute(() -> {
+        return CompletableFuture.supplyAsync(() -> {
+
             if (connections.containsKey(pluginName)) {
                 String driverClassName = "";
                 try {
@@ -49,9 +54,8 @@ public class PluginStorageManager {
                     CrownCore.log.debug(" - current storage method: " + storageConfig.getStorageType().name());
                 } catch (final SQLException ignored) {}
 
-                if (driverClassName.contains(storageConfig.getStorageType().name())) {
-                    return;
-                }
+                if (driverClassName.contains(storageConfig.getStorageType().name()))
+                    return true;
             }
 
             CrownCore.log.debug(" - creating new connection");
@@ -108,7 +112,9 @@ public class PluginStorageManager {
             connections.put(pluginName, new HikariDataSource(hikariConfig));
 
             CrownCore.log.debug("created connection pool - " + hikariConfig.getPoolName());
-        });
+
+            return true;
+        }, executor);
     }
 
     public void loadPluginDataPlugins() {
@@ -130,9 +136,8 @@ public class PluginStorageManager {
         final String pluginName = pluginConfig.getPlugin().getName().toLowerCase();
         final List<PluginDataSchema> schemas = pluginDataSchemas.containsKey(pluginName) ? pluginDataSchemas.get(pluginName) : new ArrayList<>();
 
-        if(!schemas.contains(pluginDataSchema)) {
+        if(!schemas.contains(pluginDataSchema))
             schemas.add(pluginDataSchema);
-        }
 
         if(!pluginConfigs.containsKey(pluginName)) {
             pluginConfigs.put(pluginName, pluginConfig);
@@ -167,75 +172,101 @@ public class PluginStorageManager {
      */
     private void createPluginDataTables() {
         pluginDataSchemas.forEach((pluginName, schemas) -> {
-            if(!connections.containsKey(pluginName)) {
-                if(!pluginConfigs.containsKey(pluginName)) {
-                    return;
+            createPluginDataTables(pluginName.toLowerCase(), false);
+        });
+    }
+
+    public void createPluginDataTables(String pluginNamePlain, final boolean forceNewConnection) {
+        final String pluginName = pluginNamePlain.toLowerCase();
+
+        if(forceNewConnection) {
+            createConnection(pluginConfigs.get(pluginName)).thenAccept((state) -> {
+                if(state) {
+                    executeTableCreation(pluginName);
+                } else {
+                    CrownCore.log.warn("could not execute table creation. no connection.");
                 }
+            });
+        } else {
+            if(!connections.containsKey(pluginName)) {
+                if(!pluginConfigs.containsKey(pluginName))
+                    return;
 
-                createConnection(pluginConfigs.get(pluginName));
-            }
-
-            CrownCore.log.debug(" > creating plugin data tables for " + pluginName);
-            for (final PluginDataSchema pluginDataSchema : schemas) {
-                CrownCore.log.debug(" - creating table: " + pluginDataSchema.getTableName());
-
-                executor.submit(() -> {
-                    final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
-                    stringBuilder.append(pluginDataSchema.getTableName()).append(" (");
-
-                    final List<String> primaryKeys = new ArrayList<>();
-
-                    for (final Iterator<DataKey<?>> iterator = pluginDataSchema.getDataKeys().iterator(); iterator.hasNext(); ) {
-                        final DataKey<?> key = iterator.next();
-
-                        CrownCore.log.debug("   - data key: " + key.getName());
-
-                        final StringBuilder column = new StringBuilder(key.getName())
-                                .append(" ")
-                                .append(key.getSqlDataType());
-
-                        if (key.isNotNull()) column.append(" NOT NULL");
-                        if (key.getDefaultValue() != null) {
-                            if (Number.class.isAssignableFrom(key.getDataType()) || key.getDataType() == Boolean.class) {
-                                column.append(" DEFAULT ").append(key.getDefaultValue());
-                            } else {
-                                column.append(" DEFAULT '").append(key.getDefaultValue()).append("'");
-                            }
-                        }
-                        if (key.isAutoIncrement()) column.append(" AUTO_INCREMENT");
-                        if (key.isUnique()) column.append(" UNIQUE");
-
-                        stringBuilder.append(column);
-
-                        if (iterator.hasNext()) {
-                            stringBuilder.append(", ");
-                        }
-
-                        if (key.isPrimaryKey()) {
-                            primaryKeys.add(key.getName());
-                        }
-                    }
-
-                    if (!primaryKeys.isEmpty()) {
-                        stringBuilder.append(", PRIMARY KEY (")
-                                .append(String.join(", ", primaryKeys))
-                                .append(")");
-                    }
-
-                    stringBuilder.append(");");
-
-                    try (final Connection conn = getConnectionForPluginName(pluginName);
-                         final Statement stmt = conn.createStatement()) {
-                        stmt.executeUpdate(stringBuilder.toString());
-                    } catch (final SQLException exception) {
-                        CrownCore.log.warn("error creating plugin data tables: ");
-                        CrownCore.log.warn(" - plugin: " + pluginName);
-                        CrownCore.log.warn(" - table: " + pluginDataSchema.getTableName());
-                        CrownCore.log.warn(" - exception: " + exception.getMessage());
+                createConnection(pluginConfigs.get(pluginName)).thenAccept((state) -> {
+                    if(state) {
+                        executeTableCreation(pluginName);
+                    } else {
+                        CrownCore.log.warn("could not execute table creation. no connection.");
                     }
                 });
             }
-        });
+        }
+
+    }
+
+    private void executeTableCreation(final String pluginName) {
+        CrownCore.log.debug(" > creating plugin data tables for " + pluginName);
+
+        final List<PluginDataSchema> schemas = pluginDataSchemas.get(pluginName);
+        for (final PluginDataSchema pluginDataSchema : schemas) {
+            CrownCore.log.debug(" - creating table: " + pluginDataSchema.getTableName());
+
+            executor.submit(() -> {
+                final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
+                stringBuilder.append(pluginDataSchema.getTableName()).append(" (");
+
+                final List<String> primaryKeys = new ArrayList<>();
+
+                for (final Iterator<DataKey<?>> iterator = pluginDataSchema.getDataKeys().iterator(); iterator.hasNext(); ) {
+                    final DataKey<?> key = iterator.next();
+
+                    CrownCore.log.debug("   - data key: " + key.getName());
+
+                    final StringBuilder column = new StringBuilder(key.getName())
+                            .append(" ")
+                            .append(key.getSqlDataType());
+
+                    if (key.isNotNull()) column.append(" NOT NULL");
+                    if (key.getDefaultValue() != null) {
+                        if (Number.class.isAssignableFrom(key.getDataType()) || key.getDataType() == Boolean.class) {
+                            column.append(" DEFAULT ").append(key.getDefaultValue());
+                        } else {
+                            column.append(" DEFAULT '").append(key.getDefaultValue()).append("'");
+                        }
+                    }
+                    if (key.isAutoIncrement()) column.append(" AUTO_INCREMENT");
+                    if (key.isUnique()) column.append(" UNIQUE");
+
+                    stringBuilder.append(column);
+
+                    if (iterator.hasNext()) {
+                        stringBuilder.append(", ");
+                    }
+
+                    if (key.isPrimaryKey()) {
+                        primaryKeys.add(key.getName());
+                    }
+                }
+
+                if (!primaryKeys.isEmpty()) {
+                    stringBuilder.append(", PRIMARY KEY (")
+                            .append(String.join(", ", primaryKeys))
+                            .append(")");
+                }
+
+                stringBuilder.append(");");
+
+                try (final Connection conn = getConnectionForPluginName(pluginName);
+                     final Statement stmt = conn.createStatement()) {
+                    stmt.executeUpdate(stringBuilder.toString());
+                } catch (final SQLException exception) {
+                    CrownCore.log.warn("error creating plugin data tables: ");
+                    CrownCore.log.warn(" - plugin: " + pluginName);
+                    CrownCore.log.warn(" - table: " + pluginDataSchema.getTableName());
+                    CrownCore.log.warn(" - exception: " + exception.getMessage());
+                }
+            });
+        }
     }
 
     /***

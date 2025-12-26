@@ -67,6 +67,25 @@ public class UUIDFetcher {
         return CompletableFuture.supplyAsync(() -> getUserName(uniqueId), CrownCore.getInstance().getExecutor());
     }
 
+    public CompletableFuture<UUID> resolveUUID(final String input) {
+        CrownCore.log.debug("resolving uuid for '" + input + "'");
+
+        try {
+            final UUID uuid = UUID.fromString(input);
+            CrownCore.log.debug(" - input already is uuid");
+            return CompletableFuture.completedFuture(uuid);
+        } catch (final IllegalArgumentException exception) {
+            if(FloodgateUtil.isFloodgateEnabled()) {
+
+                if(input.startsWith(FloodgateUtil.getBedrockPrefix())) {
+                    CrownCore.log.debug(" - input starts with bedrock prefix");
+                    return FloodgateUtil.getUuidByName(input);
+                }
+            }
+
+            return getUniqueIdAsync(input);
+        }
+    }
 
     public @Nullable UUID getUniqueId(@NotNull String userName) {
         CrownCore.log.debug("(!) fetching uuid for name " + userName);

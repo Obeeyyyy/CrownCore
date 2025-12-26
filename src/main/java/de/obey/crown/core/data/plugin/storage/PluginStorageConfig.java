@@ -38,7 +38,8 @@ public class PluginStorageConfig {
         setConnectTimeout(FileUtil.getInt(configuration, "storage.data.pool-settings.connection-timeout", 5000));
 
         CrownCore.log.debug(" - storage method: " + storageType.name());
-
-        CrownCore.getInstance().getPluginStorageManager().loadPluginDataPlugins();
+        CrownCore.log.debug(" - host: " + host);
+        CrownCore.log.debug(" - user: " + username);
+        CrownCore.log.debug(" - password: " + password.substring(0, password.length() / 2) + "*");
     }
 }
