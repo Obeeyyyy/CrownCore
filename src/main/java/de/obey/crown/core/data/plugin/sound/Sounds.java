@@ -83,7 +83,7 @@ public final class Sounds {
     }
 
     private void checkForMissingEntries(final File file, final YamlConfiguration configuration) {
-        CrownCore.getInstance().getExecutor().submit(() -> {
+        CrownCore.getInstance().getExecutor().execute(() -> {
             final YamlConfiguration defaults = new YamlConfiguration();
 
             try (final InputStream stream = plugin.getResource("sounds.yml")) {

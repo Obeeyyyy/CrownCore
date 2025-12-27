@@ -107,7 +107,7 @@ public final class Messanger {
     }
 
     private void checkForMissingMessageEntries() {
-        crownCore.getExecutor().submit(() -> {
+        crownCore.getExecutor().execute(() -> {
             final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
             final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
             final YamlConfiguration defaults = new YamlConfiguration();
@@ -145,7 +145,7 @@ public final class Messanger {
     }
 
     private void checkForMissingMultiLineMessageEntries() {
-        crownCore.getExecutor().submit(() -> {
+        crownCore.getExecutor().execute(() -> {
             final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
             final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
             final YamlConfiguration defaults = new YamlConfiguration();

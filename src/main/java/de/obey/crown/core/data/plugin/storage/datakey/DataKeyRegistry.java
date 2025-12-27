@@ -1,8 +1,10 @@
 package de.obey.crown.core.data.plugin.storage.datakey;
 
 import com.google.common.collect.Maps;
+import de.obey.crown.core.noobf.CrownCore;
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
+import org.bukkit.plugin.Plugin;
 
 import java.util.Collection;
 import java.util.Map;
@@ -19,15 +21,12 @@ public class DataKeyRegistry {
     private final Map<String, Map<String, DataKey<?>>> registry = Maps.newConcurrentMap();
 
     public void register(final DataKey<?> key) {
-        if(registry.containsKey(key.getPlugin())) {
-            registry.get(key.getPlugin()).put(key.getName(), key);
-            return;
-        }
 
-        final Map<String, DataKey<?>> temp = Maps.newConcurrentMap();
-        temp.put(key.getName(), key);
+        CrownCore.log.debug("registering datakey");
+        CrownCore.log.debug(" - name: " + key.getName());
+        CrownCore.log.debug(" - plugin: " + key.getPlugin());
 
-        registry.put(key.getPlugin(), temp);
+        registry.computeIfAbsent(key.getPlugin(), k -> Maps.newConcurrentMap()).put(key.getName(), key);
     }
 
     public void register(final DataKey<?>... keys) {
@@ -49,8 +48,12 @@ public class DataKeyRegistry {
         return registry.get(plugin).values();
     }
 
-    public boolean pluginHasKeys(final String plugin) {
-        return registry.containsKey(plugin);
+    public boolean pluginHasKeys(final String pluginName) {
+        return registry.containsKey(pluginName) || registry.containsKey(pluginName.toLowerCase());
+    }
+
+    public boolean pluginHasKeys(final Plugin plugin) {
+        return pluginHasKeys(plugin.getName());
     }
 }
 

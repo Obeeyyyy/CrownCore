@@ -123,7 +123,7 @@ public class PluginStorageManager {
 
     public void loadPlayerDataPlugins() {
         for (final String pluginName : playerDataSchemas.keySet()) {
-            createPlayerDataTable(pluginName);
+            createPlayerDataTable(pluginName.toLowerCase());
         }
     }
 
@@ -154,24 +154,31 @@ public class PluginStorageManager {
     public void registerPlayerDataPlugin(final CrownConfig pluginConfig) {
         final String pluginName = pluginConfig.getPlugin().getName().toLowerCase();
 
+        CrownCore.log.debug("registering playerdata plugin: " + pluginName);
+
         if(!DataKeyRegistry.pluginHasKeys(pluginName)) {
+            CrownCore.log.debug(" -> no datakey found, abort");
             return;
         }
 
         if(!pluginConfigs.containsKey(pluginName)) {
             pluginConfigs.put(pluginName, pluginConfig);
             createConnection(pluginConfig);
+            CrownCore.log.debug(" -> created new connection");
         }
 
         final PlayerDataSchema schema = new PlayerDataSchema(pluginName);
         playerDataSchemas.put(pluginName, schema);
+        CrownCore.log.debug(" -> created schema");
     }
 
     /***
      * creates the plugin data tables using the registered schemas
      */
     private void createPluginDataTables() {
+        CrownCore.log.debug("creating all plugin data tables");
         pluginDataSchemas.forEach((pluginName, schemas) -> {
+            CrownCore.log.debug(" - creating for: " + pluginName);
             createPluginDataTables(pluginName.toLowerCase(), false);
         });
     }
@@ -199,6 +206,8 @@ public class PluginStorageManager {
                         CrownCore.log.warn("could not execute table creation. no connection.");
                     }
                 });
+            } else {
+                executeTableCreation(pluginName);
             }
         }
 
@@ -211,7 +220,7 @@ public class PluginStorageManager {
         for (final PluginDataSchema pluginDataSchema : schemas) {
             CrownCore.log.debug(" - creating table: " + pluginDataSchema.getTableName());
 
-            executor.submit(() -> {
+            executor.execute(() -> {
                 final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
                 stringBuilder.append(pluginDataSchema.getTableName()).append(" (");
 
@@ -271,10 +280,12 @@ public class PluginStorageManager {
 
     /***
      * creates the player data table using the generated schema
-     * @param pluginName name of plugin the schema was generated for
+     * @param rawPluginName name of plugin the schema was generated for
      */
-    private void createPlayerDataTable(final String pluginName) {
-        executor.submit(() -> {
+    public void createPlayerDataTable(final String rawPluginName) {
+        final String pluginName = rawPluginName.toLowerCase();
+
+        executor.execute(() -> {
             CrownCore.log.debug("creating playerdata table for " + pluginName);
             final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
 
@@ -288,7 +299,7 @@ public class PluginStorageManager {
             stringBuilder.setLength(stringBuilder.length() - 2);
             stringBuilder.append(");");
 
-            try (final Connection conn = getConnectionForPluginName(pluginName.toLowerCase());
+            try (final Connection conn = getConnectionForPluginName(pluginName);
                  final Statement stmt = conn.createStatement()) {
                 stmt.executeUpdate(stringBuilder.toString());
 

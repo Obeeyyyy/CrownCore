@@ -4,6 +4,7 @@
 package de.obey.crown.core.data.plugin;
 
 import de.obey.crown.core.data.plugin.storage.PluginStorageConfig;
+import de.obey.crown.core.data.plugin.storage.datakey.DataKeyRegistry;
 import de.obey.crown.core.gui.GuiLoader;
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.data.plugin.sound.Sounds;
@@ -75,9 +76,11 @@ public class CrownConfig implements CrowPlugin {
         loadMessages();
         loadSounds();
 
-        if(pluginStorageConfig != null) {
+        if(pluginStorageConfig != null)
             crownCore.getPluginStorageManager().createPluginDataTables(plugin.getName(), true);
-        }
+
+        if(DataKeyRegistry.pluginHasKeys(plugin))
+            crownCore.getPluginStorageManager().createPlayerDataTable(plugin.getName());
     }
 
     public void loadConfig() {
@@ -85,6 +88,15 @@ public class CrownConfig implements CrowPlugin {
 
         if(configuration.contains("storage"))
             pluginStorageConfig = new PluginStorageConfig(this, configuration);
+
+        CrownCore.log.debug("LOAD CONFIG 1 " + plugin.getName());
+
+        if(DataKeyRegistry.pluginHasKeys(plugin)) {
+            CrownCore.log.debug("LOAD CONFIG HAS PÜLUFGIN DATA " + plugin.getName());
+            crownCore.getPluginStorageManager().registerPlayerDataPlugin(this);
+        }
+
+        CrownCore.log.debug("LOAD CONFIG 2 " + plugin.getName());
     }
 
     public void saveConfig() {}
