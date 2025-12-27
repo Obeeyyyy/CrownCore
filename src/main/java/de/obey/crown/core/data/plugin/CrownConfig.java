@@ -89,14 +89,9 @@ public class CrownConfig implements CrowPlugin {
         if(configuration.contains("storage"))
             pluginStorageConfig = new PluginStorageConfig(this, configuration);
 
-        CrownCore.log.debug("LOAD CONFIG 1 " + plugin.getName());
-
-        if(DataKeyRegistry.pluginHasKeys(plugin)) {
-            CrownCore.log.debug("LOAD CONFIG HAS PÜLUFGIN DATA " + plugin.getName());
+        if(DataKeyRegistry.pluginHasKeys(plugin))
             crownCore.getPluginStorageManager().registerPlayerDataPlugin(this);
-        }
 
-        CrownCore.log.debug("LOAD CONFIG 2 " + plugin.getName());
     }
 
     public void saveConfig() {}
