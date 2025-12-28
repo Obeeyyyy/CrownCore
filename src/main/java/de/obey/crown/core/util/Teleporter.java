@@ -15,6 +15,10 @@ import de.obey.crown.core.data.plugin.sound.SoundData;
 import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.handler.LocationHandler;
 import de.obey.crown.core.util.effects.TeleportEffect;
+import de.obey.crown.core.util.task.CrownTask;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.UtilityClass;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -36,6 +40,8 @@ public class Teleporter {
 
     private final List<UUID> isTeleporting = new ArrayList<UUID>();
     private final Map<Player, BossBar> bossBars = Maps.newConcurrentMap();
+    @Getter
+    private final Map<UUID, CrownTask> tasks = Maps.newConcurrentMap();
 
     private PluginConfig crownPluginConfig;
     private Messanger messanger;
@@ -45,6 +51,13 @@ public class Teleporter {
         crownPluginConfig = CrownCore.getInstance().getPluginConfig();
         messanger = crownPluginConfig.getMessanger();
         sounds = crownPluginConfig.getSounds();
+    }
+
+    public void quit(final Player player) {
+        if(tasks.containsKey(player.getUniqueId()))
+            tasks.get(player.getUniqueId()).cancel();
+
+        isTeleporting.remove(player.getUniqueId());
     }
 
     public void teleportInstant(final Player player, final String locationName) {
@@ -59,11 +72,11 @@ public class Teleporter {
     }
 
     public void teleportInstant(final Player player, final Location location) {
-        if (location == null) {
+        if (location == null)
             return;
-        }
 
-        player.teleport(location);
+        player.teleportAsync(location);
+
         sounds.playSoundToPlayer(player, "teleport-instant-1");
         sounds.playSoundToPlayer(player, "teleport-instant-2");
     }
@@ -80,23 +93,21 @@ public class Teleporter {
     }
 
     public void teleportWithAnimation(final Player player, final Location location) {
-        if (location == null) {
+        if (location == null)
             return;
-        }
 
         if (crownPluginConfig.isInstantTeleport()) {
             teleportInstant(player, location);
             return;
         }
 
-        if(player.hasPermission("core.instant.teleport")) {
+        if (player.hasPermission("core.instant.teleport")) {
             teleportInstant(player, location);
             return;
         }
 
-        if (isTeleporting.contains(player.getUniqueId())) {
+        if (isTeleporting.contains(player.getUniqueId()))
             return;
-        }
 
         if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
             teleportInstant(player, location);
@@ -108,9 +119,9 @@ public class Teleporter {
             return;
         }
 
-        if(!crownPluginConfig.getInstantTeleportRegions().isEmpty()) {
+        if (!crownPluginConfig.getInstantTeleportRegions().isEmpty()) {
             for (final String region : crownPluginConfig.getInstantTeleportRegions()) {
-                if(WorldGuardUtil.isPlayerInRegion(player, region)) {
+                if (WorldGuardUtil.isPlayerInRegion(player, region)) {
                     teleportInstant(player, location);
                     return;
                 }
@@ -127,54 +138,46 @@ public class Teleporter {
 
         sounds.playSoundToPlayer(player, "teleport-tick");
 
-        new BukkitRunnable() {
+        final TeleportState teleportState = new TeleportState(player.getLocation());
+        teleportState.setRemain(cooldown);
 
-            final Location saved = player.getLocation();
-            long remain = cooldown;
-            int ticks = 0;
-            int microTicks = 0;
-            float pitch = 0.6f;
-
-            @Override
-            public void run() {
-
-                if (player.getLocation().getX() != saved.getX() || player.getLocation().getZ() != saved.getZ()) {
-                    removeBossbar(player);
-                    effect.stop();
-                    sounds.playSoundToPlayer(player, "teleport-cancelled");
-                    messanger.sendMessage(player, "teleportation-cancelled");
-                    isTeleporting.remove(player.getUniqueId());
-                    cancel();
-                    return;
-                }
-
-                if (microTicks < 20) {
-                    microTicks++;
-                    remain -= 50;
-
-                    sendTeleportMessage(player, ticks, cooldown, remain);
-                    return;
-                }
-
-                microTicks = 0;
-
-                if ((ticks + 1) >= crownPluginConfig.getTeleportDelay()) {
-                    teleportInstant(player, location);
-                    sendTeleportCompletedMessage(player);
-                    removeBossbar(player);
-                    isTeleporting.remove(player.getUniqueId());
-                    effect.stop();
-                    cancel();
-                    return;
-                }
-
-                pitch += 0.1f;
-                final SoundData soundData = sounds.getSoundData("teleport-tick");
-                player.playSound(player.getLocation(), soundData.getSound(), soundData.getVolume(), pitch);
-
-                ticks++;
+        tasks.put(player.getUniqueId(), Scheduler.runEntityTaskTimer(CrownCore.getInstance(), player, () -> {
+            if (player.getLocation().getX() != teleportState.getSaved().getX() || player.getLocation().getZ() != teleportState.getSaved().getZ()) {
+                removeBossbar(player);
+                effect.stop();
+                sounds.playSoundToPlayer(player, "teleport-cancelled");
+                messanger.sendMessage(player, "teleportation-cancelled");
+                isTeleporting.remove(player.getUniqueId());
+                tasks.get(player.getUniqueId()).cancel();
+                return;
             }
-        }.runTaskTimer(CrownCore.getInstance(), 1, 1);
+
+            if (teleportState.getMicroTicks() < 20) {
+                teleportState.setMicroTicks(teleportState.getMicroTicks() + 1);
+                teleportState.setRemain(teleportState.getRemain() - 50);
+
+                sendTeleportMessage(player, teleportState.getTicks(), cooldown, teleportState.getRemain());
+                return;
+            }
+
+            teleportState.setMicroTicks(0);
+
+            if ((teleportState.getTicks() + 1) >= crownPluginConfig.getTeleportDelay()) {
+                teleportInstant(player, location);
+                sendTeleportCompletedMessage(player);
+                removeBossbar(player);
+                isTeleporting.remove(player.getUniqueId());
+                effect.stop();
+                tasks.get(player.getUniqueId()).cancel();
+                return;
+            }
+
+            teleportState.setPitch(teleportState.getPitch() + 0.1f);
+            final SoundData soundData = sounds.getSoundData("teleport-tick");
+            player.playSound(player.getLocation(), soundData.getSound(), soundData.getVolume(), teleportState.getPitch());
+
+            teleportState.setTicks(teleportState.getTicks() + 1);
+        }, 1, 1));
     }
 
     private void removeBossbar(final Player player) {
@@ -228,5 +231,15 @@ public class Teleporter {
             messanger.sendActionbar(player, "teleportation-message", new String[]{"remaining"}, TextUtil.formatTimeStringWithFormat(remaining, crownPluginConfig.getTeleportationTimeFormat()));
         }
     }
+}
 
+@RequiredArgsConstructor
+@Getter
+@Setter
+class TeleportState {
+    private final Location saved;
+    private long remain;
+    private int ticks = 0;
+    private int microTicks = 0;
+    private float pitch = 0.6f;
 }

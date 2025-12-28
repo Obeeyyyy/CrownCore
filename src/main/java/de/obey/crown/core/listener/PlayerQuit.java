@@ -2,7 +2,9 @@ package de.obey.crown.core.listener;
 
 import de.obey.crown.core.data.plugin.storage.player.PlayerDataService;
 import de.obey.crown.core.noobf.PluginConfig;
+import de.obey.crown.core.util.Teleporter;
 import lombok.RequiredArgsConstructor;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -15,11 +17,14 @@ public class PlayerQuit implements Listener {
 
     @EventHandler
     public void on(final PlayerQuitEvent event) {
-        event.getPlayer().closeInventory();
+        final Player player = event.getPlayer();
+        player.closeInventory();
 
-        playerDataService.saveAsync(event.getPlayer().getUniqueId()).thenRun(() -> {
+        Teleporter.quit(player);
+
+        playerDataService.saveAsync(player.getUniqueId()).thenRun(() -> {
             if(pluginConfig.getDataCacheTime() <= 0) {
-                playerDataService.unloadFromCache(event.getPlayer().getUniqueId());
+                playerDataService.unloadFromCache(player.getUniqueId());
             }
         });
     }
