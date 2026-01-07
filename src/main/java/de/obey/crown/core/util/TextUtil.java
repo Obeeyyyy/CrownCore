@@ -14,6 +14,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -415,4 +416,16 @@ public final class TextUtil {
     public String translateColors(final String message) {
         return translateLegacyColors(translateHexColors(translateCorePlaceholder(message)));
     }
+
+    public String miniToLegacyIfMini(String input) {
+        if (input == null || input.isEmpty()) return input;
+
+        try {
+            final Component component = MiniMessage.miniMessage().deserialize(input);
+            return LegacyComponentSerializer.legacySection().serialize(component);
+        } catch (final Exception ignored) {
+            return input;
+        }
+    }
+
 }

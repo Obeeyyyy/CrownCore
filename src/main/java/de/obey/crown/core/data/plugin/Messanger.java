@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
@@ -64,8 +65,8 @@ public final class Messanger {
 
     private void loadPluginPlaceholders(final YamlConfiguration configuration) {
         prefix = TextUtil.registerCorePlaceholder("%" + plugin.getName().toLowerCase() + "_prefix%", FileUtil.getString(configuration, "prefix", prefix));
-        whiteColor = TextUtil.registerCorePlaceholder("%" + plugin.getName().toLowerCase() + "_white%",FileUtil.getString(configuration, "white", whiteColor));
-        accentColor = TextUtil.registerCorePlaceholder("%" + plugin.getName().toLowerCase() + "_accent%",FileUtil.getString(configuration, "accent", accentColor));
+        whiteColor = TextUtil.registerCorePlaceholder("%" + plugin.getName().toLowerCase() + "_white%", FileUtil.getString(configuration, "white", whiteColor));
+        accentColor = TextUtil.registerCorePlaceholder("%" + plugin.getName().toLowerCase() + "_accent%", FileUtil.getString(configuration, "accent", accentColor));
     }
 
     private void loadCorePlaceholders() {
@@ -128,7 +129,7 @@ public final class Messanger {
                 }
 
                 for (final String messageKey : messageKeys) {
-                    if(configuration.contains("messages." + messageKey)) {
+                    if (configuration.contains("messages." + messageKey)) {
                         continue;
                     }
 
@@ -140,7 +141,8 @@ public final class Messanger {
                 loadMessages(configuration);
                 FileUtil.saveConfigurationIntoFile(configuration, file);
 
-            } catch (final IOException | InvalidConfigurationException ignored) {}
+            } catch (final IOException | InvalidConfigurationException ignored) {
+            }
         });
     }
 
@@ -166,7 +168,7 @@ public final class Messanger {
                 }
 
                 for (final String messageKey : messageKeys) {
-                    if(configuration.contains("multi-line-messages." + messageKey)) {
+                    if (configuration.contains("multi-line-messages." + messageKey)) {
                         continue;
                     }
 
@@ -177,7 +179,8 @@ public final class Messanger {
 
                 loadMultiLineMessages(configuration);
                 FileUtil.saveConfigurationIntoFile(configuration, file);
-            } catch (final IOException | InvalidConfigurationException ignored) {}
+            } catch (final IOException | InvalidConfigurationException ignored) {
+            }
         });
     }
 
@@ -324,7 +327,19 @@ public final class Messanger {
             }
         }
 
-        return TextUtil.translateColors(PlaceholderAPI.setPlaceholders(player, message));
+        // look for papi placeholders and check for mini message
+        final Pattern pattern = Pattern.compile("%([^%]+)%");
+        final Matcher matcher = pattern.matcher(message);
+
+        while (matcher.find()) {
+            final String placeholder = matcher.group();
+
+            String value = PlaceholderAPI.setPlaceholders(player, placeholder);
+            value = TextUtil.miniToLegacyIfMini(value);
+            message = message.replace(placeholder, value);
+        }
+
+        return TextUtil.translateColors(message);
     }
 
     public ArrayList<String> getMultiLineMessage(final String key) {
@@ -547,14 +562,14 @@ public final class Messanger {
         sendClickableMessageWithHoverOption(sender, "&8 » &f" + command, command, key, placeholders, replacements);
     }
 
-    public void sendClickableMessageWithHoverOption(final CommandSender sender,final String hoverOption, final String command, final String key) {
+    public void sendClickableMessageWithHoverOption(final CommandSender sender, final String hoverOption, final String command, final String key) {
         final Component component = getRawComponent(key, null, "")
                 .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, command))
                 .hoverEvent(HoverEvent.showText(TextUtil.translateComponent(hoverOption)));
         sender.sendMessage(component);
     }
 
-    public void sendClickableMessageWithHoverOption(final CommandSender sender,final String hoverOption, final String command, final String key, final String[] placeholders, final String... replacements) {
+    public void sendClickableMessageWithHoverOption(final CommandSender sender, final String hoverOption, final String command, final String key, final String[] placeholders, final String... replacements) {
         final Component component = getRawComponent(key, placeholders, replacements)
                 .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, command))
                 .hoverEvent(HoverEvent.showText(TextUtil.translateComponent(hoverOption)));
@@ -609,7 +624,7 @@ public final class Messanger {
     public CompletableFuture<Boolean> isBedrockPlayer(final CommandSender sender, final String name) {
         return FloodgateUtil.isBedrockPlayer(name).thenApply((state) -> {
 
-            if(!state) {
+            if (!state) {
                 if (sender instanceof Player player)
                     sounds.playSoundToPlayer(player, "player-invalid");
 
