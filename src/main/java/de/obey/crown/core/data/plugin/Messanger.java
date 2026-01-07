@@ -311,9 +311,8 @@ public final class Messanger {
     public String getMessageWithPlaceholderAPI(final OfflinePlayer player, final String key, final String[] placeholders, final String... replacements) {
         generateMessageEntryIfMissing(key);
 
-        if (messages.get(key).equalsIgnoreCase("")) {
+        if (messages.get(key).equalsIgnoreCase(""))
             return "";
-        }
 
         String message = messages.get(key);
 

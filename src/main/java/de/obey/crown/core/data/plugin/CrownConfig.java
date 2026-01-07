@@ -16,6 +16,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
+import java.util.concurrent.CompletableFuture;
 
 @Getter
 public class CrownConfig implements CrowPlugin {
@@ -48,9 +49,8 @@ public class CrownConfig implements CrowPlugin {
 
     @Override
     public void createFiles() {
-        if (!plugin.getDataFolder().exists()) {
+        if (!plugin.getDataFolder().exists())
             plugin.getDataFolder().mkdir();
-        }
 
         messageFile = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
         configFile = FileUtil.getGeneratedFile(plugin, "config.yml", true);
@@ -76,11 +76,21 @@ public class CrownConfig implements CrowPlugin {
         loadMessages();
         loadSounds();
 
-        if(pluginStorageConfig != null)
-            crownCore.getPluginStorageManager().createPluginDataTables(plugin.getName(), true);
+        if(pluginStorageConfig != null) {
+            crownCore.getPluginStorageManager().shutdownPluginConnections(plugin);
+        }
 
-        if(DataKeyRegistry.pluginHasKeys(plugin))
-            crownCore.getPluginStorageManager().createPlayerDataTable(plugin.getName());
+        crownCore.getPluginStorageManager().createConnection(this).thenApply(success -> {
+            if(success) {
+                if(pluginStorageConfig != null) {
+                    crownCore.getPluginStorageManager().createPluginDataTables(plugin.getName(), false);
+                }
+
+                if(DataKeyRegistry.pluginHasKeys(plugin))
+                    crownCore.getPluginStorageManager().createPlayerDataTable(plugin.getName());
+            }
+            return success;
+        });
     }
 
     public void loadConfig() {
@@ -105,6 +115,7 @@ public class CrownConfig implements CrowPlugin {
         pluginStorageConfig = new PluginStorageConfig(this, configuration);
     }
 
+    @Deprecated
     public void registerPluginWithPlayerData() {
         crownCore.getPluginStorageManager().registerPlayerDataPlugin(this);
     }

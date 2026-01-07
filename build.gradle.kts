@@ -63,8 +63,10 @@ dependencies {
     compileOnly("org.geysermc.floodgate:api:2.2.4-SNAPSHOT")
     compileOnly ("com.sk89q.worldguard:worldguard-bukkit:7.0.9")
     compileOnly("net.luckperms:api:5.4")
+    compileOnly("io.lettuce:lettuce-core:6.7.1.RELEASE")
 
     implementation("org.bstats:bstats-bukkit:3.0.2")
+    implementation("net.kyori:adventure-text-minimessage:4.25.0")
 }
 
 java {

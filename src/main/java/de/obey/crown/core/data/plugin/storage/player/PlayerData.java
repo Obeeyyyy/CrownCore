@@ -25,6 +25,7 @@ public class PlayerData {
     private Player player;
     private final UUID uuid;
     private boolean unload = false;
+    private boolean dirty = false;
     private long lastseen = System.currentTimeMillis();
 
     public PlayerData(UUID uuid) {
@@ -35,6 +36,7 @@ public class PlayerData {
 
     public void load() {
         pluginStorageManager.loadPlayerData(this);
+        this.dirty = false;
     }
 
     /***
@@ -43,7 +45,10 @@ public class PlayerData {
      * @return current PlayerData
      */
     public PlayerData save() {
-        return pluginStorageManager.savePlayerData(this);
+        if (!dirty) return this;
+        final PlayerData saved = pluginStorageManager.savePlayerData(this);
+        this.dirty = false;
+        return saved;
     }
 
     /***
@@ -66,7 +71,10 @@ public class PlayerData {
      * @param <T> type of dateKey
      */
     public <T> void set(DataKey<T> key, T value) {
-        data.put(key, value);
+        if (!java.util.Objects.equals(data.get(key), value)) {
+            data.put(key, value);
+            this.dirty = true;
+        }
     }
 
     /***

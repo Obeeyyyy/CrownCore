@@ -5,12 +5,14 @@ package de.obey.crown.core.noobf;
 
 import de.obey.crown.core.data.plugin.CrownConfig;
 import de.obey.crown.core.data.plugin.TeleportMessageType;
+import de.obey.crown.core.data.redis.RedisConfiguration;
 import de.obey.crown.core.util.FileUtil;
 import de.obey.crown.core.util.TextUtil;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import org.apache.commons.lang.LocaleUtils;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
@@ -28,10 +30,12 @@ public final class PluginConfig extends CrownConfig {
     private TeleportMessageType teleportMessageType;
 
     private int teleportDelay, messageDelay, commandDelay, dataCacheTime;
-    private boolean instantTeleport = false, instantRespawn = true, teleportOnJoin, updateReminder = true;
+    private boolean instantTeleport = false, instantRespawn = true, teleportOnJoin, updateReminder = true, teleportParticles = true;
     private List<String> instantTeleportWorlds;
     private List<String> instantTeleportRegions;
     private String defaultTimeFormat, teleportationTimeFormat, bedrockPrefix;
+
+    private RedisConfiguration redisConfiguration;
 
     public PluginConfig(@NonNull Plugin plugin) {
         super(plugin);
@@ -46,6 +50,7 @@ public final class PluginConfig extends CrownConfig {
         setTeleportMessageType(FileUtil.getString(configuration, "teleport.message-type", "actionbar").equalsIgnoreCase("actionbar") ? TeleportMessageType.ACTIONBAR : TeleportMessageType.BOSSBAR);
         setInstantTeleport(FileUtil.getBoolean(configuration, "instant-teleport.always", false));
         setTeleportDelay(FileUtil.getInt(configuration, "teleport.delay", 10));
+        setTeleportParticles(FileUtil.getBoolean(configuration, "teleport.particles", true));
         setInstantTeleportWorlds(FileUtil.getStringArrayList(configuration, "instant-teleport.worlds", new ArrayList<>()));
         setInstantTeleportRegions(FileUtil.getStringArrayList(configuration, "instant-teleport.regions", new ArrayList<>()));
         setMessageDelay(FileUtil.getInt(configuration, "cooldown.message", 0));
@@ -64,6 +69,8 @@ public final class PluginConfig extends CrownConfig {
         setDefaultTimeFormat(FileUtil.getString(configuration, "time-formats.default", "%hh%:%mm%:%ss%"));
         setTeleportationTimeFormat(FileUtil.getString(configuration, "time-formats.teleportation", "%ss%.%t%s"));
 
+        loadRedisConfiguration(configuration);
+
         FileUtil.saveConfigurationIntoFile(configuration, file);
     }
 
@@ -74,5 +81,31 @@ public final class PluginConfig extends CrownConfig {
         configuration.set("debug-mode", CrownCore.log.isDebug());
 
         FileUtil.saveConfigurationIntoFile(configuration, getConfigFile());
+    }
+
+    private void loadRedisConfiguration(final YamlConfiguration configuration) {
+
+        ConfigurationSection section;
+
+        if(configuration.contains("redis")) {
+            section = configuration.getConfigurationSection("redis");
+        } else {
+            section = configuration.createSection("redis");
+        }
+
+        if (redisConfiguration == null)
+            redisConfiguration = new RedisConfiguration();
+
+        redisConfiguration.setEnabled(FileUtil.getBoolean(section, "enabled", false));
+        redisConfiguration.setHost(FileUtil.getString(section, "host", "127.0.0.1"));
+        redisConfiguration.setPort(FileUtil.getInt(section, "port", 6379));
+        redisConfiguration.setUsername(FileUtil.getString(section, "username", ""));
+        redisConfiguration.setPassword(FileUtil.getString(section, "password", ""));
+
+        redisConfiguration.setDatabase(FileUtil.getInt(section, "database", 0));
+        redisConfiguration.setSsl(FileUtil.getBoolean(section, "ssl", false));
+        redisConfiguration.setTimeout(FileUtil.getInt(section, "timeout", 5000));
+
+        configuration.set("redis", section);
     }
 }

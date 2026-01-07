@@ -9,6 +9,7 @@ import de.obey.crown.core.data.plugin.storage.player.PlayerDataService;
 import de.obey.crown.core.util.Scheduler;
 import de.obey.crown.core.util.VersionChecker;
 import lombok.RequiredArgsConstructor;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -28,17 +29,14 @@ public final class PlayerJoin implements Listener {
 
         playerDataService.loadAsync(event.getPlayer().getUniqueId()).thenAccept((data) -> data.join(event.getPlayer()));
 
-        if (!pluginConfig.isUpdateReminder()) {
+        if (!pluginConfig.isUpdateReminder())
             return;
-        }
 
-        if (!event.getPlayer().hasPermission("core.version.checker")) {
+        if (!event.getPlayer().hasPermission("core.version.checker"))
             return;
-        }
 
-        if (versionChecker.getOutdatedPlugins().isEmpty()) {
+        if (versionChecker.getOutdatedPlugins().isEmpty())
             return;
-        }
 
         final Player player = event.getPlayer();
 

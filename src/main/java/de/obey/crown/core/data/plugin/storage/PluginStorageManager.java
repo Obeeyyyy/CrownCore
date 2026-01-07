@@ -13,6 +13,7 @@ import de.obey.crown.core.event.PlayerDataSaveEvent;
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.util.Scheduler;
 import lombok.RequiredArgsConstructor;
+import org.bukkit.plugin.Plugin;
 
 import java.nio.file.Path;
 import java.sql.*;
@@ -31,6 +32,15 @@ public class PluginStorageManager {
     private final Map<String, List<PluginDataSchema>> pluginDataSchemas = new ConcurrentHashMap<>();
     private final Map<String, CrownConfig> pluginConfigs = new ConcurrentHashMap<>();
 
+    static {
+        try {
+            Class.forName("org.h2.Driver");
+            Class.forName("org.mariadb.jdbc.Driver");
+        } catch (ClassNotFoundException ignored) {
+            // Drivers might not be available in all environments, which is fine if not used
+        }
+    }
+
     /***
      * Initiates the database connection (h2/mysql/mariadb) with the settings read out of the config.yml
      * @param pluginConfig the CrownConfig instance to read settings from
@@ -41,7 +51,12 @@ public class PluginStorageManager {
         if(storageConfig == null)
             return CompletableFuture.completedFuture(false);
 
-        final String pluginName = pluginConfig.getPlugin().getName().toLowerCase();
+        final String rawPluginName = pluginConfig.getPlugin().getName().toLowerCase();
+        if (!rawPluginName.matches("[a-z0-9_]+")) {
+            CrownCore.log.warn("Invalid plugin name for storage: " + rawPluginName);
+            return CompletableFuture.completedFuture(false);
+        }
+        final String pluginName = rawPluginName;
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -63,14 +78,7 @@ public class PluginStorageManager {
             final HikariConfig hikariConfig = new HikariConfig();
 
             String jdbcUrl;
-            final Path h2DataFile = pluginConfig.getPlugin().getDataFolder().toPath().resolve(pluginName.toLowerCase());
-
-            try {
-                Class.forName("org.h2.Driver");
-                Class.forName("org.mariadb.jdbc.Driver");
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
+            final Path h2DataFile = pluginConfig.getPlugin().getDataFolder().toPath().resolve(pluginName);
 
             hikariConfig.setUsername("sa");
             hikariConfig.setPassword("");
@@ -314,16 +322,37 @@ public class PluginStorageManager {
     }
 
     public Connection getConnectionForPluginName(final String name) throws SQLException {
+
+        if(connections == null || !connections.containsKey(name))
+            throw new SQLException("Missing connection for " + name);
+
         return connections.get(name).getConnection();
     }
 
-    public void shutdownConnections() {
+    public void shutdown() {
         for (final HikariDataSource hikariDataSource : connections.values()) {
             try {
                 hikariDataSource.close();
             } catch (Exception ignored) {}
         }
         connections.clear();
+    }
+
+    public void shutdownPluginConnections(final Plugin plugin) {
+        final String pluginName = plugin.getName().toLowerCase();
+        if(connections.containsKey(pluginName)) {
+            CrownCore.log.debug("shutting down connection for " + pluginName);
+            connections.computeIfPresent(pluginName, (name, con) -> {
+                try {
+                    if (!con.isClosed()) {
+                        con.close();
+                    }
+                } catch (Exception e) {
+                    CrownCore.log.warn("error closing connection for " + name + ": " + e.getMessage());
+                }
+                return null;
+            });
+        }
     }
 
     private void insertDefaultPlayerDataValues(final UUID uuid, final PlayerDataSchema schema) throws SQLException {

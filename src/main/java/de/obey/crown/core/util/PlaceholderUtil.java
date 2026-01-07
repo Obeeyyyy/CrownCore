@@ -9,11 +9,8 @@ package de.obey.crown.core.util;
 
 import com.google.common.collect.Maps;
 import de.obey.crown.core.noobf.Placeholders;
-import lombok.AccessLevel;
-import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +23,7 @@ public class PlaceholderUtil {
 
     private static boolean papiEnabled = false;
 
-    public static void init() {
+    public static void initialize() {
         papiEnabled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
 
         if(papiEnabled)

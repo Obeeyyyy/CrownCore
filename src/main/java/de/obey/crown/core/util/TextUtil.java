@@ -13,6 +13,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -40,6 +41,8 @@ public final class TextUtil {
     private final Pattern HEX_COMBINED = Pattern.compile("&#[A-Fa-f0-9]{6}|#[A-Fa-f0-9]{6}");
 
     private final Pattern durationStringPattern = Pattern.compile("(\\d+)\\s*(d|h|m|s)");
+
+    private final MiniMessage miniMessage = MiniMessage.miniMessage();
 
     @Setter
     private DecimalFormat decimalFormat = new DecimalFormat("#,###.##", new DecimalFormatSymbols(Locale.ENGLISH));
@@ -243,6 +246,13 @@ public final class TextUtil {
         return temp.format(value);
     }
 
+    public String translateMiniMessage(String message ) {
+        if (message == null)
+            return "";
+
+        return miniMessage.deserialize(message).toString();
+    }
+
     public String translateHexColors(String message) {
         if (message == null)
             return "";
@@ -360,17 +370,14 @@ public final class TextUtil {
     }
 
     public String translateCorePlaceholderRaw(String message) {
-        if (message == null) {
+        if (message == null)
             return "";
-        }
 
-        if (message.isEmpty()) {
+        if (message.isEmpty())
             return message;
-        }
 
-        if (rawPlaceholders.isEmpty()) {
+        if (rawPlaceholders.isEmpty())
             return message;
-        }
 
         for (final String key : rawPlaceholders.keySet()) {
             if (message.contains(key)) {

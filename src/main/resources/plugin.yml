@@ -1,5 +1,5 @@
 name: CrownCore
-version: 1.5.9
+version: 1.6.0
 main: de.obey.crown.core.noobf.CrownCore
 author: Obey
 website: https://builtbybit.com/resources/crowncore.52753/
@@ -11,6 +11,7 @@ libraries:
   - org.mariadb.jdbc:mariadb-java-client:3.1.4
   - com.squareup.okhttp3:okhttp:4.12.0
   - com.zaxxer:HikariCP:6.2.1
+  - io.lettuce:lettuce-core:6.7.1.RELEASE
 
 softdepend:
   - PlaceholderAPI

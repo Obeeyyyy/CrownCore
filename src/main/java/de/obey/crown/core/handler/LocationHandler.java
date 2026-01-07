@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 public final class LocationHandler {
 
     @Getter
-    private Map<String, Location> locations;
+    private Map<String, Location> locations = Maps.newConcurrentMap();
 
     public Location getLocation(final String name) {
         return locations.get(name);
@@ -28,6 +28,7 @@ public final class LocationHandler {
 
     public void setLocation(final String name, final Location location) {
         locations.put(name, location);
+        saveLocations();
     }
 
     public void deleteLocation(final String name) {
@@ -39,22 +40,18 @@ public final class LocationHandler {
      * Converts location data from config.yml into locations.yml
      */
     public YamlConfiguration convertLocations() {
-        locations = Maps.newConcurrentMap();
-
         final File file = FileUtil.getFile(CrownCore.getInstance().getDataFolder().getPath() + "/", "config.yml");
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
         final File locationsFile = FileUtil.getCreatedFile(CrownCore.getInstance(), "locations.yml", true);
         final YamlConfiguration locationsConfiguration = YamlConfiguration.loadConfiguration(locationsFile);
 
-        if(!configuration.contains("locations")) {
+        if(!configuration.contains("locations"))
             return locationsConfiguration;
-        }
 
 
-        for (final String key : configuration.getConfigurationSection("locations").getKeys(false)) {
+        for (final String key : configuration.getConfigurationSection("locations").getKeys(false))
             locationsConfiguration.set("locations." + key, configuration.getString("locations." + key));
-        }
 
         configuration.set("locations", null);
 
@@ -70,16 +67,14 @@ public final class LocationHandler {
     public void loadLocations() {
         final YamlConfiguration configuration = convertLocations();
 
-        if (!configuration.contains("locations")) {
+        if (!configuration.contains("locations"))
             return;
-        }
 
         for (final String name : configuration.getConfigurationSection("locations").getKeys(false)) {
             final Location location = TextUtil.parseStringToLocation(configuration.getString("locations." + name));
 
-            if(location == null) {
+            if(location == null)
                 continue;
-            }
 
             locations.put(name, location);
         }
@@ -90,16 +85,12 @@ public final class LocationHandler {
      */
     public void saveLocations() {
         final File file = FileUtil.getCreatedFile(CrownCore.getInstance(), "locations.yml", true);
-        final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+        final YamlConfiguration configuration = new YamlConfiguration();
 
-        if (locations.isEmpty()) {
-            return;
-        }
-
-        configuration.set("locations", null);
-
-        for (final String name : locations.keySet()) {
-            configuration.set("locations." + name, TextUtil.parseLocationToString(locations.get(name)));
+        if (locations != null && !locations.isEmpty()) {
+            for (final String name : locations.keySet()) {
+                configuration.set("locations." + name, TextUtil.parseLocationToString(locations.get(name)));
+            }
         }
 
         FileUtil.saveConfigurationIntoFile(configuration, file);

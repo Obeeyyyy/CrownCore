@@ -22,22 +22,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public final class LocationCommand implements CommandExecutor, TabCompleter {
 
-    private final String hi = "https://dsc.gg/crownplugins";
-    private final String how = "https://dsc.gg/crownplugins";
-    private final String are = "https://dsc.gg/crownplugins";
-    private final String you = "https://dsc.gg/crownplugins";
-    private final String doing = "https://dsc.gg/crownplugins";
-
     private final Messanger messanger;
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
         if (!(sender instanceof Player player))
-            return false;
+            return true;
 
         if (!messanger.hasPermission(sender, "core.command.location"))
-            return false;
+            return true;
 
         if (args.length == 1) {
 
@@ -50,7 +44,7 @@ public final class LocationCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(TextUtil.translateColors("§8    => %accent%" + name + "§8 - (%white% " + location.getWorld().getName() + ", " + location.getX() + ", " + location.getY() + ", " + location.getZ() + " §8)"));
                 });
 
-                return false;
+                return true;
             }
 
         }
@@ -61,7 +55,7 @@ public final class LocationCommand implements CommandExecutor, TabCompleter {
                 LocationHandler.setLocation(args[1], player.getLocation());
                 messanger.sendMessage(sender, "location-set", new String[]{"name"}, args[1]);
 
-                return false;
+                return true;
             }
 
             if (args[0].equalsIgnoreCase("delete")) {
@@ -69,12 +63,12 @@ public final class LocationCommand implements CommandExecutor, TabCompleter {
                 LocationHandler.deleteLocation(args[1]);
                 messanger.sendMessage(sender, "location-deleted", new String[]{"name"}, args[1]);
 
-                return false;
+                return true;
             }
 
             if (args[0].equalsIgnoreCase("tp")) {
                 Teleporter.teleportInstant(player, args[1]);
-                return false;
+                return true;
             }
         }
 
@@ -83,7 +77,7 @@ public final class LocationCommand implements CommandExecutor, TabCompleter {
 
             if(!LocationHandler.getLocations().containsKey(locationName)) {
                 messanger.sendMessage(sender, "location-invalid", new String[]{"name"}, locationName);
-                return false;
+                return true;
             }
 
             try {
@@ -100,7 +94,7 @@ public final class LocationCommand implements CommandExecutor, TabCompleter {
 
                     messanger.sendNonConfigMessage(sender, "%prefix% You have set the yaw for location '" + locationName + "' to " + value + ".");
 
-                    return false;
+                    return true;
                 }
 
                 if (args[0].equalsIgnoreCase("setpitch")) {
@@ -110,7 +104,7 @@ public final class LocationCommand implements CommandExecutor, TabCompleter {
 
                     messanger.sendNonConfigMessage(sender, "%prefix% You have set the pitch for location '" + locationName + "' to " + value + ".");
 
-                    return false;
+                    return true;
                 }
 
                 if (args[0].equalsIgnoreCase("setx")) {
@@ -120,7 +114,7 @@ public final class LocationCommand implements CommandExecutor, TabCompleter {
 
                     messanger.sendNonConfigMessage(sender, "%prefix% You have set the x value for location '" + locationName + "' to " + value + ".");
 
-                    return false;
+                    return true;
                 }
 
                 if (args[0].equalsIgnoreCase("setz")) {
@@ -130,7 +124,7 @@ public final class LocationCommand implements CommandExecutor, TabCompleter {
 
                     messanger.sendNonConfigMessage(sender, "%prefix% You have set the z value for location '" + locationName + "' to " + value + ".");
 
-                    return false;
+                    return true;
                 }
 
                 if (args[0].equalsIgnoreCase("sety")) {
@@ -139,11 +133,12 @@ public final class LocationCommand implements CommandExecutor, TabCompleter {
                     LocationHandler.saveLocations();
 
                     messanger.sendNonConfigMessage(sender, "%prefix% You have set the y value for location '" + locationName + "' to " + value + ".");
-                    return false;
+                    return true;
                 }
 
             }catch (final NumberFormatException exception) {
                 messanger.sendNonConfigMessage(player, "%prefix% Invalid number.");
+                return true;
             }
         }
 
@@ -159,7 +154,7 @@ public final class LocationCommand implements CommandExecutor, TabCompleter {
                 "/location sety <name> <value>")
         ;
 
-        return false;
+        return true;
     }
 
     @Override
@@ -181,7 +176,7 @@ public final class LocationCommand implements CommandExecutor, TabCompleter {
             list.add("setyaw");
             list.add("setpitch");
             list.add("setx");
-            list.add("serz");
+            list.add("setz");
             list.add("sety");
         }
 

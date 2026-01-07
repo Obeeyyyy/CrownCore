@@ -134,7 +134,9 @@ public class Teleporter {
         sendTeleportMessage(player, 0, cooldown, cooldown);
 
         isTeleporting.add(player.getUniqueId());
-        effect.run(CrownCore.getInstance(), player, 1, null);
+
+        if(crownPluginConfig.isTeleportParticles())
+            effect.run(CrownCore.getInstance(), player, 1, null);
 
         sounds.playSoundToPlayer(player, "teleport-tick");
 

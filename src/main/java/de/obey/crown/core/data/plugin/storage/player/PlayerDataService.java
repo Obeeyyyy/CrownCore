@@ -31,9 +31,8 @@ public class PlayerDataService {
                 final Player player = Bukkit.getPlayer(data.getUuid());
                 saveAsync(data.getUuid());
 
-                if(player != null && player.isOnline()) {
+                if(player != null && player.isOnline())
                     continue;
-                }
 
                 if(data.isUnload()) {
                     cache.remove(data.getUuid());

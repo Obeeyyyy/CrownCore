@@ -47,7 +47,7 @@ public class UUIDFetcher {
 
     private OkHttpClient okHttpClient;
 
-    public void initHTTPClient(final OkHttpClient param) {
+    public void setOkHttpClient(final OkHttpClient param) {
         okHttpClient = param;
     }
 

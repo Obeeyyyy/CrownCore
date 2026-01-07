@@ -7,6 +7,7 @@ import de.obey.crown.core.noobf.CrownCore;
 import lombok.experimental.UtilityClass;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -208,6 +209,129 @@ public final class FileUtil {
         }
 
         configuration.set(path, defaultValue.name());
+        return defaultValue;
+    }
+
+    public int getInt(final ConfigurationSection section, final String path, final int defaultValue) {
+        if (section.contains(path))
+            return section.getInt(path);
+
+        section.set(path, defaultValue);
+
+        return defaultValue;
+    }
+
+    public long getLong(final ConfigurationSection section, final String path, final long defaultValue) {
+        if (section.contains(path))
+            return section.getLong(path);
+
+        section.set(path, defaultValue);
+
+        return defaultValue;
+    }
+
+    public double getDouble(final ConfigurationSection section, final String path, final double defaultValue) {
+        if (section.contains(path))
+            return section.getDouble(path);
+
+        section.set(path, defaultValue);
+
+        return defaultValue;
+    }
+
+    public String getString(final ConfigurationSection section, final String path, String defaultValue) {
+        if (section.contains(path)) {
+            return section.getString(path);
+        }
+
+        section.set(path, defaultValue);
+        return defaultValue;
+    }
+
+    public boolean getBoolean(final ConfigurationSection section, final String path, final boolean defaultValue) {
+        if (section.contains(path))
+            return section.getBoolean(path);
+
+        section.set(path, defaultValue);
+
+        return defaultValue;
+    }
+
+    public List<String> getStringArrayList(final ConfigurationSection section, final String path, final List<String> defaultValue) {
+        if (section.contains(path))
+            return (List<String>) section.getList(path);
+
+        section.set(path, defaultValue);
+
+        return defaultValue;
+    }
+
+    public List<Integer> getIntArrayList(final ConfigurationSection section, final String path, final List<Integer> defaultValue) {
+        if (section.contains(path))
+            return (List<Integer>) section.getList(path);
+
+        section.set(path, defaultValue);
+
+        return defaultValue;
+    }
+    public List<Double> getDoubleList(final ConfigurationSection section, final String path, final List<Double> defaultValue) {
+        if (section.contains(path)) {
+            return (List<Double>) section.getList(path);
+        }
+
+        section.set(path, defaultValue);
+
+        return defaultValue;
+    }
+
+    public List<ItemStack> getItemStackList(final ConfigurationSection section, final String path, final List<ItemStack> defaultValue) {
+        if (!section.contains((path)))
+            return defaultValue;
+
+        final ArrayList<ItemStack> items = new ArrayList<>();
+
+        if (!section.contains(path))
+            return items;
+
+        if (section.getConfigurationSection(path).getKeys(false).isEmpty())
+            return items;
+
+        for (final String key : section.getConfigurationSection(path).getKeys(false)) {
+            items.add(section.getItemStack(path + "." + key));
+        }
+
+        return items;
+    }
+
+    public void setItemStackList(final ConfigurationSection section, final String path, final ArrayList<ItemStack> items) {
+        if (items.isEmpty())
+            return;
+
+        int slot = 0;
+        for (final ItemStack item : items) {
+            section.set(path + "." + slot, item);
+            slot++;
+        }
+    }
+
+    public ItemStack getItemStack(final ConfigurationSection section, final String path, final ItemStack defaultValue) {
+        if (section.contains(path))
+            return section.getItemStack(path);
+
+        section.set(path, defaultValue);
+        return defaultValue;
+    }
+
+    public Material getMaterial(final ConfigurationSection section, final String path, final Material defaultValue) {
+        if (section.contains(path)) {
+            try {
+                return Material.valueOf(section.getString(path));
+            } catch (IllegalArgumentException ignored) {
+
+            }
+        }
+
+        section.set(path, defaultValue.name());
         return defaultValue;
     }
 }

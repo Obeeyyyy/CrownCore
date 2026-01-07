@@ -27,7 +27,7 @@ public class FloodgateUtil {
     @Getter
     private static boolean floodgateEnabled = false;
 
-    public static void init() {
+    public static void initialize() {
         floodgateEnabled = Bukkit.getPluginManager().isPluginEnabled("floodgate");
 
         if(floodgateEnabled)
