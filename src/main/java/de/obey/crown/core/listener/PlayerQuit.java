@@ -2,6 +2,7 @@ package de.obey.crown.core.listener;
 
 import de.obey.crown.core.data.plugin.storage.player.PlayerDataService;
 import de.obey.crown.core.noobf.PluginConfig;
+import de.obey.crown.core.util.Scheduler;
 import de.obey.crown.core.util.Teleporter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
@@ -18,14 +19,17 @@ public class PlayerQuit implements Listener {
     @EventHandler
     public void on(final PlayerQuitEvent event) {
         final Player player = event.getPlayer();
-        player.closeInventory();
+
+        if(!Scheduler.isFolia)
+            player.closeInventory();
 
         Teleporter.quit(player);
 
         playerDataService.saveAsync(player.getUniqueId()).thenRun(() -> {
-            if(pluginConfig.getDataCacheTime() <= 0) {
+
+            if(pluginConfig.getDataCacheTime() <= 0)
                 playerDataService.unloadFromCache(player.getUniqueId());
-            }
+
         });
     }
 

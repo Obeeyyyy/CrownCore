@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 @UtilityClass
 public final class Scheduler {
 
-    private boolean isFolia = false;
+    public boolean isFolia = false;
 
     public void initialize() {
         try {

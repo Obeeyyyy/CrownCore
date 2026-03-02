@@ -38,9 +38,8 @@ public class GuiLoader {
     public static void loadAll(final Plugin plugin) {
         final File guiFolder = new File(plugin.getDataFolder(), "gui");
 
-        if (!guiFolder.exists()) {
+        if (!guiFolder.exists())
             extractGuiResources(plugin, guiFolder);
-        }
 
         if (!guiFolder.exists()) return;
 
@@ -48,14 +47,13 @@ public class GuiLoader {
 
         if (files == null) return;
 
-        for (final File file : files) {
+        for (final File file : files)
             load(plugin, file);
-        }
     }
 
     private static void load(final Plugin plugin, final File file) {
         CrownCore.getInstance().getExecutor().execute(() -> {
-            CrownCore.log.info("loading gui for plugin " + plugin.getName() + ": " + file.getName());
+            CrownCore.log.debug("loading gui for plugin " + plugin.getName() + ": " + file.getName());
 
             final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 

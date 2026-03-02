@@ -47,6 +47,8 @@ public final class TextUtil {
 
     @Setter
     private DecimalFormat decimalFormat = new DecimalFormat("#,###.##", new DecimalFormatSymbols(Locale.ENGLISH));
+    @Setter
+    private boolean useShortFormat = false;
 
     public String reverse(final String text) {
         String value = "";
@@ -230,10 +232,18 @@ public final class TextUtil {
     }
 
     public String formatNumber(final long value) {
+
+        if(useShortFormat)
+            return formatNumberShort(value);
+
         return decimalFormat.format(value);
     }
 
     public String formatNumber(final double value) {
+
+        if(useShortFormat)
+            return formatNumberShort(value);
+
         return decimalFormat.format(value);
     }
 

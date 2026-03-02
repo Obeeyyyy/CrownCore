@@ -65,6 +65,7 @@ dependencies {
     compileOnly("net.luckperms:api:5.4")
     compileOnly("io.lettuce:lettuce-core:6.7.1.RELEASE")
 
+    implementation("org.json:json:20251224")
     implementation("org.bstats:bstats-bukkit:3.0.2")
     implementation("net.kyori:adventure-text-minimessage:4.25.0")
 }
@@ -87,6 +88,7 @@ tasks.withType<Jar>().configureEach {
 tasks.shadowJar {
     archiveClassifier.set("")
     relocate("org.bstats", "${project.group}.noobf.bstats")
+    relocate("org.json", "${project.group}.noobf.json")
 }
 
 tasks.named<Jar>("jar") {

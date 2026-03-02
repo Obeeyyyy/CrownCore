@@ -42,9 +42,8 @@ public class PlayerDataService {
                 if(System.currentTimeMillis() - data.getLastseen() >= pluginConfig.getDataCacheTime()) {
                     data.setUnload(true);
 
-                    if(pluginConfig.getDataCacheTime() <= 0) {
+                    if(pluginConfig.getDataCacheTime() <= 0)
                         cache.remove(data.getUuid());
-                    }
                 }
 
             }

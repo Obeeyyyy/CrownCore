@@ -54,9 +54,6 @@ public class Teleporter {
     }
 
     public void quit(final Player player) {
-        if(tasks.containsKey(player.getUniqueId()))
-            tasks.get(player.getUniqueId()).cancel();
-
         isTeleporting.remove(player.getUniqueId());
     }
 
@@ -144,6 +141,13 @@ public class Teleporter {
         teleportState.setRemain(cooldown);
 
         tasks.put(player.getUniqueId(), Scheduler.runEntityTaskTimer(CrownCore.getInstance(), player, () -> {
+            if (!player.isOnline()) {
+                isTeleporting.remove(player.getUniqueId());
+                effect.stop();
+                tasks.get(player.getUniqueId()).cancel();
+                return;
+            }
+
             if (player.getLocation().getX() != teleportState.getSaved().getX() || player.getLocation().getZ() != teleportState.getSaved().getZ()) {
                 removeBossbar(player);
                 effect.stop();

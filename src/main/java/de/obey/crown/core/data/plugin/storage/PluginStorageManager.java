@@ -218,7 +218,6 @@ public class PluginStorageManager {
                 executeTableCreation(pluginName);
             }
         }
-
     }
 
     private void executeTableCreation(final String pluginName) {
@@ -323,7 +322,7 @@ public class PluginStorageManager {
 
     public Connection getConnectionForPluginName(final String name) throws SQLException {
 
-        if(connections == null || !connections.containsKey(name))
+        if(connections.isEmpty() || !connections.containsKey(name))
             throw new SQLException("Missing connection for " + name);
 
         return connections.get(name).getConnection();

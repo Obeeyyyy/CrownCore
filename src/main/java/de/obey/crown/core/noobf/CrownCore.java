@@ -27,9 +27,11 @@ import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jspecify.annotations.NonNull;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 @Getter
 @Setter
@@ -61,15 +63,10 @@ public final class CrownCore extends JavaPlugin {
         log.setPlugin(this);
 
         /***
-         * Fixed thread pool.
-         * Threads: 8
+         * Cached thread pool.
          * Used for all core and child plugins tasks.
          */
-        executor = Executors.newFixedThreadPool(8, runnable -> {
-            Thread thread = new Thread(runnable);
-            thread.setName("CrownCore-Worker-" + thread.getId());
-            return thread;
-        });
+        executor = Executors.newCachedThreadPool(new CoreThreadFactory());
 
         okHttpClient = new OkHttpClient();
         pluginStorageManager = new PluginStorageManager(executor);

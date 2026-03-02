@@ -50,10 +50,8 @@ public final class VersionChecker {
                 CrownCore.log.debug(" versionchecker response: " + bodyString);
 
                 final JsonObject jsonResponse = new Gson().fromJson(bodyString, JsonObject.class);
-                final Map<String, JsonElement> map = jsonResponse.asMap();
-
-                for (final String pluginName : map.keySet()) {
-                    newestVersions.put(pluginName, map.get(pluginName).getAsString());
+                for (final Map.Entry<String, JsonElement> entry : jsonResponse.entrySet()) {
+                    newestVersions.put(entry.getKey(), entry.getValue().getAsString());
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);

@@ -12,10 +12,6 @@ import lombok.experimental.UtilityClass;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
@@ -25,6 +21,7 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 
 import java.time.Duration;
 import java.util.LinkedList;
@@ -162,32 +159,35 @@ public class UUIDFetcher {
 
                 CrownCore.log.debug(" - response: " + responseString);
 
-                final JsonObject object = JsonParser.parseString(responseString).getAsJsonObject();
+                final JSONObject jsonObject = new JSONObject(responseString);
 
-
-                if (object == null || !object.has("name") || !object.has("id")) {
+                if (!jsonObject.has("name") || !jsonObject.has("id")) {
                     CrownCore.log.debug(" - response is missing 'name' and 'id' objects");
                     return null;
                 }
 
-                final JsonElement uuidElement = object.get("id");
-                if (uuidElement == null || uuidElement instanceof JsonNull) {
+                if(!jsonObject.has("id")) {
                     CrownCore.log.debug(" - response is missing 'id' element");
                     return null;
                 }
 
-                final String uniqueIdString = uuidElement.getAsString();
-                final UUID uniqueId = validateUniqueId(uniqueIdString);
+                final String uuidString = jsonObject.getString("id");
+                if (uuidString == null || uuidString == JSONObject.NULL) {
+                    CrownCore.log.debug(" - response is missing 'id' element");
+                    return null;
+                }
+
+                final UUID uniqueId = validateUniqueId(uuidString);
                 if (uniqueId == null) {
                     CrownCore.log.debug(" - response is missing 'id' element");
                     return null;
                 }
 
-                final String name = object.get("name").getAsString();
+                final String name = jsonObject.getString("name");
 
                 CrownCore.log.debug(" - fetched");
                 CrownCore.log.debug("   - name:" + name);
-                CrownCore.log.debug("   - uuid:" + uniqueIdString);
+                CrownCore.log.debug("   - uuid:" + uuidString);
 
                 return new String[]{name, uniqueId.toString()};
             }

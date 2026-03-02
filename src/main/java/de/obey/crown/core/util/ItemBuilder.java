@@ -6,7 +6,10 @@ package de.obey.crown.core.util;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkEffectMeta;
@@ -202,6 +205,28 @@ public final class ItemBuilder {
 
         /* flags */
         flags.forEach(meta::addItemFlags);
+
+        if(meta.hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
+            for (Attribute attribute : new Attribute[] {
+                    Attribute.GENERIC_ATTACK_DAMAGE,
+                    Attribute.GENERIC_ATTACK_SPEED,
+                    Attribute.GENERIC_ARMOR,
+                    Attribute.GENERIC_ARMOR_TOUGHNESS,
+                    Attribute.GENERIC_MAX_HEALTH,
+                    Attribute.GENERIC_KNOCKBACK_RESISTANCE
+            }) {
+                meta.addAttributeModifier(
+                        attribute,
+                        new AttributeModifier(
+                                UUID.randomUUID(),
+                                "zero_" + attribute.name().toLowerCase(),
+                                -1.0,
+                                AttributeModifier.Operation.MULTIPLY_SCALAR_1,
+                                EquipmentSlot.HAND
+                        )
+                );
+            }
+        }
 
         /* custom model data */
         if (customModelData != null)
