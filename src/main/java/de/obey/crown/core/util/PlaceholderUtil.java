@@ -21,13 +21,17 @@ public class PlaceholderUtil {
 
     private static final Map<String, Function<OfflinePlayer, String>> PLACEHOLDERS = Maps.newConcurrentMap();
 
-    private static boolean papiEnabled = false;
+    public static boolean papiEnabled = false;
+    public static Placeholders placeholders;
 
     public static void initialize() {
         papiEnabled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
 
-        if(papiEnabled)
-            new Placeholders().register();
+        placeholders = new Placeholders();
+
+        if(papiEnabled) {
+            placeholders.register();
+        }
 
         register("player", OfflinePlayer::getName);
         register("uuid", p -> p.getUniqueId().toString());

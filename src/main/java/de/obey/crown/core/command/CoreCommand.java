@@ -4,9 +4,12 @@
 package de.obey.crown.core.command;
 
 import de.obey.crown.core.noobf.CrownCore;
+import de.obey.crown.core.noobf.Placeholders;
 import de.obey.crown.core.noobf.PluginConfig;
 import de.obey.crown.core.data.plugin.Messanger;
+import de.obey.crown.core.util.PlaceholderUtil;
 import lombok.RequiredArgsConstructor;
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -39,6 +42,9 @@ public final class CoreCommand implements CommandExecutor, TabCompleter {
                 pluginConfig.loadMessages();
                 pluginConfig.loadConfig();
                 pluginConfig.loadSounds();
+
+                PlaceholderUtil.placeholders.loadPlaceholders();
+
                 messanger.sendMessage(sender, "plugin-reloaded", new String[]{"plugin"}, CrownCore.getInstance().getName());
                 return false;
             }

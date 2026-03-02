@@ -5,7 +5,6 @@ package de.obey.crown.core.noobf;
 
 import de.obey.crown.core.data.plugin.CrownConfig;
 import de.obey.crown.core.data.plugin.TeleportMessageType;
-import de.obey.crown.core.data.redis.RedisConfiguration;
 import de.obey.crown.core.util.FileUtil;
 import de.obey.crown.core.util.TextUtil;
 import lombok.Getter;
@@ -34,8 +33,6 @@ public final class PluginConfig extends CrownConfig {
     private List<String> instantTeleportWorlds;
     private List<String> instantTeleportRegions;
     private String defaultTimeFormat, teleportationTimeFormat, bedrockPrefix;
-
-    private RedisConfiguration redisConfiguration;
 
     public PluginConfig(@NonNull Plugin plugin) {
         super(plugin);
@@ -94,19 +91,6 @@ public final class PluginConfig extends CrownConfig {
         } else {
             section = configuration.createSection("redis");
         }
-
-        if (redisConfiguration == null)
-            redisConfiguration = new RedisConfiguration();
-
-        redisConfiguration.setEnabled(FileUtil.getBoolean(section, "enabled", false));
-        redisConfiguration.setHost(FileUtil.getString(section, "host", "127.0.0.1"));
-        redisConfiguration.setPort(FileUtil.getInt(section, "port", 6379));
-        redisConfiguration.setUsername(FileUtil.getString(section, "username", ""));
-        redisConfiguration.setPassword(FileUtil.getString(section, "password", ""));
-
-        redisConfiguration.setDatabase(FileUtil.getInt(section, "database", 0));
-        redisConfiguration.setSsl(FileUtil.getBoolean(section, "ssl", false));
-        redisConfiguration.setTimeout(FileUtil.getInt(section, "timeout", 5000));
 
         configuration.set("redis", section);
     }
