@@ -3,13 +3,10 @@ package de.obey.crown.core.noobf;
 import de.obey.crown.core.command.CoreCommand;
 import de.obey.crown.core.command.LocationCommand;
 import de.obey.crown.core.data.plugin.Messanger;
-import de.obey.crown.core.data.redis.RedisManager;
 import de.obey.crown.core.data.plugin.storage.player.PlayerDataService;
 import de.obey.crown.core.data.plugin.Log;
 import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.data.plugin.storage.PluginStorageManager;
-import de.obey.crown.core.data.redis.RedisMessageBus;
-import de.obey.crown.core.data.redis.RedisService;
 import de.obey.crown.core.event.CoreStartEvent;
 import de.obey.crown.core.gui.command.CrownGuiCommand;
 import de.obey.crown.core.gui.listener.GuiClickListener;
@@ -27,11 +24,9 @@ import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jspecify.annotations.NonNull;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 @Getter
 @Setter
@@ -44,9 +39,6 @@ public final class CrownCore extends JavaPlugin {
     private OkHttpClient okHttpClient;
     private VersionChecker versionChecker;
     private PluginStorageManager pluginStorageManager;
-    private RedisManager redisManager;
-    private RedisService redisService;
-    private RedisMessageBus redisMessageBus;
 
     private PluginConfig pluginConfig;
     private Messanger messanger;
@@ -70,9 +62,6 @@ public final class CrownCore extends JavaPlugin {
 
         okHttpClient = new OkHttpClient();
         pluginStorageManager = new PluginStorageManager(executor);
-        redisManager = new RedisManager(executor);
-        redisService = new RedisService(redisManager, executor);
-        redisMessageBus = new RedisMessageBus(redisManager, new de.obey.crown.core.data.redis.GsonMessageSerializer());
 
         pluginConfig = new PluginConfig(this);
         messanger = pluginConfig.getMessanger();
@@ -89,9 +78,6 @@ public final class CrownCore extends JavaPlugin {
         PlaceholderUtil.initialize();
         FloodgateUtil.initialize();
 
-        redisManager.addConnectionHook(() -> redisMessageBus.init());
-        redisManager.initialize();
-
         versionChecker = new VersionChecker(executor, okHttpClient);
         versionChecker.retrieveNewestPluginVersions();
         playerDataService = new PlayerDataService(pluginConfig, executor);
@@ -107,7 +93,6 @@ public final class CrownCore extends JavaPlugin {
     public void onDisable() {
         LocationHandler.saveLocations();
         pluginStorageManager.shutdown();
-        redisManager.shutdown();
         executor.shutdown();
     }
 
