@@ -359,6 +359,7 @@ public final class Messanger {
                 }
             }
 
+            line = PlaceholderAPI.setPlaceholders(null, line);
             line = TextUtil.translateColors(line);
             temp.add(line);
         }
