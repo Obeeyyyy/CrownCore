@@ -26,7 +26,6 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.geysermc.floodgate.api.FloodgateApi;
 
 import java.io.File;
 import java.io.IOException;
@@ -636,7 +635,7 @@ public final class Messanger {
 
     public boolean isValidPlayerName(final CommandSender sender, final String name) {
 
-        final String bedrockPrefix = FloodgateApi.getInstance().getPlayerPrefix();
+        final String bedrockPrefix = FloodgateUtil.getBedrockPrefix();
         final String escapedPrefix = Pattern.quote(bedrockPrefix);
         final String regex = "^(?:" + escapedPrefix + ")?[A-Za-z0-9_]{3,16}$";
 

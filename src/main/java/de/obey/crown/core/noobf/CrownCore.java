@@ -91,7 +91,6 @@ public final class CrownCore extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-        LocationHandler.saveLocations();
         pluginStorageManager.shutdown();
         executor.shutdown();
     }
