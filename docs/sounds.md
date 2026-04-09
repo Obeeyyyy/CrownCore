@@ -1,5 +1,5 @@
 ---
-description: The default sounds.yml for CrownStoreData and an explanation of its content.
+description: The default sounds.yml for CrownCore and an explanation of its content.
 icon: music
 title: Sounds
 ---
@@ -8,11 +8,16 @@ title: Sounds
 
 ```yaml title="sounds.yml"
 sounds:
-  gg-wave-started-1: "minecraft:entity.boat.paddle_water:0.5:3.0"
-  gg-wave-started-2: "minecraft:item.goat_horn.sound.0:0.5:3.0"
-  gg-wave-message: "minecraft:block.note_block.banjo:0.5:3.0"
-  purchase-message: "minecraft:item.goat_horn.sound.7:0.1:3.0"
-  sale-activated: "minecraft:block.beacon.activate:0.5:3.0"
+  no-permission: "minecraft:entity.generic.explode:0.2:1.0"
+  player-invalid: "minecraft:entity.generic.explode:0.2:1.0"
+  player-offline: "minecraft:entity.generic.explode:0.2:1.0"
+  message-cooldown: "minecraft:entity.villager.no:0.2:1.0"
+  command-cooldown: "minecraft:entity.villager.no:0.2:1.0"
+  location-invalid: "minecraft:entity.generic.explode:0.2:1.0"
+  teleport-instant-1: "minecraft:entity.splash_potion.break:0.5:3.0"
+  teleport-instant-2: "minecraft:entity.shulker.teleport:0.5:3.0"
+  teleport-cancelled: "minecraft:entity.item.break:0.5:3.0"
+  teleport-tick: "minecraft:block.note_block.banjo:0.5:0.6"
 ```
 
 * `gg-wave-started-1`: This sound is played when a GGWave stars.

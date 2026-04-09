@@ -12,3 +12,16 @@ title: Introduction
 
 # bStats
 > Visit the plugins bStats page [here](https://bstats.org/plugin/bukkit/CrownCore/27306).
+
+### Features
+
+* [Configuration](./configuration)
+* [Messages](messages.md)
+* [Sounds](./sounds)
+* [Messages](messages.md)
+* [Placeholders](./placeholders)
+* [Custom Placeholders](./feautres/custom-placeholders)
+
+{% hint style="success" %}
+Make sure to join our [**Discord Server**](https://discord.gg/crowndev).
+{% endhint %}
