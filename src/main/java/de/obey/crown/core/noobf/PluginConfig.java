@@ -29,7 +29,7 @@ public final class PluginConfig extends CrownConfig {
     private TeleportMessageType teleportMessageType;
 
     private int teleportDelay, messageDelay, commandDelay, dataCacheTime;
-    private boolean instantTeleport = false, instantRespawn = true, teleportOnJoin, updateReminder = true, teleportParticles = true, useShortFormat = false;
+    private boolean instantTeleport = false, instantRespawn = true, teleportOnJoin, updateReminder = true, teleportParticles = true, useShortFormat = false, offlineMode = false;
     private List<String> instantTeleportWorlds;
     private List<String> instantTeleportRegions;
     private String defaultTimeFormat, teleportationTimeFormat, bedrockPrefix;
@@ -44,6 +44,7 @@ public final class PluginConfig extends CrownConfig {
         final File file = FileUtil.getFile(this.getPlugin().getDataFolder().getPath(), "config.yml");
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
+        setOfflineMode(FileUtil.getBoolean(configuration, "offline-mode", false));
         setDataCacheTime(FileUtil.getInt(configuration, "data-cache-time", 3600000));
         setTeleportMessageType(FileUtil.getString(configuration, "teleport.message-type", "actionbar").equalsIgnoreCase("actionbar") ? TeleportMessageType.ACTIONBAR : TeleportMessageType.BOSSBAR);
         setInstantTeleport(FileUtil.getBoolean(configuration, "instant-teleport.always", false));
@@ -58,16 +59,14 @@ public final class PluginConfig extends CrownConfig {
         CrownCore.log.setDebug(FileUtil.getBoolean(configuration, "debug-mode", false));
 
         Locale locale = LocaleUtils.toLocale(FileUtil.getString(configuration, "number-format.locale", "en_US"));
-        if(locale == null) {
+        if(locale == null)
             locale = Locale.ENGLISH;
-        }
+
         TextUtil.setDecimalFormat(new DecimalFormat(FileUtil.getString(configuration, "number-format.default-format", "#,###.##"), new DecimalFormatSymbols(locale)));
         TextUtil.setUseShortFormat(FileUtil.getBoolean(configuration, "number-format.use-short-format", false));
 
         setDefaultTimeFormat(FileUtil.getString(configuration, "time-formats.default", "%hh%:%mm%:%ss%"));
         setTeleportationTimeFormat(FileUtil.getString(configuration, "time-formats.teleportation", "%ss%.%t%s"));
-
-        loadRedisConfiguration(configuration);
 
         FileUtil.saveConfigurationIntoFile(configuration, file);
     }

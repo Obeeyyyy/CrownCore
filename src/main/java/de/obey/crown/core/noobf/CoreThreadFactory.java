@@ -24,7 +24,7 @@ public class CoreThreadFactory implements ThreadFactory {
     @Override
     public Thread newThread(@NonNull Runnable r) {
         final Thread thread = new Thread(r);
-        thread.setName("CrownCore-Worker-" + thread.getId());
+        thread.setName("Crown-Worker-" + thread.getId());
         return thread;
     }
 }

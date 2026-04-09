@@ -44,6 +44,10 @@ public final class TextUtil {
     private final Pattern durationStringPattern = Pattern.compile("(\\d+)\\s*(d|h|m|s)");
 
     private final MiniMessage miniMessage = MiniMessage.miniMessage();
+    private final LegacyComponentSerializer legacyComponentSerializer = LegacyComponentSerializer.builder()
+            .hexColors()
+            .character('&')
+            .build();
 
     @Setter
     private DecimalFormat decimalFormat = new DecimalFormat("#,###.##", new DecimalFormatSymbols(Locale.ENGLISH));
@@ -436,6 +440,23 @@ public final class TextUtil {
         } catch (final Exception ignored) {
             return input;
         }
+    }
+
+    public Component translateModern(String input) {
+
+        input = translateCorePlaceholder(input);
+
+        final Component legacyComponent = legacyComponentSerializer.deserialize(input);
+        final String miniString = miniMessage.serialize(legacyComponent);
+        return miniMessage.deserialize(miniString);
+    }
+
+    public String translateModernToString(String input) {
+
+        input = translateCorePlaceholder(input);
+
+        final Component legacyComponent = legacyComponentSerializer.deserialize(input);
+        return miniMessage.serialize(legacyComponent);
     }
 
 }

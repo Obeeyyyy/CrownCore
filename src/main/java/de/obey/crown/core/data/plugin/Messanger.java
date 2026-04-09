@@ -152,24 +152,20 @@ public final class Messanger {
             final YamlConfiguration defaults = new YamlConfiguration();
 
             try (final InputStream stream = plugin.getResource("messages.yml")) {
-                if (stream != null) {
+                if (stream != null)
                     defaults.load(new InputStreamReader(stream));
-                }
 
-                if (!defaults.contains("multi-line-messages")) {
+                if (!defaults.contains("multi-line-messages"))
                     return;
-                }
 
                 final Set<String> messageKeys = defaults.getConfigurationSection("multi-line-messages").getKeys(false);
 
-                if (messageKeys.isEmpty()) {
+                if (messageKeys.isEmpty())
                     return;
-                }
 
                 for (final String messageKey : messageKeys) {
-                    if (configuration.contains("multi-line-messages." + messageKey)) {
+                    if (configuration.contains("multi-line-messages." + messageKey))
                         continue;
-                    }
 
                     CrownCore.log.info("generated missing multi-line-message key '" + messageKey + "' for plugin " + plugin.getName());
 
@@ -316,6 +312,7 @@ public final class Messanger {
 
         String message = messages.get(key);
 
+        // replace internal placeholders
         if (placeholders != null) {
             int count = 0;
             for (final String placeholder : placeholders) {
@@ -336,6 +333,7 @@ public final class Messanger {
             message = message.replace(placeholder, value);
         }
 
+        //return TextUtil.translateModernToString(message);
         return TextUtil.translateColors(message);
     }
 
@@ -518,6 +516,19 @@ public final class Messanger {
         sender.sendActionBar(textComponent);
     }
 
+    public void sendActionbarToAll(final String key) {
+        for (final Player all : Bukkit.getOnlinePlayers()) {
+            sendActionbar(all, key, null);
+        }
+    }
+
+    public void sendActionbarAll(final String key, final String[] placeholders, final String... replacements) {
+        final TextComponent textComponent = TextUtil.translateComponent(getRawMessage(key, placeholders, replacements));
+        for (final Player all : Bukkit.getOnlinePlayers()) {
+            all.sendActionBar(textComponent);
+        }
+    }
+
     /*               */
     /*     Title     */
     /*               */
@@ -634,7 +645,6 @@ public final class Messanger {
     }
 
     public boolean isValidPlayerName(final CommandSender sender, final String name) {
-
         final String bedrockPrefix = FloodgateUtil.getBedrockPrefix();
         final String escapedPrefix = Pattern.quote(bedrockPrefix);
         final String regex = "^(?:" + escapedPrefix + ")?[A-Za-z0-9_]{3,16}$";

@@ -1,12 +1,13 @@
 plugins {
     java
     `maven-publish`
-    id("com.github.johnrengelman.shadow") version "8.0.0"
+    id("com.gradleup.shadow") version "9.4.1"
 }
 
 group = "de.obey.crown.core"
 version = "1.0.0"
-val targetJavaVersion = 17
+val targetJavaVersion = 21
+val localServerPath = "D:\\MINECRAFT LOCALHOST\\1.21.11"
 
 val pluginYml = file("src/main/resources/plugin.yml")
 val pluginVersion: String by lazy {
@@ -47,6 +48,7 @@ repositories {
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots")
     maven("https://repo.opencollab.dev/main/")
     maven ("https://maven.enginehub.org/repo/")
+    maven("https://mvnrepository.com/artifact/javax.persistence/javax.persistence-api")
 }
 
 dependencies {
@@ -57,17 +59,20 @@ dependencies {
 
     compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
-    compileOnly("com.zaxxer:HikariCP:6.2.1")
-    compileOnly("com.squareup.okhttp3:okhttp:4.12.0")
-    compileOnly("com.h2database:h2:2.3.232")
+
     compileOnly("org.geysermc.floodgate:api:2.2.4-SNAPSHOT")
     compileOnly ("com.sk89q.worldguard:worldguard-bukkit:7.0.9")
     compileOnly("net.luckperms:api:5.4")
-    compileOnly("io.lettuce:lettuce-core:6.7.1.RELEASE")
 
+    implementation("com.zaxxer:HikariCP:6.2.1")
+    implementation("com.squareup.okhttp3:okhttp:5.3.2")
+    implementation("com.h2database:h2:2.3.232")
     implementation("org.json:json:20251224")
     implementation("org.bstats:bstats-bukkit:3.0.2")
-    implementation("net.kyori:adventure-text-minimessage:4.25.0")
+    implementation("net.kyori:adventure-text-minimessage:4.26.1")
+    implementation("net.kyori:adventure-text-serializer-legacy:4.26.1")
+    implementation("com.j256.ormlite:ormlite-jdbc:6.1")
+    implementation("javax.persistence:javax.persistence-api:2.2")
 }
 
 java {
@@ -87,8 +92,17 @@ tasks.withType<Jar>().configureEach {
 
 tasks.shadowJar {
     archiveClassifier.set("")
-    relocate("org.bstats", "${project.group}.noobf.bstats")
-    relocate("org.json", "${project.group}.noobf.json")
+
+    relocate("org.bstats", "${project.group}.lib.bstats")
+    relocate("org.json", "${project.group}.lib.json")
+    relocate("com.j256", "${project.group}.lib.j256")
+    relocate("javax.persistence", "${project.group}.lib.javax.persistence")
+    relocate("com.zaxxer", "${project.group}.lib.zaxxer")
+    relocate("okhttp3", "${project.group}.lib.okhttp3")
+    relocate("okio", "${project.group}.lib.okio")
+    relocate("kotlin", "${project.group}.lib.kotlin")
+    relocate("org.intellij", "${project.group}.lib.intellij")
+    relocate("org.jetbrains", "${project.group}.lib.jetbrains")
 }
 
 tasks.named<Jar>("jar") {
@@ -97,6 +111,13 @@ tasks.named<Jar>("jar") {
 
 tasks.named("build") {
     dependsOn(tasks.shadowJar)
+    finalizedBy("deployToLocalServer")
+}
+
+tasks.register<Copy>("deployToLocalServer") {
+    dependsOn(tasks.shadowJar)
+    from(tasks.shadowJar)
+    into("$localServerPath//plugins")
 }
 
 

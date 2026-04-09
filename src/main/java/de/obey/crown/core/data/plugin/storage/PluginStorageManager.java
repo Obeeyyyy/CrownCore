@@ -1,5 +1,7 @@
 package de.obey.crown.core.data.plugin.storage;
 
+import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
+import com.j256.ormlite.support.ConnectionSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import de.obey.crown.core.data.plugin.storage.datakey.DataKey;
@@ -12,6 +14,7 @@ import de.obey.crown.core.event.PlayerDataLoadEvent;
 import de.obey.crown.core.event.PlayerDataSaveEvent;
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.util.Scheduler;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.plugin.Plugin;
 
@@ -56,14 +59,13 @@ public class PluginStorageManager {
             CrownCore.log.warn("Invalid plugin name for storage: " + rawPluginName);
             return CompletableFuture.completedFuture(false);
         }
-        final String pluginName = rawPluginName;
 
         return CompletableFuture.supplyAsync(() -> {
 
-            if (connections.containsKey(pluginName)) {
+            if (connections.containsKey(rawPluginName)) {
                 String driverClassName = "";
                 try {
-                    driverClassName = connections.get(pluginName).getConnection().getMetaData().getDriverName();
+                    driverClassName = connections.get(rawPluginName).getConnection().getMetaData().getDriverName();
                     CrownCore.log.debug("plugin db connection already exists");
                     CrownCore.log.debug(" - driver: " + driverClassName);
                     CrownCore.log.debug(" - current storage method: " + storageConfig.getStorageType().name());
@@ -78,7 +80,7 @@ public class PluginStorageManager {
             final HikariConfig hikariConfig = new HikariConfig();
 
             String jdbcUrl;
-            final Path h2DataFile = pluginConfig.getPlugin().getDataFolder().toPath().resolve(pluginName);
+            final Path h2DataFile = pluginConfig.getPlugin().getDataFolder().toPath().resolve(rawPluginName);
 
             hikariConfig.setUsername("sa");
             hikariConfig.setPassword("");
@@ -101,12 +103,12 @@ public class PluginStorageManager {
                 }
 
                 default -> {
-                    CrownCore.log.warn("invalid storage.method for " + pluginName + " in config.yml");
+                    CrownCore.log.warn("invalid storage.method for " + rawPluginName + " in config.yml");
                     jdbcUrl = "jdbc:h2:" + h2DataFile.toAbsolutePath();
                 }
             }
 
-            CrownCore.log.debug("storage method for " + pluginName + ": " + storageConfig.getStorageType().name());
+            CrownCore.log.debug("storage method for " + rawPluginName + ": " + storageConfig.getStorageType().name());
             CrownCore.log.debug(" - " + jdbcUrl);
 
             hikariConfig.setJdbcUrl(jdbcUrl);
@@ -116,8 +118,12 @@ public class PluginStorageManager {
             hikariConfig.setMinimumIdle(storageConfig.getMinIdle());
             hikariConfig.setKeepaliveTime(storageConfig.getKeepAliveTime());
 
-            hikariConfig.setPoolName("obey-" + pluginName);
-            connections.put(pluginName, new HikariDataSource(hikariConfig));
+            hikariConfig.setInitializationFailTimeout(5000);
+            hikariConfig.setConnectionTimeout(5000);
+            hikariConfig.setValidationTimeout(5000);
+
+            hikariConfig.setPoolName("obey-" + rawPluginName);
+            connections.put(rawPluginName, new HikariDataSource(hikariConfig));
 
             CrownCore.log.debug("created connection pool - " + hikariConfig.getPoolName());
 
@@ -326,6 +332,17 @@ public class PluginStorageManager {
             throw new SQLException("Missing connection for " + name);
 
         return connections.get(name).getConnection();
+    }
+
+    public ConnectionSource getConnectionSourceForPlugin(final Plugin plugin) throws SQLException {
+        if(!connections.containsKey(plugin.getName()))
+            return null;
+
+        final HikariDataSource hikariDataSource = connections.get(plugin.getName());
+
+        return new JdbcPooledConnectionSource(
+                hikariDataSource.getJdbcUrl(), hikariDataSource.getUsername(), hikariDataSource.getPassword()
+        );
     }
 
     public void shutdown() {

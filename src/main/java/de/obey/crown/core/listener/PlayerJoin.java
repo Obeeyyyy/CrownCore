@@ -40,7 +40,7 @@ public final class PlayerJoin implements Listener {
 
         final Player player = event.getPlayer();
 
-        Scheduler.runGlobalTaskLater(CrownCore.getInstance(), () -> {
+        Scheduler.runEntityTaskLater(CrownCore.getInstance(), player, () -> {
             for (final Plugin plugin : versionChecker.getOutdatedPlugins()) {
                 final String pluginName = plugin.getName();
                 final String newest = versionChecker.getNewestVersions().get(pluginName);
@@ -48,9 +48,7 @@ public final class PlayerJoin implements Listener {
                 final String downloadLink = plugin.getDescription().getWebsite();
 
                 player.sendMessage("");
-                pluginConfig.getMessanger().sendNonConfigMessage(
-                        player,
-                        "%prefix% Your version of %accent%&n" + pluginName + "%white% is &coutdated%white%!");
+                pluginConfig.getMessanger().sendNonConfigMessage(player, "%prefix% Your version of %accent%&n" + pluginName + "%white% is &coutdated%white%!");
 
                 pluginConfig.getMessanger().sendNonConfigMessage(player, "            &8➥ &7current: &c" + current + "&7 - latest: &a" + newest);
                 pluginConfig.getMessanger().sendNonConfigMessage(player, "            &8➥ &7Download: &n" + (downloadLink == null ? "https://builtbybit.com/creators/crown-plugins.427256" : downloadLink));

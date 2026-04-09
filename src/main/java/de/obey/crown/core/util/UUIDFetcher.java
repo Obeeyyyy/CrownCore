@@ -8,6 +8,7 @@ package de.obey.crown.core.util;
  */
 
 import de.obey.crown.core.noobf.CrownCore;
+import lombok.Setter;
 import lombok.experimental.UtilityClass;
 
 import com.google.common.cache.Cache;
@@ -19,16 +20,20 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -42,11 +47,8 @@ public class UUIDFetcher {
     private final List<Function<String, UUID>> NAME_TO_UNIQUE_ID_CONVERTER_LIST = new LinkedList<>();
     private final List<Function<UUID, String>> UNIQUE_ID_TO_NAME_CONVERTER_LIST = new LinkedList<>();
 
+    @Setter
     private OkHttpClient okHttpClient;
-
-    public void setOkHttpClient(final OkHttpClient param) {
-        okHttpClient = param;
-    }
 
     public void addNameToUniqueIdConverter(Function<String, UUID> function) {
         NAME_TO_UNIQUE_ID_CONVERTER_LIST.add(function);
@@ -56,8 +58,9 @@ public class UUIDFetcher {
         UNIQUE_ID_TO_NAME_CONVERTER_LIST.add(function);
     }
 
-    public CompletableFuture<UUID> getUniqueIdAsync(@NonNull String userName) {
-        return CompletableFuture.supplyAsync(() -> getUniqueId(userName), CrownCore.getInstance().getExecutor());
+    public void addToCache(final String username, final UUID uuid) {
+        NAME_TO_UNIQUE_ID_CACHE.put(username, uuid);
+        UNIQUE_ID_TO_NAME_CACHE.put(uuid, username);
     }
 
     public CompletableFuture<String> getUserNameAsync(@NonNull UUID uniqueId) {
@@ -72,44 +75,55 @@ public class UUIDFetcher {
             CrownCore.log.debug(" - input already is uuid");
             return CompletableFuture.completedFuture(uuid);
         } catch (final IllegalArgumentException exception) {
-            if(FloodgateUtil.isFloodgateEnabled()) {
-
-                if(input.startsWith(FloodgateUtil.getBedrockPrefix())) {
-                    CrownCore.log.debug(" - input starts with bedrock prefix");
-                    return FloodgateUtil.getUuidByName(input);
-                }
-            }
-
-            return getUniqueIdAsync(input);
+            return getUniqueId(input);
         }
     }
 
-    public @Nullable UUID getUniqueId(@NotNull String userName) {
-        CrownCore.log.debug("(!) fetching uuid for name " + userName);
+    public @Nullable CompletableFuture<UUID> getUniqueId(@NotNull String username) {
+        final boolean offlineMode = CrownCore.getInstance().getPluginConfig().isOfflineMode();
 
-        if (!isValidMinecraftUserName(userName)) {
-            CrownCore.log.debug(" - name is invalid (not a minecraft username)");
+        if(!offlineMode)
+            username = username.toLowerCase(Locale.ROOT);
+
+        UUID uniqueId = NAME_TO_UNIQUE_ID_CACHE.getIfPresent(username);
+
+        if (uniqueId != null)
+            return CompletableFuture.completedFuture(uniqueId);
+
+        CrownCore.log.debug("(!) fetching uuid for name " + username);
+        CrownCore.log.debug(" -> offline-mode: " + offlineMode );
+
+        if (!isValidMinecraftUserName(username)) {
+
+            if(username.startsWith(FloodgateUtil.getBedrockPrefix())) {
+                if(FloodgateUtil.isFloodgateEnabled()) {
+                    CrownCore.log.debug(" -> name starts with bedrock prefix");
+
+                    @NotNull final String finalUsername = username;
+                    return FloodgateUtil.getUuidByName(username).thenApply((uuid) -> {
+                        CrownCore.log.debug("   -> floodgate uuid: " + uuid);
+                        NAME_TO_UNIQUE_ID_CACHE.put(finalUsername, uuid);
+                        return uuid;
+                    });
+                } else {
+                    CrownCore.log.warn(" You are trying to use bedrock features but the floodgate api is not present. Please install floodgate.");
+                    return null;
+                }
+            }
+
+            CrownCore.log.debug(" - name is invalid (not a minecraft or bedrock username)");
             return null;
         }
 
-        userName = userName.toLowerCase(Locale.ROOT);
-        UUID uniqueId = NAME_TO_UNIQUE_ID_CACHE.getIfPresent(userName);
-        if (uniqueId != null) {
-            return uniqueId;
-        }
-        for (Function<String, UUID> function : NAME_TO_UNIQUE_ID_CONVERTER_LIST) {
-            uniqueId = function.apply(userName);
-            if (uniqueId == null) {
-                continue;
-            }
-            NAME_TO_UNIQUE_ID_CACHE.put(userName, uniqueId);
-            return uniqueId;
-        }
-        String[] data = getRemoteUserData(userName);
+        if(offlineMode)
+            return CompletableFuture.completedFuture(getOfflineUUID(username));
+
+        String[] data = getRemoteUserData(username);
+
         if (data != null && data.length == 2) {
             uniqueId = UUID.fromString(data[1]);
-            NAME_TO_UNIQUE_ID_CACHE.put(userName, uniqueId);
-            return uniqueId;
+            NAME_TO_UNIQUE_ID_CACHE.put(username, uniqueId);
+            return CompletableFuture.completedFuture(uniqueId);
         }
 
         return null;
@@ -135,6 +149,10 @@ public class UUIDFetcher {
             return name;
         }
         return null;
+    }
+
+    private UUID getOfflineUUID(final String username) {
+        return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
     }
 
     private String[] getRemoteUserData(@NotNull String nameOrUuid) {

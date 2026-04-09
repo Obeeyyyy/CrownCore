@@ -55,10 +55,10 @@ public final class CrownCore extends JavaPlugin {
         log.setPlugin(this);
 
         /***
-         * Cached thread pool.
+         * Fixed thread pool n = 16.
          * Used for all core and child plugins tasks.
          */
-        executor = Executors.newCachedThreadPool(new CoreThreadFactory());
+        executor =  Executors.newFixedThreadPool(16, new CoreThreadFactory());
 
         okHttpClient = new OkHttpClient();
         pluginStorageManager = new PluginStorageManager(executor);
