@@ -1,13 +1,14 @@
 ---
+title: Messages
 description: Default messages.yml file for the CrownCore and their explanation.
 icon: file-lines
-title: Messages
 ---
 
+# Messages
 
-### Default messages.yml
+## Default messages.yml
 
-```yaml title="messages.yml"
+```yaml
 prefix: "&6&lCROWNCORE &8●&f"
 white: "&f"
 accent: "&e"
@@ -37,20 +38,26 @@ messages:
   not-enough-money: "%prefix% You dont have enough money, you are missing %accent%-$%missing%%white%."
 ```
 
-# What these values mean
-## prefix
+**What these values mean**
+
+**prefix**
+
 * `prefix`: This is the prefix that is used in all our plugins with `%prefix%` in the message files and `%cc_prefix%` using [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/).
-## white
+
+**white**
+
 * `white`: This is the default color that is used in all our plugins with `%white%` in the message files and `%cc_white%` using [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/).
-## accent
+
+**accent**
+
 * `accent`: This is the accent color that is used in all our plugins with `%accent%` in the message files and `%cc_accent%` using [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/).
 
 {% hint style="info" %}
-You can configure plugin specific values for what is mentioned above by simply adding them into the plugins `messages.yml` and using `%pluginname_key%` instead of `%key%`.
-`Example:` `%crownkits_prefix%` will use the `prefix` defined in the `messages.yml` from `CrownKits` instead of the Cores.
+You can configure plugin specific values for what is mentioned above by simply adding them into the plugins `messages.yml` and using `%pluginname_key%` instead of `%key%`. `Example:` `%crownkits_prefix%` will use the `prefix` defined in the `messages.yml` from `CrownKits` instead of the Cores.
 {% endhint %}
 
-# Messages
+**Messages**
+
 > These are simple key value pairs that are global, meaning used in all the crown plugins.
 
 * `no-permission`: This message is sent when a player does not have permission for an action. The needed permission can be displayed using `%permission%`.
@@ -76,5 +83,6 @@ You can configure plugin specific values for what is mentioned above by simply a
 * `teleportation-cancelled`: Sent when the teleportation was cancelled (by moving for example).
 * `not-enough-money`: Sent whenever a player does not have enough money for an action. `%missing%` can be used to display the missing amount.
 
-# Multi Line Messages
-> There are no multi line messages for the CrownCore but these are key and [Array](../../guides/yaml#array) pairs.
+**Multi Line Messages**
+
+> There are no multi line messages for the CrownCore but these are key and [Array](../guides/yaml/#array) pairs.
