@@ -6,6 +6,10 @@ icon: plane-landing-gear
 
 # Introduction
 
+{% hint style="success" %}
+Make sure to join our [**Discord Server**](https://discord.gg/crowndev).
+{% endhint %}
+
 ## What is CrownCore ?
 
 > **CrownCore** is as the name suggests a Core we use to develop our plugins. The Core itself does not offer many features but it contains global configuration like time formats, teleportation etc. but more on that later.
@@ -18,15 +22,10 @@ icon: plane-landing-gear
 
 > Visit the plugins bStats page [here](https://bstats.org/plugin/bukkit/CrownCore/27306).
 
-#### Features
+## Features
 
 * [Configuration](configuration.md)
 * [Messages](messages.md)
-* [Sounds](sounds/)
-* [Messages](messages.md)
-* [Placeholders](placeholders/)
-* [Custom Placeholders](feautres/custom-placeholders/)
-
-{% hint style="success" %}
-Make sure to join our [**Discord Server**](https://discord.gg/crowndev).
-{% endhint %}
+* [Sounds](sounds.md)
+* [Placeholders](placeholders.md)
+* [Custom Placeholders](features/custom-placeholders.md)
