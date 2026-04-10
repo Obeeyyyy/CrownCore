@@ -1,6 +1,0 @@
----
-icon: align-justify
----
-
-# Features
-

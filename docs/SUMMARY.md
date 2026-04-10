@@ -5,5 +5,7 @@
 * [Messages](messages.md)
 * [Placeholders](placeholders.md)
 * [Sounds](sounds.md)
-* [Features](features/README.md)
-  * [Custom Placeholders](features/custom-placeholders.md)
+
+## Features
+
+* [Custom Placeholders](features/custom-placeholders.md)
