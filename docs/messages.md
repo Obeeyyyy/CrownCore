@@ -6,7 +6,7 @@ icon: file-lines
 
 # Messages
 
-## Default messages.yml
+# Default messages.yml
 
 ```yaml
 prefix: "&6&lCROWNCORE &8●&f"
@@ -38,7 +38,7 @@ messages:
   not-enough-money: "%prefix% You dont have enough money, you are missing %accent%-$%missing%%white%."
 ```
 
-**What these values mean**
+# What these values mean
 
 **prefix**
 

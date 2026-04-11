@@ -8,11 +8,11 @@ icon: percent
 
 ***
 
-## What are custom placeholders and how to they work ?
+## What are custom placeholders and how do they work ?
 
 > During my time working on servers, I realised that having a way to quickly create a placeholder for PlaceholderAPI that holds a static value can be very useful.
 
-### Example use cases:
+### Example use cases
 
 * **A Discord invite URL**: Your Discord link is most likely displayed in multiple locations. Now imagine your invite link changes, now you would have to update it in every single location. Very time consuming and prone to errors.
 * **A store URL**: Same scenario as above.
@@ -22,7 +22,7 @@ The solution to this problem is simple. **Placeholders**. You just define your p
 
 `Example`: I have a placeholder called `discord`. To display its value in game, I use `%cc_discord%`.
 
-#### The placeholders.yml
+### The placeholders.yml
 
 > This file holds your custom placeholders represented as key value pairs.
 

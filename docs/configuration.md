@@ -4,7 +4,7 @@ title: Configuration
 icon: file-lines
 ---
 
-### Default config.yml
+# Default config.yml
 
 ```yaml title="config.yml"
 update-reminder: true
