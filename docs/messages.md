@@ -4,8 +4,6 @@ description: Default messages.yml file for the CrownCore and their explanation.
 icon: file-lines
 ---
 
-# Messages
-
 # Default messages.yml
 
 ```yaml
