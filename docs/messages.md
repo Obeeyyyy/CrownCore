@@ -40,15 +40,15 @@ messages:
 
 # What these values mean
 
-**prefix**
+## prefix
 
 * `prefix`: This is the prefix that is used in all our plugins with `%prefix%` in the message files and `%cc_prefix%` using [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/).
 
-**white**
+## white
 
 * `white`: This is the default color that is used in all our plugins with `%white%` in the message files and `%cc_white%` using [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/).
 
-**accent**
+## accent
 
 * `accent`: This is the accent color that is used in all our plugins with `%accent%` in the message files and `%cc_accent%` using [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/).
 
@@ -56,7 +56,7 @@ messages:
 You can configure plugin specific values for what is mentioned above by simply adding them into the plugins `messages.yml` and using `%pluginname_key%` instead of `%key%`. `Example:` `%crownkits_prefix%` will use the `prefix` defined in the `messages.yml` from `CrownKits` instead of the Cores.
 {% endhint %}
 
-**Messages**
+# Messages
 
 > These are simple key value pairs that are global, meaning used in all the crown plugins.
 
@@ -83,6 +83,6 @@ You can configure plugin specific values for what is mentioned above by simply a
 * `teleportation-cancelled`: Sent when the teleportation was cancelled (by moving for example).
 * `not-enough-money`: Sent whenever a player does not have enough money for an action. `%missing%` can be used to display the missing amount.
 
-**Multi Line Messages**
+# Multi Line Messages
 
 > There are no multi line messages for the CrownCore but these are key and [Array](../guides/yaml/#array) pairs.
