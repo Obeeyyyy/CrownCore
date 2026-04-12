@@ -12,10 +12,15 @@ import de.obey.crown.core.util.FileUtil;
 import lombok.Getter;
 import lombok.NonNull;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Getter
@@ -76,9 +81,8 @@ public class CrownConfig implements CrowPlugin {
         loadMessages();
         loadSounds();
 
-        if(pluginStorageConfig != null) {
+        if(pluginStorageConfig != null)
             crownCore.getPluginStorageManager().shutdownPluginConnections(plugin);
-        }
 
         crownCore.getPluginStorageManager().createConnection(this).thenApply(success -> {
             if(success) {
@@ -95,6 +99,32 @@ public class CrownConfig implements CrowPlugin {
 
     public void loadConfig() {
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(getConfigFile());
+        configuration.options().parseComments(true);
+
+        final YamlConfiguration defaults = new YamlConfiguration();
+        try (final InputStream stream = plugin.getResource("config.yml")) {
+            if (stream != null)
+                defaults.load(new InputStreamReader(stream));
+
+            final Set<String> keys = defaults.getConfigurationSection("").getKeys(true);
+
+            if (keys.isEmpty())
+                return;
+
+            for (final String key : keys) {
+                if (configuration.contains(key))
+                    continue;
+
+                CrownCore.log.info("generated missing config key '" + key + "' for plugin " + plugin.getName());
+
+                configuration.set(key, defaults.get(key));
+                configuration.setComments(key, defaults.getComments(key));
+                configuration.setInlineComments(key, defaults.getInlineComments(key));
+            }
+
+            FileUtil.saveConfigurationIntoFile(configuration, getConfigFile());
+
+        } catch (final IOException | InvalidConfigurationException ignored) {}
 
         if(configuration.contains("storage"))
             pluginStorageConfig = new PluginStorageConfig(this, configuration);

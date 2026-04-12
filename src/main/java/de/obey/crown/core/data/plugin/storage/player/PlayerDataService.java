@@ -65,10 +65,10 @@ public class PlayerDataService {
         final long started = System.currentTimeMillis();
         return CompletableFuture.supplyAsync(() -> {
 
-            CrownCore.log.debug(" loading async");
+            CrownCore.log.debug(" loading async " + uuid.toString());
 
             if(cache.containsKey(uuid)) {
-                CrownCore.log.debug("found player in cache '" + uuid.toString() + "' in " + (System.currentTimeMillis() - started) + "ms");
+                CrownCore.log.debug("found player in cache '" + uuid + "' in " + (System.currentTimeMillis() - started) + "ms");
                 return cache.get(uuid).setUnload(false);
             }
 
@@ -77,7 +77,7 @@ public class PlayerDataService {
             final PlayerData playerData = new PlayerData(uuid);
             cache.put(uuid, playerData);
 
-            CrownCore.log.debug("loaded player data for '" + uuid.toString() + "' in " + (System.currentTimeMillis() - started) + "ms");
+            CrownCore.log.debug("loaded player data for '" + uuid + "' in " + (System.currentTimeMillis() - started) + "ms");
 
             return playerData;
         }, executor);
@@ -85,6 +85,8 @@ public class PlayerDataService {
 
     public CompletableFuture<PlayerData> saveAsync(final UUID uuid) {
         return CompletableFuture.supplyAsync(() -> {
+            CrownCore.log.debug(" saving  async " + uuid.toString());
+
             if(!cache.containsKey(uuid))
                 return null;
 
