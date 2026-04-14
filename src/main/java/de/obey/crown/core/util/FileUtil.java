@@ -56,9 +56,8 @@ public final class FileUtil {
     public File getGeneratedCoreFile(final String fileName, final boolean generate) {
         final File file = new File(CrownCore.getInstance().getDataFolder() + "/" + fileName);
 
-        if (!file.exists() && generate) {
+        if (!file.exists() && generate)
             CrownCore.getInstance().saveResource(fileName, false);
-        }
 
         return file;
     }
@@ -69,8 +68,7 @@ public final class FileUtil {
         if (!file.exists() && create) {
             try {
                 file.createNewFile();
-            } catch (final IOException ignored) {
-            }
+            } catch (final IOException ignored) {}
         }
 
         return file;
@@ -82,11 +80,13 @@ public final class FileUtil {
             return;
         }
 
-        CrownCore.getInstance().getExecutor().execute(() -> {
-            try {
-                configuration.save(file);
-            } catch (final IOException ignored) {}
-        });
+        try {
+            configuration.save(file);
+        } catch (final IOException exception) {
+            CrownCore.log.warn("error saving file " + file.getAbsolutePath());
+            CrownCore.log.warn(exception.getMessage());
+        }
+
     }
 
     public int getInt(final YamlConfiguration configuration, final String path, final int defaultValue) {

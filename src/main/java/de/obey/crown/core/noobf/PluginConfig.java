@@ -6,6 +6,7 @@ package de.obey.crown.core.noobf;
 import de.obey.crown.core.data.plugin.CrownConfig;
 import de.obey.crown.core.data.plugin.TeleportMessageType;
 import de.obey.crown.core.util.FileUtil;
+import de.obey.crown.core.util.PlaceholderUtil;
 import de.obey.crown.core.util.TextUtil;
 import lombok.Getter;
 import lombok.NonNull;
@@ -81,16 +82,10 @@ public final class PluginConfig extends CrownConfig {
         FileUtil.saveConfigurationIntoFile(configuration, getConfigFile());
     }
 
-    private void loadRedisConfiguration(final YamlConfiguration configuration) {
+    @Override
+    public void reload() {
+        super.reload();
 
-        ConfigurationSection section;
-
-        if(configuration.contains("redis")) {
-            section = configuration.getConfigurationSection("redis");
-        } else {
-            section = configuration.createSection("redis");
-        }
-
-        configuration.set("redis", section);
+        PlaceholderUtil.placeholders.loadPlaceholders();
     }
 }

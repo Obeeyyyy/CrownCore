@@ -18,7 +18,7 @@ public class DataKey<T> {
     private boolean unique = false;
 
     public DataKey(final String name, final Plugin plugin, final Class<T> dataType, final T defaultValue, final String sqlDataType) {
-        this.name = name;
+        this.name = name.toUpperCase();
         this.plugin = plugin.getName().toLowerCase();
         this.dataType = dataType;
         this.defaultValue = (T) defaultValue;
@@ -26,7 +26,7 @@ public class DataKey<T> {
     }
 
     public DataKey(final String name, final Plugin plugin, final Class<T> dataType, final String sqlDataType) {
-        this.name = name;
+        this.name = name.toUpperCase();
         this.plugin = plugin.getName().toLowerCase();
         this.dataType = dataType;
         this.sqlDataType = sqlDataType;

@@ -292,38 +292,84 @@ public class PluginStorageManager {
     }
 
     /***
-     * creates the player data table using the generated schema
+     * creates the base player data table and checks/adds the columns using the generated schema
      * @param rawPluginName name of plugin the schema was generated for
      */
     public void createPlayerDataTable(final String rawPluginName) {
         final String pluginName = rawPluginName.toLowerCase();
 
         executor.execute(() -> {
-            CrownCore.log.debug("creating playerdata table for " + pluginName);
-            final StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
+            CrownCore.log.debug("creating/updating player data table for " + pluginName);
+            try (final Connection conn = getConnectionForPluginName(pluginName)) {
 
-            stringBuilder.append(pluginName).append(" (");
-            stringBuilder.append("player_uuid CHAR(36) PRIMARY KEY, ");
-
-            for (final DataKey<?> key : playerDataSchemas.get(pluginName).getDataKeys()) {
-                stringBuilder.append(key.getName()).append(" ").append(key.getSqlDataType()).append(", ");
-            }
-
-            stringBuilder.setLength(stringBuilder.length() - 2);
-            stringBuilder.append(");");
-
-            try (final Connection conn = getConnectionForPluginName(pluginName);
-                 final Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate(stringBuilder.toString());
-
-                CrownCore.log.debug(" - executed statement: " + stringBuilder);
+                createBaseTable(conn, pluginName);
+                addMissingColumns(conn, pluginName);
 
             } catch (final SQLException exception) {
-                CrownCore.log.warn("error creating player data table: ");
+                CrownCore.log.warn("error creating/updating player data table:");
                 CrownCore.log.warn(" - plugin: " + pluginName);
                 CrownCore.log.warn(" - exception: " + exception.getMessage());
             }
         });
+    }
+
+    /***
+     * creates a base table with a player uuid column
+     * @param conn connection
+     * @param pluginName pluginName
+     * @throws SQLException sqlException
+     */
+    private void createBaseTable(final Connection conn, final String pluginName) throws SQLException {
+        final String sql = """
+            CREATE TABLE IF NOT EXISTS %s (
+            PLAYER_UUID CHAR(36) PRIMARY KEY
+        );
+        """.formatted(pluginName.toUpperCase());
+
+        try (final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(sql);
+        }
+    }
+
+    /***
+     * creates the missing columns. compares schema to actual table.
+     * @param conn connection
+     * @param pluginName pluginName
+     * @throws SQLException sqlException
+     */
+    private void addMissingColumns(final Connection conn, final String pluginName) throws SQLException {
+        CrownCore.log.debug("creating missing columns");
+        final Set<String> existingColumns = new HashSet<>();
+
+        final DatabaseMetaData metaData = conn.getMetaData();
+
+        try (final ResultSet columns = metaData.getColumns(null, "PUBLIC", pluginName.toUpperCase(), null)) {
+            while (columns.next()) {
+                final String column = columns.getString("COLUMN_NAME").toUpperCase();
+
+                CrownCore.log.debug(" - found column " +column);
+                existingColumns.add(column);
+            }
+        }
+
+        for (final DataKey<?> key : playerDataSchemas.get(pluginName).getDataKeys()) {
+            final String columnName = key.getName().toUpperCase();
+
+            CrownCore.log.debug(" - checking column: " + columnName);
+
+            if (existingColumns.contains(columnName)) {
+                CrownCore.log.debug("   - already exists: " + columnName);
+                continue;
+            }
+
+            final String alterSql = "ALTER TABLE " + pluginName +
+                    " ADD COLUMN " + columnName + " " + key.getSqlDataType();
+
+            try (final Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate(alterSql);
+                CrownCore.log.debug("   - added missing column '" + columnName + "' to " + pluginName);
+            }
+        }
     }
 
     public Connection getConnectionForPluginName(final String name) throws SQLException {

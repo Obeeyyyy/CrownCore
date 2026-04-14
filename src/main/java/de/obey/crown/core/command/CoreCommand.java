@@ -39,12 +39,7 @@ public final class CoreCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 1) {
             if (args[0].equalsIgnoreCase("reload")) {
-                pluginConfig.loadMessages();
-                pluginConfig.loadConfig();
-                pluginConfig.loadSounds();
-
-                PlaceholderUtil.placeholders.loadPlaceholders();
-
+                pluginConfig.reload();
                 messanger.sendMessage(sender, "plugin-reloaded", new String[]{"plugin"}, CrownCore.getInstance().getName());
                 return false;
             }

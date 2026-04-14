@@ -78,12 +78,10 @@ public final class InventoryUtil {
                 return;
             }
 
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    player.getWorld().dropItem(player.getLocation(), item.clone());
-                }
-            }.runTask(CrownCore.getInstance());
+            Scheduler.runEntityTask(CrownCore.getInstance(), player, () -> {
+                player.getWorld().dropItem(player.getLocation(), item.clone());
+            });
+
             return;
         }
 
