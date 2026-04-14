@@ -4,7 +4,6 @@
 # we are there to assist you
 #
 
-
 update-reminder: true # toggle the update reminder when joining (only players with permission see the reminder)
 debug-mode: false # toggle this to enable in depth debug output
 

@@ -7,31 +7,43 @@ icon: file-lines
 # Default config.yml
 
 ```yaml title="config.yml"
-update-reminder: true
-debug-mode: false
+#
+# if you have any questions or suggestions, please do not hesitate and
+# join our discord: https://discord.com/invite/bJQRV5GeZg
+# we are there to assist you
+#
 
-offline-mode: false
+update-reminder: true # toggle the update reminder when joining (only players with permission see the reminder)
+debug-mode: false # toggle this to enable in depth debug output
 
-data-cache-time: 3600000
+offline-mode: false # toggle this if your server is cracked
+
+data-cache-time: 3600000 # the time player data stays cached after a player left in ms
 
 teleport:
-  delay: 5              
-  message-type: bossbar  
+  delay: 5 # this is the teleport delay in s
+  message-type: bossbar # message type: bossbar, actionbar
+  particles: true # toggle the particles when teleporting
 
 instant-teleport:
-  always: false      
-  worlds: []        
-  regions: []        
+  always: false # set this to true if you don't want to use the teleport animation, also players in gmc will always be teleported without the animation
+  # players in these worlds will be teleported without a delay
+  worlds: []
+  # players in these regions will be teleported without a delay
+  regions: []
 
 cooldown:
-  message: 0      
-  command: 0     
+  message: 0 # cooldown before being able to send another chat message in milliseconds
+  command: 0 # cooldown before being able to send another command in milliseconds
 
-number-formatting: "en_US"
+number-format:
+  locale: "en_US" # set the language default for number formatting. EX: en-US -> 10,000.00
+  default-format: "#,###.##" # the default number format
+  use-short-format: false # toggle this to use the short format (1k, 1m etc)
 
 time-formats:
-  default: "%hh%:%mm%:%ss%"  
-  teleportation: "%ss%.%t%" 
+  default: "%hh%:%mm%:%ss%" # the default format to use when nothing else is specified
+  teleportation: "%ss%.%t%" # the format for the teleportation messages
 ```
 
 # What these values mean
