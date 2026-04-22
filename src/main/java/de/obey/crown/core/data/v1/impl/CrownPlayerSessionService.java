@@ -46,10 +46,7 @@ public abstract class CrownPlayerSessionService<S extends CrownPlayerSession<S>,
 
     @Override
     public CompletableFuture<S> load(final ID id) {
-        CrownCore.log.info(" LOAD CALL session service " + plugin.getName());
-
         if(sessions.containsKey(id)) {
-            CrownCore.log.info(" - found in cache");
             return CompletableFuture.completedFuture(sessions.get(id));
         }
 
@@ -62,10 +59,7 @@ public abstract class CrownPlayerSessionService<S extends CrownPlayerSession<S>,
 
     @Override
     public CompletableFuture<S> save(ID id) {
-        CrownCore.log.info(" SAVE CALL session service " + plugin.getName());
-
         if(!sessions.containsKey(id)) {
-            CrownCore.log.info(" - not found in cache, SKIPPING");
             return CompletableFuture.completedFuture(null);
         }
 

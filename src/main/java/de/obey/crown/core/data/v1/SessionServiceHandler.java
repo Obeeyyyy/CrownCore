@@ -40,18 +40,10 @@ public class SessionServiceHandler implements Listener {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
 
         sessionScheduler = Scheduler.runGlobalTaskTimer(plugin, () -> {
-
-            CrownCore.log.info("session handler task");
-            CrownCore.log.info(" - " + sessionServiceMap.size() + " session services");
-
             for (CrownPlayerSessionService<?, UUID> sessionService : sessionServiceMap.values()) {
-                CrownCore.log.info("   -> session service: " + sessionService.getPlugin().getName());
-                CrownCore.log.info("     - sessions: " + sessionService.getSessions().size());
                 sessionService.saveAllAsync();
 
                 for (final CrownPlayerSession<?> session : sessionService.getSessions().values()) {
-                    CrownCore.log.info("       -> session for player: " + session.getPlayer().map(Player::getName).orElse("loading") + " (" + session.getUuid() + ")");
-
                     if(session.getPlayer().map(Player::isOnline).orElse(false))  {
                         if(System.currentTimeMillis() - session.getLastSeen() >= pluginConfig.getDataCacheTime()) {
                             sessionService.unload(session.getUuid());
@@ -101,7 +93,6 @@ public class SessionServiceHandler implements Listener {
     }
 
     public <S extends CrownPlayerSession<S>, ID extends UUID> void registerSessionService(final CrownPlayerSessionService<S,ID> sessionService) {
-        CrownCore.log.info("registering session service for " + sessionService.getPlugin().getName());
         sessionServiceMap.put(sessionService.getPlugin(), (CrownPlayerSessionService<?, UUID>) sessionService);
     }
 }
