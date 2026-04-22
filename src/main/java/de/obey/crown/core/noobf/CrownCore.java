@@ -7,6 +7,7 @@ import de.obey.crown.core.data.plugin.storage.player.PlayerDataService;
 import de.obey.crown.core.data.plugin.Log;
 import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.data.plugin.storage.PluginStorageManager;
+import de.obey.crown.core.data.v1.SessionServiceHandler;
 import de.obey.crown.core.event.CoreStartEvent;
 import de.obey.crown.core.gui.command.CrownGuiCommand;
 import de.obey.crown.core.gui.listener.GuiClickListener;
@@ -22,6 +23,7 @@ import net.kyori.adventure.text.format.TextColor;
 import okhttp3.OkHttpClient;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -34,11 +36,13 @@ public final class CrownCore extends JavaPlugin {
 
     public static final Log log = new Log();
     private static CrownCore crownCore;
+    private boolean ready = false;
 
     private ExecutorService executor;
     private OkHttpClient okHttpClient;
     private VersionChecker versionChecker;
     private PluginStorageManager pluginStorageManager;
+    private SessionServiceHandler sessionServiceHandler;
 
     private PluginConfig pluginConfig;
     private Messanger messanger;
@@ -54,11 +58,13 @@ public final class CrownCore extends JavaPlugin {
         crownCore = this;
         log.setPlugin(this);
 
-        /***
+        final int threadCount = getConfig().contains("core-thread-pool") ? getConfig().getInt("core-thread-pool") : 16;
+
+        /*
          * Fixed thread pool n = 16.
          * Used for all core and child plugins tasks.
          */
-        executor =  Executors.newFixedThreadPool(16, new CoreThreadFactory());
+        executor =  Executors.newFixedThreadPool(threadCount, new CoreThreadFactory("Crown-Worker"));
 
         okHttpClient = new OkHttpClient();
         pluginStorageManager = new PluginStorageManager(executor);
@@ -73,13 +79,13 @@ public final class CrownCore extends JavaPlugin {
      */
     @Override
     public void onEnable() {
-        UUIDFetcher.setOkHttpClient(okHttpClient);
         Scheduler.initialize();
         PlaceholderUtil.initialize();
         FloodgateUtil.initialize();
 
         versionChecker = new VersionChecker(executor, okHttpClient);
         versionChecker.retrieveNewestPluginVersions();
+        sessionServiceHandler = new SessionServiceHandler(this, pluginConfig);
         playerDataService = new PlayerDataService(pluginConfig, executor);
 
         initializeBStats();
@@ -92,6 +98,7 @@ public final class CrownCore extends JavaPlugin {
     @Override
     public void onDisable() {
         pluginStorageManager.shutdown();
+        sessionServiceHandler.saveAllSync();
         executor.shutdown();
     }
 
@@ -117,6 +124,7 @@ public final class CrownCore extends JavaPlugin {
             Teleporter.initialize();
             sendConsoleMessage();
             getServer().getPluginManager().callEvent(new CoreStartEvent(versionChecker));
+            ready = true;
         }, 2);
     }
 

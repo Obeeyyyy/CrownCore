@@ -321,19 +321,43 @@ public final class Messanger {
             }
         }
 
-        // look for papi placeholders and check for mini message
         final Pattern pattern = Pattern.compile("%([^%]+)%");
-        final Matcher matcher = pattern.matcher(message);
 
-        while (matcher.find()) {
-            final String placeholder = matcher.group();
+        // look for papi placeholders and check for mini message
+        int maxIterations = 2;
 
-            String value = PlaceholderAPI.setPlaceholders(player, placeholder);
-            value = TextUtil.miniToLegacyIfMini(value);
-            message = message.replace(placeholder, value);
+        for (int i = 0; i < maxIterations; i++) {
+            Matcher matcher = pattern.matcher(message);
+
+            boolean changed = false;
+            StringBuffer result = new StringBuffer();
+
+            while (matcher.find()) {
+                String placeholder = matcher.group();
+
+                String value = PlaceholderAPI.setPlaceholders(player, placeholder);
+                value = TextUtil.miniToLegacyIfMini(value);
+
+                if (!value.equals(placeholder)) {
+                    matcher.appendReplacement(result, Matcher.quoteReplacement(value));
+                    changed = true;
+                } else {
+                    matcher.appendReplacement(result, Matcher.quoteReplacement(placeholder));
+                }
+            }
+
+            matcher.appendTail(result);
+            String newMessage = result.toString();
+
+            if (!changed || newMessage.equals(message)) {
+                message = newMessage;
+                break;
+            }
+
+            message = newMessage;
+
         }
 
-        //return TextUtil.translateModernToString(message);
         return TextUtil.translateColors(message);
     }
 
@@ -400,6 +424,24 @@ public final class Messanger {
         sender.sendMessage(TextUtil.translateColors(line));
     }
 
+    public void sendNonConfigMessage(final CommandSender sender, final String[] placeholders, final String message, final String... replacements) {
+        String line = message;
+
+        if (placeholders != null) {
+            int count = 0;
+            for (final String placeholder : placeholders) {
+                line = line.replace("%" + placeholder + "%", replacements[count]);
+                count++;
+            }
+        }
+
+        if (sender instanceof Player player) {
+            line = PlaceholderAPI.setPlaceholders(player, line);
+        }
+
+        sender.sendMessage(TextUtil.translateColors(line));
+    }
+
     public void sendMessage(final CommandSender sender, final String key) {
         sendMessage(sender, key, null);
     }
@@ -415,6 +457,35 @@ public final class Messanger {
         sender.sendMessage(message);
     }
 
+    public void sendNonConfigMultiLineMessage(final CommandSender sender, final List<String> lines) {
+        sendNonConfigMultiLineMessage(sender, null, lines);
+    }
+
+    public void sendNonConfigMultiLineMessage(final CommandSender sender, final String[] placeholders, final List<String> lines, final String... replacements) {
+        if (lines.isEmpty())
+            return;
+
+        final ArrayList<String> temp = new ArrayList<>();
+
+        for (final String line : lines) {
+            String tempLine = line;
+            if (placeholders != null) {
+                int count = 0;
+                for (final String placeholder : placeholders) {
+                    tempLine = tempLine.replace("%" + placeholder + "%", replacements[count]);
+                    count++;
+                }
+            }
+
+            temp.add(TextUtil.translateColors(tempLine));
+        }
+
+
+        for (final String translatedLine : temp) {
+            sender.sendMessage(PlaceholderAPI.setPlaceholders(null, translatedLine));
+        }
+    }
+
     public void sendMultiLineMessage(final CommandSender sender, final String key) {
         sendMultiLineMessage(sender, key, null);
     }
@@ -426,7 +497,7 @@ public final class Messanger {
 
         final ArrayList<String> temp = new ArrayList<>();
 
-        for (String line : lines) {
+        for (final String line : lines) {
             String tempLine = line;
             if (placeholders != null) {
                 int count = 0;

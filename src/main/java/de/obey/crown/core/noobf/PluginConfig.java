@@ -30,7 +30,7 @@ public final class PluginConfig extends CrownConfig {
     private TeleportMessageType teleportMessageType;
 
     private int teleportDelay, messageDelay, commandDelay, dataCacheTime;
-    private boolean instantTeleport = false, instantRespawn = true, teleportOnJoin, updateReminder = true, teleportParticles = true, useShortFormat = false, offlineMode = false;
+    private boolean instantTeleport, instantRespawn, teleportOnJoin, updateReminder, teleportParticles, useShortFormat, offlineMode;
     private List<String> instantTeleportWorlds;
     private List<String> instantTeleportRegions;
     private String defaultTimeFormat, teleportationTimeFormat, bedrockPrefix;
@@ -46,6 +46,7 @@ public final class PluginConfig extends CrownConfig {
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
         setOfflineMode(FileUtil.getBoolean(configuration, "offline-mode", false));
+
         setDataCacheTime(FileUtil.getInt(configuration, "data-cache-time", 3600000));
         setTeleportMessageType(FileUtil.getString(configuration, "teleport.message-type", "actionbar").equalsIgnoreCase("actionbar") ? TeleportMessageType.ACTIONBAR : TeleportMessageType.BOSSBAR);
         setInstantTeleport(FileUtil.getBoolean(configuration, "instant-teleport.always", false));

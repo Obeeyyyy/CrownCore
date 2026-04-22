@@ -15,6 +15,7 @@ icon: file-lines
 
 update-reminder: true # toggle the update reminder when joining (only players with permission see the reminder)
 debug-mode: false # toggle this to enable in depth debug output
+core-thread-pool: 16 # if you don't know what this is, do not change it
 
 offline-mode: false # toggle this if your server is cracked
 
@@ -53,6 +54,9 @@ time-formats:
 
 ## debug-mode
 * `debug-mode`: Either `true` or `false`. Toggles the debug mode for more console output. Can be toggled via command `/crowncore debug`.
+
+## core-thread-pool
+* `core-thread-pool`: This value represents the amount of threads used in the core fixed thread pool used for various tasks across our plugins. 
 
 ## offline-mode
 * `offline-mode`: Either `true` or `false`. Changes internal functions like UUID fetching.

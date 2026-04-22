@@ -5,13 +5,14 @@ package de.obey.crown.core.data.plugin;
 
 import de.obey.crown.core.data.plugin.storage.PluginStorageConfig;
 import de.obey.crown.core.data.plugin.storage.datakey.DataKeyRegistry;
+import de.obey.crown.core.event.config.ReLoadConfigEvent;
 import de.obey.crown.core.gui.GuiLoader;
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.util.FileUtil;
+import de.obey.crown.core.util.Scheduler;
 import lombok.Getter;
 import lombok.NonNull;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -23,11 +24,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 @Getter
 public class CrownConfig implements CrowPlugin {
@@ -36,8 +34,8 @@ public class CrownConfig implements CrowPlugin {
     @NonNull
     private final Plugin plugin;
 
-    private Messanger messanger;
-    private Sounds sounds;
+    private final Messanger messanger;
+    private final Sounds sounds;
 
     private File messageFile, configFile, soundFile;
 
@@ -89,7 +87,8 @@ public class CrownConfig implements CrowPlugin {
         loadSounds();
 
         if(pluginStorageConfig != null)
-            crownCore.getPluginStorageManager().shutdownPluginConnections(plugin);
+
+           crownCore.getPluginStorageManager().shutdownPluginConnections(plugin);
 
         crownCore.getPluginStorageManager().createConnection(this).thenApply(success -> {
             if(success) {
@@ -102,10 +101,13 @@ public class CrownConfig implements CrowPlugin {
             }
             return success;
         });
+
+        Scheduler.callEvent(plugin, new ReLoadConfigEvent());
     }
 
     public void loadConfig() {
         boolean changed;
+
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(getConfigFile());
         configuration.options().parseComments(true);
 
@@ -129,12 +131,13 @@ public class CrownConfig implements CrowPlugin {
             e.printStackTrace();
         }
 
-        if (configuration.contains("storage"))
+        if (configuration.contains("storage")) {
             pluginStorageConfig = new PluginStorageConfig(this, configuration);
+            crownCore.getPluginStorageManager().registerPlayerSessionPlugin(this);
+        }
 
         if (DataKeyRegistry.pluginHasKeys(plugin))
             crownCore.getPluginStorageManager().registerPlayerDataPlugin(this);
-
     }
 
     private boolean compareDefaults(final YamlConfiguration defaults, final YamlConfiguration configuration) {
@@ -208,6 +211,15 @@ public class CrownConfig implements CrowPlugin {
         final Set<String> existingKeys = new HashSet<>(configuration.getKeys(true));
 
         for (String key : existingKeys) {
+
+            if(key.contains("permissions") ||
+                    key.contains("chances") ||
+                    key.contains("map") ||
+                    key.contains("events") ||
+                    key.contains("progress-bar")
+            )
+                continue;
+
             if (!validKeys.contains(key)) {
                 configuration.set(key, null);
                 changed = true;

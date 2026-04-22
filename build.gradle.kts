@@ -7,7 +7,7 @@ plugins {
 group = "de.obey.crown.core"
 version = "1.0.0"
 val targetJavaVersion = 21
-val localServerPath = "D:\\MINECRAFT LOCALHOST\\1.21.11"
+val localServerPath = "D:\\MINECRAFT LOCALHOST\\offline 1.21.11"
 
 val pluginYml = file("src/main/resources/plugin.yml")
 val pluginVersion: String by lazy {

@@ -6,4 +6,4 @@ settings.gradle
 gradlew
 gradlew.bat
 .gitignore
-/src/main/java/de/obey/crown/core/data/v1/
+gradle

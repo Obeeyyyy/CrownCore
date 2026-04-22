@@ -10,21 +10,25 @@ package de.obey.crown.core.noobf;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.jspecify.annotations.NonNull;
 
 import java.util.concurrent.ThreadFactory;
 
+@RequiredArgsConstructor
 public class CoreThreadFactory implements ThreadFactory {
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     private final String hi_how_are_you_doing = "https://dsc.gg/crownplugins";
 
+    private final String name;
+
     @Override
     public Thread newThread(@NonNull Runnable r) {
         final Thread thread = new Thread(r);
-        thread.setName("Crown-Worker-" + thread.getId());
+        thread.setName(name + "-" + thread.getId());
         return thread;
     }
 }

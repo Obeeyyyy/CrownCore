@@ -117,9 +117,8 @@ public final class FileUtil {
     }
 
     public String getString(final YamlConfiguration configuration, final String path, String defaultValue) {
-        if (configuration.contains(path)) {
+        if (configuration.contains(path))
             return configuration.getString(path);
-        }
 
         configuration.set(path, defaultValue);
         return defaultValue;

@@ -35,6 +35,9 @@ public class PluginStorageManager {
     private final Map<String, List<PluginDataSchema>> pluginDataSchemas = new ConcurrentHashMap<>();
     private final Map<String, CrownConfig> pluginConfigs = new ConcurrentHashMap<>();
 
+    @Getter
+    private final List<Plugin> playerSessionPlugins = new ArrayList<>();
+
     static {
         try {
             Class.forName("org.h2.Driver");
@@ -64,15 +67,23 @@ public class PluginStorageManager {
 
             if (connections.containsKey(rawPluginName)) {
                 String driverClassName = "";
-                try {
-                    driverClassName = connections.get(rawPluginName).getConnection().getMetaData().getDriverName();
+                try (final Connection connection = connections.get(rawPluginName).getConnection()) {
+                    driverClassName = connection.getMetaData().getDriverName();
                     CrownCore.log.debug("plugin db connection already exists");
                     CrownCore.log.debug(" - driver: " + driverClassName);
                     CrownCore.log.debug(" - current storage method: " + storageConfig.getStorageType().name());
-                } catch (final SQLException ignored) {}
+                } catch (final SQLException e) {
+                    CrownCore.log.warn("error while creating connection: " + e.getMessage());
+                    e.printStackTrace();
+                    return false;
+                }
 
                 if (driverClassName.contains(storageConfig.getStorageType().name()))
                     return true;
+
+                final HikariDataSource old = connections.remove(rawPluginName);
+                if (old != null)
+                    old.close();
             }
 
             CrownCore.log.debug(" - creating new connection");
@@ -118,6 +129,7 @@ public class PluginStorageManager {
             hikariConfig.setMinimumIdle(storageConfig.getMinIdle());
             hikariConfig.setKeepaliveTime(storageConfig.getKeepAliveTime());
 
+            hikariConfig.setLeakDetectionThreshold(5000);
             hikariConfig.setInitializationFailTimeout(5000);
             hikariConfig.setConnectionTimeout(5000);
             hikariConfig.setValidationTimeout(5000);
@@ -143,7 +155,7 @@ public class PluginStorageManager {
 
     /***
      * Registers a plugins data schema. Will read the schemas passed as params
-     * @param pluginConfig he CrownConfig instance to read settings from
+     * @param pluginConfig the CrownConfig instance to read settings from
      * @param pluginDataSchema data schema passed
      */
     public void registerPluginDataPlugin(final CrownConfig pluginConfig, final PluginDataSchema pluginDataSchema) {
@@ -163,7 +175,7 @@ public class PluginStorageManager {
 
     /***
      * Registers a plugin as a plugin using playerdata. Will read registered data keys and generate a playerdata table schema.
-     * @param pluginConfig he CrownConfig instance to read settings from
+     * @param pluginConfig the CrownConfig instance to read settings from
      */
     public void registerPlayerDataPlugin(final CrownConfig pluginConfig) {
         final String pluginName = pluginConfig.getPlugin().getName().toLowerCase();
@@ -185,6 +197,23 @@ public class PluginStorageManager {
         playerDataSchemas.put(pluginName, schema);
         CrownCore.log.debug(" -> created schema");
     }
+
+    /***
+     * Registers a plugin as a plugin using player sessions.
+     * @param pluginConfig the CrownConfig instance to read settings from
+     */
+    public void registerPlayerSessionPlugin(final CrownConfig pluginConfig) {
+        final String pluginName = pluginConfig.getPlugin().getName().toLowerCase();
+
+        CrownCore.log.debug("registering player session plugin: " + pluginName);
+
+        if(!pluginConfigs.containsKey(pluginName)) {
+            pluginConfigs.put(pluginName, pluginConfig);
+            createConnection(pluginConfig);
+            CrownCore.log.debug(" -> created new connection");
+        }
+    }
+
 
     /***
      * creates the plugin data tables using the registered schemas
@@ -381,10 +410,11 @@ public class PluginStorageManager {
     }
 
     public ConnectionSource getConnectionSourceForPlugin(final Plugin plugin) throws SQLException {
-        if(!connections.containsKey(plugin.getName()))
-            return null;
+        final String pluginName = plugin.getName().toLowerCase();
+        if(connections.isEmpty() || !connections.containsKey(pluginName))
+            throw new SQLException("Missing connection for " + pluginName);
 
-        final HikariDataSource hikariDataSource = connections.get(plugin.getName());
+        final HikariDataSource hikariDataSource = connections.get(pluginName);
 
         return new JdbcPooledConnectionSource(
                 hikariDataSource.getJdbcUrl(), hikariDataSource.getUsername(), hikariDataSource.getPassword()

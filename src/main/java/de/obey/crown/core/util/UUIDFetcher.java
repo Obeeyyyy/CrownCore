@@ -8,7 +8,6 @@ package de.obey.crown.core.util;
  */
 
 import de.obey.crown.core.noobf.CrownCore;
-import lombok.Setter;
 import lombok.experimental.UtilityClass;
 
 import com.google.common.cache.Cache;
@@ -16,12 +15,9 @@ import com.google.common.cache.CacheBuilder;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -33,7 +29,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -46,9 +41,6 @@ public class UUIDFetcher {
 
     private final List<Function<String, UUID>> NAME_TO_UNIQUE_ID_CONVERTER_LIST = new LinkedList<>();
     private final List<Function<UUID, String>> UNIQUE_ID_TO_NAME_CONVERTER_LIST = new LinkedList<>();
-
-    @Setter
-    private OkHttpClient okHttpClient;
 
     public void addNameToUniqueIdConverter(Function<String, UUID> function) {
         NAME_TO_UNIQUE_ID_CONVERTER_LIST.add(function);
@@ -166,14 +158,14 @@ public class UUIDFetcher {
                     .url(url)
                     .build();
 
-            try (final Response response = okHttpClient.newCall(request).execute()) {
+            try (final Response response = CrownCore.getInstance().getOkHttpClient().newCall(request).execute()) {
                 final ResponseBody responseBody = response.body();
-                if (responseBody == null) {
-                    CrownCore.log.debug(" - response body is null");
+                final String responseString = responseBody.string();
+
+                if (responseString.isBlank()) {
+                    CrownCore.log.debug(" - response body is empty");
                     return null;
                 }
-
-                final String responseString = responseBody.string();
 
                 CrownCore.log.debug(" - response: " + responseString);
 
