@@ -1,5 +1,5 @@
 name: CrownCore
-version: 1.6.8
+version: 1.6.9
 main: de.obey.crown.core.noobf.CrownCore
 author: Obey
 website: https://builtbybit.com/resources/crowncore.52753/
@@ -8,6 +8,7 @@ folia-supported: true
 
 libraries:
   - org.mariadb.jdbc:mariadb-java-client:3.1.4
+  - com.h2database:h2:2.4.240
 
 softdepend:
   - PlaceholderAPI

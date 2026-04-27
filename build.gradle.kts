@@ -7,7 +7,7 @@ plugins {
 group = "de.obey.crown.core"
 version = "1.0.0"
 val targetJavaVersion = 21
-val localServerPath = "D:\\MINECRAFT LOCALHOST\\offline 1.21.11"
+val localServerPath = "D:\\MINECRAFT LOCALHOST\\1.21.11"
 
 val pluginYml = file("src/main/resources/plugin.yml")
 val pluginVersion: String by lazy {
@@ -59,14 +59,13 @@ dependencies {
 
     compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
-
     compileOnly("org.geysermc.floodgate:api:2.2.4-SNAPSHOT")
     compileOnly ("com.sk89q.worldguard:worldguard-bukkit:7.0.9")
     compileOnly("net.luckperms:api:5.4")
+    compileOnly("com.h2database:h2:2.4.240")
 
     implementation("com.zaxxer:HikariCP:6.2.1")
     implementation("com.squareup.okhttp3:okhttp:5.3.2")
-    implementation("com.h2database:h2:2.3.232")
     implementation("org.json:json:20251224")
     implementation("org.bstats:bstats-bukkit:3.0.2")
     implementation("net.kyori:adventure-text-minimessage:4.26.1")

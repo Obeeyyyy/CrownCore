@@ -9,18 +9,14 @@ package de.obey.crown.core.data.v1.impl;
 */
 
 import com.google.common.collect.Maps;
-import com.j256.ormlite.table.TableUtils;
 import de.obey.crown.core.data.plugin.storage.PluginStorageManager;
-import de.obey.crown.core.data.v1.api.ICrownPlayerSession;
 import de.obey.crown.core.data.v1.api.ICrownPlayerSessionService;
 import de.obey.crown.core.noobf.CrownCore;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;

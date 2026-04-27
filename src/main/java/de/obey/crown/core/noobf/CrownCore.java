@@ -1,5 +1,7 @@
 package de.obey.crown.core.noobf;
 
+import com.j256.ormlite.logger.Level;
+import com.j256.ormlite.logger.Logger;
 import de.obey.crown.core.command.CoreCommand;
 import de.obey.crown.core.command.LocationCommand;
 import de.obey.crown.core.data.plugin.Messanger;
@@ -23,7 +25,6 @@ import net.kyori.adventure.text.format.TextColor;
 import okhttp3.OkHttpClient;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -55,15 +56,17 @@ public final class CrownCore extends JavaPlugin {
      */
     @Override
     public void onLoad() {
+        // this is for the ormlite logger, its INFO by default
+        Logger.setGlobalLogLevel(Level.WARNING);
+
         crownCore = this;
         log.setPlugin(this);
 
-        final int threadCount = getConfig().contains("core-thread-pool") ? getConfig().getInt("core-thread-pool") : 16;
-
         /*
-         * Fixed thread pool n = 16.
+         * Fixed thread pool n = threadCount.
          * Used for all core and child plugins tasks.
          */
+        final int threadCount = getConfig().contains("core-thread-pool") ? getConfig().getInt("core-thread-pool") : 16;
         executor =  Executors.newFixedThreadPool(threadCount, new CoreThreadFactory("Crown-Worker"));
 
         okHttpClient = new OkHttpClient();

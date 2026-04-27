@@ -216,6 +216,7 @@ public class CrownConfig implements CrowPlugin {
                     key.contains("chances") ||
                     key.contains("map") ||
                     key.contains("events") ||
+                    key.contains("permission-taxes") ||
                     key.contains("progress-bar")
             )
                 continue;
