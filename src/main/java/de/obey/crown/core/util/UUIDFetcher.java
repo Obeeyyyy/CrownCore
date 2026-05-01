@@ -71,7 +71,7 @@ public class UUIDFetcher {
         }
     }
 
-    public @Nullable CompletableFuture<UUID> getUniqueId(@NotNull String username) {
+    public CompletableFuture<UUID> getUniqueId(@NotNull String username) {
         final boolean offlineMode = CrownCore.getInstance().getPluginConfig().isOfflineMode();
 
         if(!offlineMode)
@@ -99,12 +99,12 @@ public class UUIDFetcher {
                     });
                 } else {
                     CrownCore.log.warn(" You are trying to use bedrock features but the floodgate api is not present. Please install floodgate.");
-                    return null;
+                    return CompletableFuture.completedFuture(null);
                 }
             }
 
             CrownCore.log.debug(" - name is invalid (not a minecraft or bedrock username)");
-            return null;
+            return CompletableFuture.completedFuture(null);
         }
 
         if(offlineMode)
@@ -118,7 +118,7 @@ public class UUIDFetcher {
             return CompletableFuture.completedFuture(uniqueId);
         }
 
-        return null;
+        return CompletableFuture.completedFuture(null);
     }
 
     public @Nullable String getUserName(@NonNull UUID uniqueId) {
