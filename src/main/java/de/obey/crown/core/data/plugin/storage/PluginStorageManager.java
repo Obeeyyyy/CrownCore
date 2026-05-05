@@ -353,7 +353,7 @@ public class PluginStorageManager {
             CREATE TABLE IF NOT EXISTS %s (
             PLAYER_UUID CHAR(36) PRIMARY KEY
         );
-        """.formatted(pluginName.toUpperCase());
+        """.formatted(pluginName);
 
         try (final Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(sql);
