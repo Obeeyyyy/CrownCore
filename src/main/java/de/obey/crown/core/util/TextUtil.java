@@ -25,6 +25,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -91,7 +92,7 @@ public final class TextUtil {
 
     public String registerCorePlaceholder(final String placeholder, String replacement) {
         rawPlaceholders.put(placeholder, replacement);
-        replacement = translateHexColors(translateLegacyColors(replacement));
+        replacement = convertLegacyToMiniMessage(replacement);
         placeholders.put(placeholder, replacement);
         return replacement;
     }
@@ -189,9 +190,8 @@ public final class TextUtil {
     }
 
     public String formatTimeStringWithFormat(long millis, final String format) {
-        if (format == null || format.isEmpty()) {
+        if (format == null || format.isEmpty())
             return "";
-        }
 
         long totalSeconds = millis / 1000;
         long milliseconds = millis % 1000;
@@ -442,21 +442,87 @@ public final class TextUtil {
         }
     }
 
-    public Component translateModern(String input) {
+    private final Map<Character, String> LEGACY_TO_MINI = Maps.newConcurrentMap();
 
-        input = translateCorePlaceholder(input);
-
-        final Component legacyComponent = legacyComponentSerializer.deserialize(input);
-        final String miniString = miniMessage.serialize(legacyComponent);
-        return miniMessage.deserialize(miniString);
+    static {
+        LEGACY_TO_MINI.put('0', "<black>");
+        LEGACY_TO_MINI.put('1', "<dark_blue>");
+        LEGACY_TO_MINI.put('2', "<dark_green>");
+        LEGACY_TO_MINI.put('3', "<dark_aqua>");
+        LEGACY_TO_MINI.put('4', "<dark_red>");
+        LEGACY_TO_MINI.put('5', "<dark_purple>");
+        LEGACY_TO_MINI.put('6', "<gold>");
+        LEGACY_TO_MINI.put('7', "<gray>");
+        LEGACY_TO_MINI.put('8', "<dark_gray>");
+        LEGACY_TO_MINI.put('9', "<blue>");
+        LEGACY_TO_MINI.put('a', "<green>");
+        LEGACY_TO_MINI.put('b', "<aqua>");
+        LEGACY_TO_MINI.put('c', "<red>");
+        LEGACY_TO_MINI.put('d', "<light_purple>");
+        LEGACY_TO_MINI.put('e', "<yellow>");
+        LEGACY_TO_MINI.put('f', "<white>");
+        LEGACY_TO_MINI.put('k', "<obfuscated>");
+        LEGACY_TO_MINI.put('l', "<bold>");
+        LEGACY_TO_MINI.put('m', "<strikethrough>");
+        LEGACY_TO_MINI.put('n', "<underlined>");
+        LEGACY_TO_MINI.put('o', "<italic>");
+        LEGACY_TO_MINI.put('r', "<reset>");
     }
 
-    public String translateModernToString(String input) {
-
+    public String convertLegacyToMiniMessage(String input) {
         input = translateCorePlaceholder(input);
+        final StringBuilder sb = new StringBuilder(input.length());
 
-        final Component legacyComponent = legacyComponentSerializer.deserialize(input);
-        return miniMessage.serialize(legacyComponent);
+        for (int i = 0; i < input.length(); i++) {
+            final char c = input.charAt(i);
+
+            /*
+            // #ffffff hex
+            if (c == '#' && i + 6 < input.length()) {
+                final String hex = input.substring(i + 1, i + 7);
+                if (hex.matches("[0-9a-fA-F]{6}")) {
+                    sb.append('<').append('#').append(hex).append('>');
+                    i += 6;
+                    continue;
+                }
+            }
+
+             */
+
+            if (c == '&' || c == '§') {
+                // &#ffffff hex
+                if (i + 7 < input.length() && input.charAt(i + 1) == '#') {
+                    final String hex = input.substring(i + 2, i + 8);
+                    if (hex.matches("[0-9a-fA-F]{6}")) {
+                        sb.append('<').append('#').append(hex).append('>');
+                        i += 7;
+                        continue;
+                    }
+                }
+
+                // legacy codes
+                if (i + 1 < input.length()) {
+                    final char code = Character.toLowerCase(input.charAt(i + 1));
+                    final String replacement = LEGACY_TO_MINI.get(code);
+
+                    if (replacement != null) {
+                        sb.append(replacement);
+                        i++;
+                        continue;
+                    }
+                }
+            }
+
+            sb.append(c);
+        }
+
+        return sb.toString();
     }
+
+    private boolean isHexChar(final char c) {
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    }
+
+
 
 }

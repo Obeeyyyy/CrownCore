@@ -15,14 +15,12 @@ import java.util.concurrent.ExecutorService;
 
 public class PlayerDataService {
 
-    private final PluginConfig pluginConfig;
     private final ExecutorService executor;
 
     @Getter
     private final Map<UUID, PlayerData> cache = Maps.newConcurrentMap();
 
     public PlayerDataService(final PluginConfig pluginConfig, final ExecutorService executor) {
-        this.pluginConfig = pluginConfig;
         this.executor = executor;
 
         Scheduler.runAsyncTaskTimer(CrownCore.getInstance(), () -> {

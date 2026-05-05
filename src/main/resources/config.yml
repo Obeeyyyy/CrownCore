@@ -10,6 +10,8 @@ core-thread-pool: 16 # if you don't know what this is, do not change it
 
 offline-mode: false # toggle this if your server is cracked
 
+color-mode: legacy # you can choose between legacy and minimessage.
+
 data-cache-time: 3600000 # the time player data stays cached after a player left in ms
 
 teleport:
