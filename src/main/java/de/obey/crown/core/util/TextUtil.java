@@ -213,22 +213,79 @@ public final class TextUtil {
 
         seconds = totalSeconds;
 
-        final String oneDecimal = String.format(Locale.US, "%01d", milliseconds / 100);
+        final long fd = days;
+        final long fh = hours;
+        final long fm = minutes;
+        final long fs = seconds;
+
+        String processed = processOptionalGroups(format, fd, fh, fm, fs, milliseconds);
+
+        final String oneDecimal  = String.format(Locale.US, "%01d", milliseconds / 100);
         final String twoDecimals = String.format(Locale.US, "%02d", milliseconds / 10);
 
-        return format
-                .replace("%dd%", String.format("%02d", days))
-                .replace("%hh%", String.format("%02d", hours))
-                .replace("%mm%", String.format("%02d", minutes))
-                .replace("%ss%", String.format("%02d", seconds))
-                .replace("%SSS%", String.format("%03d", milliseconds))
-                .replace("%tt%", twoDecimals)
-                .replace("%d%", String.valueOf(days))
-                .replace("%h%", String.valueOf(hours))
-                .replace("%m%", String.valueOf(minutes))
-                .replace("%s%", String.valueOf(seconds))
-                .replace("%t%", oneDecimal)
-                .replace("%S%", String.valueOf(milliseconds));
+        String result = processed
+                .replace("%dd%",  String.format(Locale.US, "%02d", days))
+                .replace("%hh%",  String.format(Locale.US, "%02d", hours))
+                .replace("%mm%",  String.format(Locale.US, "%02d", minutes))
+                .replace("%ss%",  String.format(Locale.US, "%02d", seconds))
+                .replace("%SSS%", String.format(Locale.US, "%03d", milliseconds))
+                .replace("%tt%",  twoDecimals)
+                .replace("%d%",   String.valueOf(days))
+                .replace("%h%",   String.valueOf(hours))
+                .replace("%m%",   String.valueOf(minutes))
+                .replace("%s%",   String.valueOf(seconds))
+                .replace("%t%",   oneDecimal)
+                .replace("%S%",   String.valueOf(milliseconds));
+
+        return result.replaceAll(" {2,}", " ").trim();
+    }
+
+    /**
+     * process all (...) groups in the format string.
+     * a group is removed if contains >=1 time
+     */
+    private String processOptionalGroups(String fmt, long days, long hours, long minutes, long seconds, long milliseconds) {
+
+        final Pattern groupPattern = Pattern.compile("\\(([^()]+)\\)");
+        final Matcher matcher = groupPattern.matcher(fmt);
+        final StringBuilder sb = new StringBuilder();
+
+        while (matcher.find()) {
+            String content = matcher.group(1);
+
+            boolean hasToken = false;
+            boolean allZero  = true;
+
+            if (content.contains("%dd%") || content.contains("%d%")) {
+                hasToken = true;
+                if (days != 0) allZero = false;
+            }
+            if (content.contains("%hh%") || content.contains("%h%")) {
+                hasToken = true;
+                if (hours != 0) allZero = false;
+            }
+            if (content.contains("%mm%") || content.contains("%m%")) {
+                hasToken = true;
+                if (minutes != 0) allZero = false;
+            }
+            if (content.contains("%ss%") || content.contains("%s%")) {
+                hasToken = true;
+                if (seconds != 0) allZero = false;
+            }
+            if (content.contains("%SSS%") || content.contains("%tt%")
+                    || content.contains("%t%")  || content.contains("%S%")) {
+                hasToken = true;
+                if (milliseconds != 0) allZero = false;
+            }
+
+            if (hasToken && allZero) {
+                matcher.appendReplacement(sb, "");
+            } else {
+                matcher.appendReplacement(sb, Matcher.quoteReplacement(content));
+            }
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 
     public String formatTimeString(long millis) {
@@ -476,18 +533,18 @@ public final class TextUtil {
         for (int i = 0; i < input.length(); i++) {
             final char c = input.charAt(i);
 
-            /*
-            // #ffffff hex
+            // #ffffff hex outside of mimimessage
             if (c == '#' && i + 6 < input.length()) {
-                final String hex = input.substring(i + 1, i + 7);
-                if (hex.matches("[0-9a-fA-F]{6}")) {
-                    sb.append('<').append('#').append(hex).append('>');
-                    i += 6;
-                    continue;
+                final char prev = i > 0 ? input.charAt(i - 1) : 0;
+                if (prev != '<' && prev != ':') {
+                    final String hex = input.substring(i + 1, i + 7);
+                    if (hex.matches("[0-9a-fA-F]{6}")) {
+                        sb.append('<').append('#').append(hex).append('>');
+                        i += 6;
+                        continue;
+                    }
                 }
             }
-
-             */
 
             if (c == '&' || c == '§') {
                 // &#ffffff hex

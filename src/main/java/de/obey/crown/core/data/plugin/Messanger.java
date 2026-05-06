@@ -431,10 +431,10 @@ public final class Messanger {
     public String getMessageWithPlaceholderAPI(final OfflinePlayer player, final String key, final String[] placeholders, final String... replacements) {
         generateMessageEntryIfMissing(key);
 
-        if (legacyMessages.get(key).equalsIgnoreCase(""))
+        if (messages.get(key).equalsIgnoreCase(""))
             return "";
 
-        String message = legacyMessages.get(key);
+        String message = messages.get(key);
 
         // replace internal placeholders
         if (placeholders != null) {
@@ -482,7 +482,7 @@ public final class Messanger {
 
         }
 
-        return TextUtil.translateColors(message);
+        return message;
     }
 
     public List<String> getMultiLineMessage(final String key) {
@@ -492,7 +492,7 @@ public final class Messanger {
     public List<String> getMultiLineMessage(final String key, final String[] placeholders, final String... replacements) {
         generateMultiLineMessageEntryIfMissing(key);
 
-        final List<String> lines = legacyMultiLineMessages.get(key);
+        final List<String> lines = multiLineMessages.get(key);
         final List<String> temp = new ArrayList<>();
 
         for (String line : lines) {
@@ -505,7 +505,6 @@ public final class Messanger {
             }
 
             line = PlaceholderAPI.setPlaceholders(null, line);
-            line = TextUtil.translateColors(line);
             temp.add(line);
         }
 
@@ -515,7 +514,7 @@ public final class Messanger {
     public List<String> getRawMultiLineMessage(final String key, final String[] placeholders, final String... replacements) {
         generateMultiLineMessageEntryIfMissing(key);
 
-        final List<String> lines = legacyMultiLineMessages.get(key);
+        final List<String> lines = multiLineMessages.get(key);
         final List<String> temp = new ArrayList<>();
 
         for (String line : lines) {
@@ -632,7 +631,7 @@ public final class Messanger {
 
 
         for (final String translatedLine : temp) {
-            sender.sendMessage(PlaceholderAPI.setPlaceholders(null, translatedLine));
+            sender.sendMessage(MiniMessage.miniMessage().deserialize(PlaceholderAPI.setPlaceholders(null, translatedLine)));
         }
     }
 
@@ -649,8 +648,7 @@ public final class Messanger {
     }
 
     public void broadcastMessageWithPlaceholderAPI(final Player player, final String key, final String[] placeholders, final String... replacements) {
-
-        Component message = getMessageComponentWithPlaceholderAPI(player, key, placeholders, replacements);
+        final Component message = getMessageComponentWithPlaceholderAPI(player, key, placeholders, replacements);
 
         sendLineToEveryPlayer(message);
     }
@@ -693,8 +691,8 @@ public final class Messanger {
     }
 
     public void sendActionbar(final CommandSender sender, final String key, final String[] placeholders, final String... replacements) {
-        final TextComponent textComponent = TextUtil.translateComponent(getRawMessage(key, placeholders, replacements));
-        sender.sendActionBar(textComponent);
+        //final TextComponent textComponent = TextUtil.translateComponent(getRawMessage(key, placeholders, replacements));
+        sender.sendActionBar(MiniMessage.miniMessage().deserialize(getMessage(key, placeholders, replacements)));
     }
 
     public void sendActionbarToAll(final String key) {
@@ -704,7 +702,7 @@ public final class Messanger {
     }
 
     public void sendActionbarAll(final String key, final String[] placeholders, final String... replacements) {
-        final TextComponent textComponent = TextUtil.translateComponent(getRawMessage(key, placeholders, replacements));
+        final Component textComponent = MiniMessage.miniMessage().deserialize(getMessage(key, placeholders, replacements));
         for (final Player all : Bukkit.getOnlinePlayers()) {
             all.sendActionBar(textComponent);
         }
@@ -772,7 +770,7 @@ public final class Messanger {
 
 
     public void sendCommandSyntax(final CommandSender sender, final String command, final String... lines) {
-        if (!legacyMessages.containsKey("command-syntax"))
+        if (!messages.containsKey("command-syntax"))
             return;
 
         final String syntaxPrefix = getMessage("command-syntax-prefix");

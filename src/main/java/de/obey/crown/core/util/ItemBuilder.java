@@ -5,6 +5,8 @@ package de.obey.crown.core.util;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
@@ -182,17 +184,19 @@ public final class ItemBuilder {
 
         /* display */
         if (name != null) {
-            final String resolved = player == null ? name : PlaceholderUtil.resolve(player, name);
-            meta.displayName(TextUtil.translateComponent(resolved));
+            String resolved = player == null ? name : PlaceholderUtil.resolve(player, name);
+            resolved = TextUtil.convertLegacyToMiniMessage(resolved);
+
+            meta.displayName(MiniMessage.miniMessage().deserialize(resolved));
         }
 
         /* lore */
         if (lore != null) {
-            final List<String> resolvedLore = new ArrayList<>();
-            for (String line : lore) {
-                resolvedLore.add(TextUtil.translateColors(player == null ? line : PlaceholderUtil.resolve(player, line)));
-            }
-            meta.setLore(resolvedLore);
+            final List<Component> resolvedLore = new ArrayList<>();
+            for (String line : lore)
+                resolvedLore.add(MiniMessage.miniMessage().deserialize(TextUtil.convertLegacyToMiniMessage(player == null ? line : PlaceholderUtil.resolve(player, line))));
+
+            meta.lore(resolvedLore);
         }
 
         /* enchants */
