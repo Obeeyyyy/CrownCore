@@ -9,6 +9,7 @@
 ## Features
 
 * [Custom Placeholders](features/custom-placeholders.md)
+* [Location System](features/location-system.md)
 
 ## Guides
 
