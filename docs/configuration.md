@@ -45,6 +45,7 @@ number-format:
 time-formats:
   default: "%hh%:%mm%:%ss%" # the default format to use when nothing else is specified
   teleportation: "%ss%.%t%" # the format for the teleportation messages
+  playtime: "(%dd%d) (%hh%h) (%mm%m)"
 ```
 
 # What these values mean
@@ -87,6 +88,7 @@ time-formats:
 * `time-formats` (G*)
     * `default`: This is the default time format the core will use if nothing else is specified.
     * `teleportation`: This time format will be used in the teleportation messages.
+    * `playtime`: This format is used to format the %statistic_seconds_played% placeholder as output for %cc_playtime%.
 
 `Most Plugins have a seperate time format configuration in their own configuration files.`
 
@@ -99,6 +101,9 @@ time-formats:
 * `%ss% %s%`: Seconds
 * `%SSS% %S%`: Milliseconds
 * `%tt% %t%`: Remaining Decimals. `Example:` `%ss%.%t%s` for a value of `12900 ms` would show `12.9s`.
+
+Since 1.7.2 you can also use the alias inside () to not display anything inside when the alias value is 0.
+Example: (%hh%h) (%ss%s) - In the case %hh% is 0 and %ss% is 5. The output will be 5s. Notice how no hours are shown.
 
 ### Legend
 

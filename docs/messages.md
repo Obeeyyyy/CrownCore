@@ -83,4 +83,8 @@ You can configure plugin specific values for what is mentioned above by simply a
 
 # Multi Line Messages
 
+{% hint style="warning" %}
+Multi Line Messages are as of 1.7.2 no longer a seperate entry. They will now be registered under messages too.
+{% endhint %}
+
 > There are no multi line messages for the CrownCore but these are key and [Array](../guides/yaml/#array) pairs.
