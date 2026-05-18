@@ -221,7 +221,7 @@ public class Teleporter {
                 final BossBar bossBar = bossBars.get(player);
 
                 bossBar.setProgress((double) ticks / (cooldown / 1000d));
-                bossBar.setTitle(messanger.getMessage("telportation-message", new String[]{"remaining"}, TextUtil.formatTimeStringWithFormat(remaining, crownPluginConfig.getTeleportationTimeFormat())));
+                bossBar.setTitle(messanger.getMessage("teleportation-message", new String[]{"remaining"}, TextUtil.formatTimeStringWithFormat(remaining, crownPluginConfig.getTeleportationTimeFormat())));
 
                 return;
             }

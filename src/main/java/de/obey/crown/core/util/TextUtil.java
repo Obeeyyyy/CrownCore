@@ -196,16 +196,18 @@ public final class TextUtil {
         long totalSeconds = millis / 1000;
         long milliseconds = millis % 1000;
 
-        long days = 0, hours = 0, minutes = 0, seconds = 0;
+        long days = 0, hours = 0, minutes = 0, seconds;
 
         if (format.contains("dd") || format.contains("d")) {
             days = totalSeconds / 86400;
             totalSeconds %= 86400;
         }
+
         if (format.contains("hh") || format.contains("h")) {
             hours = totalSeconds / 3600;
             totalSeconds %= 3600;
         }
+
         if (format.contains("mm") || format.contains("m")) {
             minutes = totalSeconds / 60;
             totalSeconds %= 60;
@@ -218,26 +220,40 @@ public final class TextUtil {
         final long fm = minutes;
         final long fs = seconds;
 
-        String processed = processOptionalGroups(format, fd, fh, fm, fs, milliseconds);
+        final String processed = processOptionalGroups(format, fd, fh, fm, fs, milliseconds);
 
-        final String oneDecimal  = String.format(Locale.US, "%01d", milliseconds / 100);
+        final String oneDecimal = String.format(Locale.US, "%01d", milliseconds / 100);
         final String twoDecimals = String.format(Locale.US, "%02d", milliseconds / 10);
 
+        double totalDays = millis / 86400000.0;
+        double totalHours = millis / 3600000.0;
+        double totalMinutes = millis / 60000.0;
+        double totalSecs = millis / 1000.0;
+
         String result = processed
-                .replace("%dd%",  String.format(Locale.US, "%02d", days))
-                .replace("%hh%",  String.format(Locale.US, "%02d", hours))
-                .replace("%mm%",  String.format(Locale.US, "%02d", minutes))
-                .replace("%ss%",  String.format(Locale.US, "%02d", seconds))
+                .replace("%df%", formatDecimal(totalDays))
+                .replace("%hf%", formatDecimal(totalHours))
+                .replace("%mf%", formatDecimal(totalMinutes))
+                .replace("%sf%", formatDecimal(totalSecs))
+
+                .replace("%dd%", String.format(Locale.US, "%02d", days))
+                .replace("%hh%", String.format(Locale.US, "%02d", hours))
+                .replace("%mm%", String.format(Locale.US, "%02d", minutes))
+                .replace("%ss%", String.format(Locale.US, "%02d", seconds))
                 .replace("%SSS%", String.format(Locale.US, "%03d", milliseconds))
-                .replace("%tt%",  twoDecimals)
-                .replace("%d%",   String.valueOf(days))
-                .replace("%h%",   String.valueOf(hours))
-                .replace("%m%",   String.valueOf(minutes))
-                .replace("%s%",   String.valueOf(seconds))
-                .replace("%t%",   oneDecimal)
-                .replace("%S%",   String.valueOf(milliseconds));
+                .replace("%tt%", twoDecimals)
+                .replace("%d%", String.valueOf(days))
+                .replace("%h%", String.valueOf(hours))
+                .replace("%m%", String.valueOf(minutes))
+                .replace("%s%", String.valueOf(seconds))
+                .replace("%t%", oneDecimal)
+                .replace("%S%", String.valueOf(milliseconds));
 
         return result.replaceAll(" {2,}", " ").trim();
+    }
+
+    private String formatDecimal(double value) {
+        return String.format(Locale.US, "%.1f", value);
     }
 
     /**
@@ -523,7 +539,7 @@ public final class TextUtil {
         LEGACY_TO_MINI.put('m', "<strikethrough>");
         LEGACY_TO_MINI.put('n', "<underlined>");
         LEGACY_TO_MINI.put('o', "<italic>");
-        LEGACY_TO_MINI.put('r', "<reset>");
+        LEGACY_TO_MINI.put('r', "<reset><i:false>");
     }
 
     public String convertLegacyToMiniMessage(String input) {

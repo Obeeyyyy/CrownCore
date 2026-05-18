@@ -11,6 +11,7 @@ package de.obey.crown.core.data.v1.impl;
 import de.obey.crown.core.data.v1.api.ICrownPlayerSession;
 import de.obey.crown.core.noobf.CrownCore;
 import lombok.*;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.Optional;
@@ -25,7 +26,6 @@ public abstract class CrownPlayerSession<S> implements ICrownPlayerSession<S> {
     protected final Executor executor = CrownCore.getInstance().getExecutor();
     protected final UUID uuid;
 
-    protected Player player;
     protected long lastSeen;
 
     public abstract CompletableFuture<S> loadAsync();
@@ -33,6 +33,6 @@ public abstract class CrownPlayerSession<S> implements ICrownPlayerSession<S> {
     public abstract S save();
 
     public Optional<Player> getPlayer() {
-        return Optional.ofNullable(player);
+        return Optional.ofNullable(Bukkit.getPlayer(uuid));
     }
 }

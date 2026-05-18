@@ -33,7 +33,7 @@ public final class PluginConfig extends CrownConfig {
     private boolean instantTeleport, instantRespawn, teleportOnJoin, updateReminder, teleportParticles, useShortFormat, offlineMode;
     private List<String> instantTeleportWorlds;
     private List<String> instantTeleportRegions;
-    private String defaultTimeFormat, teleportationTimeFormat, bedrockPrefix;
+    private String defaultTimeFormat, teleportationTimeFormat, playtimeTimeFormat, bedrockPrefix;
 
     public PluginConfig(@NonNull Plugin plugin) {
         super(plugin);
@@ -67,8 +67,9 @@ public final class PluginConfig extends CrownConfig {
         TextUtil.setDecimalFormat(new DecimalFormat(FileUtil.getString(configuration, "number-format.default-format", "#,###.##"), new DecimalFormatSymbols(locale)));
         TextUtil.setUseShortFormat(FileUtil.getBoolean(configuration, "number-format.use-short-format", false));
 
-        setDefaultTimeFormat(FileUtil.getString(configuration, "time-formats.default", "%hh%:%mm%:%ss%"));
+        setDefaultTimeFormat(FileUtil.getString(configuration, "time-formats.default", "(%hh%h):(%mm%m):(%ss%s)"));
         setTeleportationTimeFormat(FileUtil.getString(configuration, "time-formats.teleportation", "%ss%.%t%s"));
+        setPlaytimeTimeFormat(FileUtil.getString(configuration, "time-formats.playtime", "(%dd%d) (%hh%h) (%mm%m)"));
 
         FileUtil.saveConfigurationIntoFile(configuration, file);
     }

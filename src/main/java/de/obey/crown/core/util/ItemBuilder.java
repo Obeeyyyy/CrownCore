@@ -3,6 +3,8 @@
 
 package de.obey.crown.core.util;
 
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import net.kyori.adventure.text.Component;
@@ -11,13 +13,15 @@ import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkEffectMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 
@@ -37,9 +41,14 @@ public final class ItemBuilder {
 
     /* visuals */
     private boolean glow;
+    private Boolean enchantmentGlintOverride;
     private Integer customModelData;
-    private DyeColor leatherColor;
+    private Color leatherColor;
     private Color fireworkColor;
+
+    /* meta */
+    private boolean unbreakable;
+    private Multimap<Attribute, AttributeModifier> attributeModifiers;
 
     /* skull */
     private String skullOwner;
@@ -50,124 +59,219 @@ public final class ItemBuilder {
     private final Map<Enchantment, Integer> enchantments = new HashMap<>();
     private final Set<ItemFlag> flags = new HashSet<>();
 
-    public ItemBuilder(Material material) {
+    /* persistent data */
+    private final Map<NamespacedKey, Object> persistentData = new LinkedHashMap<>();
+
+    public ItemBuilder(final Material material) {
         this.material = material;
     }
 
-    public ItemBuilder(Material material, int amount) {
+    public ItemBuilder(final Material material, final int amount) {
         this.material = material;
         this.amount = Math.max(1, amount);
     }
 
-    /* settters */
+    public ItemBuilder(final ItemStack item) {
+        final ItemMeta meta = item.getItemMeta();
 
-    public ItemBuilder amount(int amount) {
+        this.material = item.getType();
+        this.amount   = item.getAmount();
+
+        if (meta == null) return;
+
+        /* display */
+        if (meta.hasDisplayName())
+            this.name = MiniMessage.miniMessage().serialize(meta.displayName());
+
+        /* lore */
+        if (meta.hasLore())
+            this.lore = meta.lore().stream()
+                    .map(MiniMessage.miniMessage()::serialize)
+                    .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+
+        /* enchants */
+        enchantments.putAll(meta.getEnchants());
+
+        /* flags */
+        flags.addAll(meta.getItemFlags());
+
+        /* custom model data */
+        if (meta.hasCustomModelData())
+            this.customModelData = meta.getCustomModelData();
+
+        /* unbreakable */
+        this.unbreakable = meta.isUnbreakable();
+
+        /* enchantment glint override */
+        if (meta.hasEnchantmentGlintOverride())
+            this.enchantmentGlintOverride = meta.getEnchantmentGlintOverride();
+
+        /* glow */
+        if (enchantmentGlintOverride == null
+                && meta.hasItemFlag(ItemFlag.HIDE_ENCHANTS)
+                && meta.hasEnchant(Enchantment.UNBREAKING)) {
+            this.glow = true;
+            enchantments.remove(Enchantment.UNBREAKING);
+        }
+
+        /* attribute modifiers */
+        final Multimap<Attribute, AttributeModifier> attrs = meta.getAttributeModifiers();
+        if (attrs != null && !attrs.isEmpty())
+            this.attributeModifiers = LinkedHashMultimap.create(attrs);
+
+        /* leather color */
+        if (meta instanceof LeatherArmorMeta leather)
+            this.leatherColor = leather.getColor();
+
+        /* firework color */
+        if (meta instanceof FireworkEffectMeta firework && firework.hasEffect())
+            this.fireworkColor = firework.getEffect().getColors().isEmpty()
+                    ? null
+                    : firework.getEffect().getColors().get(0);
+
+        /* skull */
+        if (meta instanceof SkullMeta skull) {
+            if (skull.getOwningPlayer() != null)
+                this.skullOwner = skull.getOwningPlayer().getName();
+
+            if (skull.getOwnerProfile() != null) {
+                final PlayerTextures textures = skull.getOwnerProfile().getTextures();
+                if (textures.getSkin() != null)
+                    this.skullUUID = skull.getOwnerProfile().getUniqueId();
+            }
+        }
+
+        /* persistent data */
+        final PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        for (final NamespacedKey key : pdc.getKeys())
+            readPdcKey(pdc, key);
+    }
+
+    /* setters */
+
+    public ItemBuilder amount(final int amount) {
         this.amount = Math.max(1, amount);
         return this;
     }
 
-    /* for backwards comp*/
     @Deprecated
-    public ItemBuilder setDisplayname(String name) {
+    public ItemBuilder setDisplayname(final String name) {
         this.name = name;
         return this;
     }
 
-    public ItemBuilder name(String name) {
+    public ItemBuilder name(final String name) {
         this.name = name;
         return this;
     }
 
-    /* for backwards comp*/
     @Deprecated
-    public ItemBuilder setLore(List<String> lore) {
+    public ItemBuilder setLore(final List<String> lore) {
         this.lore = lore;
         return this;
     }
 
-    /* for backwards comp*/
     @Deprecated
-    public ItemBuilder setLore(String... lore) {
-        this.lore.clear();
+    public ItemBuilder setLore(final String... lore) {
+        this.lore = new ArrayList<>();
         Collections.addAll(this.lore, lore);
         return this;
     }
 
-    public ItemBuilder lore(String... lore) {
-        this.lore.clear();
+    public ItemBuilder lore(final String... lore) {
+        this.lore = new ArrayList<>();
         Collections.addAll(this.lore, lore);
         return this;
     }
 
-    public ItemBuilder lore(List<String> lore) {
+    public ItemBuilder lore(final List<String> lore) {
         this.lore = lore;
         return this;
     }
 
-    public ItemBuilder addLore(List<String> extra) {
-        if (this.lore == null)
-            this.lore = new ArrayList<>();
+    public ItemBuilder addLore(final List<String> extra) {
+        if (this.lore == null) this.lore = new ArrayList<>();
         this.lore.addAll(extra);
         return this;
     }
 
-    public ItemBuilder glow(boolean glow) {
+    public ItemBuilder glow(final boolean glow) {
         this.glow = glow;
         return this;
     }
 
-    public ItemBuilder customModelData(Integer data) {
+    public ItemBuilder glintOverride(final boolean glint) {
+        this.enchantmentGlintOverride = glint;
+        return this;
+    }
+
+    public ItemBuilder unbreakable(final boolean unbreakable) {
+        this.unbreakable = unbreakable;
+        return this;
+    }
+
+    public ItemBuilder attribute(final Attribute attribute, final AttributeModifier modifier) {
+        if (this.attributeModifiers == null)
+            this.attributeModifiers = LinkedHashMultimap.create();
+        this.attributeModifiers.put(attribute, modifier);
+        return this;
+    }
+
+    public ItemBuilder customModelData(final Integer data) {
         this.customModelData = data;
         return this;
     }
 
-    public ItemBuilder color(DyeColor color) {
+    public ItemBuilder color(final DyeColor color) {
+        this.leatherColor = color.getColor();
+        return this;
+    }
+
+    public ItemBuilder color(final Color color) {
         this.leatherColor = color;
         return this;
     }
 
-    public ItemBuilder fireworkColor(Color color) {
+    public ItemBuilder fireworkColor(final Color color) {
         this.fireworkColor = color;
         return this;
     }
 
-    public ItemBuilder skullOwner(String name) {
+    public ItemBuilder skullOwner(final String name) {
         this.skullOwner = name;
         return this;
     }
 
-    /* for backwards comp*/
     @Deprecated
-    public ItemBuilder setSkullOwner(String name) {
+    public ItemBuilder setSkullOwner(final String name) {
         this.skullOwner = name;
         return this;
     }
 
-    public ItemBuilder skullTexture(String texture, UUID uuid) {
+    public ItemBuilder skullTexture(final String texture, final UUID uuid) {
         this.skullTexture = texture;
-        this.skullUUID = uuid;
+        this.skullUUID    = uuid;
         return this;
     }
 
-    /* for backwards comp*/
     @Deprecated
-    public ItemBuilder setTextur(String texture, UUID uuid) {
+    public ItemBuilder setTextur(final String texture, final UUID uuid) {
         this.skullTexture = texture;
-        this.skullUUID = uuid;
+        this.skullUUID    = uuid;
         return this;
     }
 
-    public ItemBuilder enchant(Enchantment enchant, int level) {
+    public ItemBuilder enchant(final Enchantment enchant, final int level) {
         enchantments.put(enchant, level);
         return this;
     }
 
-    public ItemBuilder flag(ItemFlag flag) {
+    public ItemBuilder flag(final ItemFlag flag) {
         flags.add(flag);
         return this;
     }
 
-    /* build functions */
+    /* build */
 
     public ItemStack build() {
         return buildInternal(null);
@@ -179,39 +283,50 @@ public final class ItemBuilder {
 
     private ItemStack buildInternal(final OfflinePlayer player) {
         final ItemStack item = new ItemStack(material, amount);
-        final ItemMeta meta = item.getItemMeta();
+        final ItemMeta  meta = item.getItemMeta();
         if (meta == null) return item;
 
         /* display */
         if (name != null) {
             String resolved = player == null ? name : PlaceholderUtil.resolve(player, name);
-            resolved = TextUtil.convertLegacyToMiniMessage(resolved);
-
+            resolved = "<i:false>" + TextUtil.convertLegacyToMiniMessage(resolved);
             meta.displayName(MiniMessage.miniMessage().deserialize(resolved));
         }
 
         /* lore */
         if (lore != null) {
             final List<Component> resolvedLore = new ArrayList<>();
-            for (String line : lore)
-                resolvedLore.add(MiniMessage.miniMessage().deserialize(TextUtil.convertLegacyToMiniMessage(player == null ? line : PlaceholderUtil.resolve(player, line))));
-
+            for (final String line : lore) {
+                String resolved = player == null ? line : PlaceholderUtil.resolve(player, line);
+                resolved = "<i:false>" + TextUtil.convertLegacyToMiniMessage(resolved);
+                resolvedLore.add(MiniMessage.miniMessage().deserialize(resolved));
+            }
             meta.lore(resolvedLore);
         }
 
         /* enchants */
         enchantments.forEach((e, lvl) -> meta.addEnchant(e, lvl, true));
 
-        if (glow) {
-            meta.addEnchant(Enchantment.DURABILITY, 1, true);
+        /* glow */
+        if (enchantmentGlintOverride != null) {
+            meta.setEnchantmentGlintOverride(enchantmentGlintOverride);
+        } else if (glow) {
+            meta.addEnchant(Enchantment.UNBREAKING, 1, true);
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
 
         /* flags */
         flags.forEach(meta::addItemFlags);
 
-        if(meta.hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
-            for (Attribute attribute : new Attribute[] {
+        /* unbreakable */
+        if (unbreakable)
+            meta.setUnbreakable(true);
+
+        /* attribute modifiers */
+        if (attributeModifiers != null) {
+            meta.setAttributeModifiers(attributeModifiers);
+        } else if (meta.hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
+            for (final Attribute attribute : new Attribute[]{
                     Attribute.GENERIC_ATTACK_DAMAGE,
                     Attribute.GENERIC_ATTACK_SPEED,
                     Attribute.GENERIC_ARMOR,
@@ -222,11 +337,10 @@ public final class ItemBuilder {
                 meta.addAttributeModifier(
                         attribute,
                         new AttributeModifier(
-                                UUID.randomUUID(),
-                                "zero_" + attribute.name().toLowerCase(),
+                                new NamespacedKey("crownplugins", "zero_" + attribute.getKey().getKey()),
                                 -1.0,
                                 AttributeModifier.Operation.MULTIPLY_SCALAR_1,
-                                EquipmentSlot.HAND
+                                EquipmentSlotGroup.ANY
                         )
                 );
             }
@@ -237,9 +351,8 @@ public final class ItemBuilder {
             meta.setCustomModelData(customModelData);
 
         /* leather armor */
-        if (leatherColor != null && meta instanceof LeatherArmorMeta leather) {
-            leather.setColor(leatherColor.getColor());
-        }
+        if (leatherColor != null && meta instanceof LeatherArmorMeta leather)
+            leather.setColor(leatherColor);
 
         /* firework */
         if (fireworkColor != null && meta instanceof FireworkEffectMeta firework) {
@@ -255,43 +368,121 @@ public final class ItemBuilder {
         }
 
         /* skull texture */
-        if (skullTexture != null && meta instanceof SkullMeta skull) {
+        if (skullTexture != null && meta instanceof SkullMeta skull)
             applySkullTexture(skull);
-        }
+
+        /* persistent data */
+        applyPersistentData(meta);
 
         item.setItemMeta(meta);
         return item;
     }
 
-    /* skull util*/
+    /* skull util */
 
-    private void applySkullTexture(SkullMeta skull) {
-        final PlayerProfile profile = Bukkit.createPlayerProfile(
-                skullUUID != null ? skullUUID : UUID.randomUUID(),
-                "crownplugins"
-        );
-
+    private void applySkullTexture(final SkullMeta skull) {
+        final PlayerProfile  profile  = Bukkit.createPlayerProfile(
+                skullUUID != null ? skullUUID : UUID.randomUUID(), "crownplugins");
         final PlayerTextures textures = profile.getTextures();
+
         final String full = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUv"
                 + skullTexture;
 
         try {
-            byte[] decoded = Base64.getDecoder().decode(full);
-            JsonObject json = new Gson().fromJson(
-                    new String(decoded, StandardCharsets.UTF_8),
-                    JsonObject.class
-            );
+            final byte[]     decoded = Base64.getDecoder().decode(full);
+            final JsonObject json    = new Gson().fromJson(
+                    new String(decoded, StandardCharsets.UTF_8), JsonObject.class);
 
-            String url = json
+            final String url = json
                     .getAsJsonObject("textures")
                     .getAsJsonObject("SKIN")
-                    .get("url")
-                    .getAsString();
+                    .get("url").getAsString();
 
             textures.setSkin(new URL(url));
             profile.setTextures(textures);
             skull.setOwnerProfile(profile);
 
         } catch (final Exception ignored) {}
+    }
+
+    /* persistent data */
+
+    public ItemBuilder pdc(final NamespacedKey key, final String value) {
+        persistentData.put(key, value);
+        return this;
+    }
+
+    public ItemBuilder pdc(final NamespacedKey key, final boolean value) {
+        persistentData.put(key, value);
+        return this;
+    }
+
+    public ItemBuilder pdc(final NamespacedKey key, final int value) {
+        persistentData.put(key, value);
+        return this;
+    }
+
+    public ItemBuilder pdc(final NamespacedKey key, final long value) {
+        persistentData.put(key, value);
+        return this;
+    }
+
+    public ItemBuilder pdc(final NamespacedKey key, final double value) {
+        persistentData.put(key, value);
+        return this;
+    }
+
+    public ItemBuilder pdc(final NamespacedKey key, final byte value) {
+        persistentData.put(key, value);
+        return this;
+    }
+
+    public ItemBuilder pdc(final NamespacedKey key, final int[] value) {
+        persistentData.put(key, value);
+        return this;
+    }
+
+    public ItemBuilder pdc(final NamespacedKey key, final long[] value) {
+        persistentData.put(key, value);
+        return this;
+    }
+
+    public ItemBuilder pdc(final NamespacedKey key, final byte[] value) {
+        persistentData.put(key, value);
+        return this;
+    }
+
+    private void applyPersistentData(final ItemMeta meta) {
+        if (persistentData.isEmpty()) return;
+        final PersistentDataContainer pdc = meta.getPersistentDataContainer();
+
+        for (final Map.Entry<NamespacedKey, Object> entry : persistentData.entrySet()) {
+            final NamespacedKey key = entry.getKey();
+            switch (entry.getValue()) {
+                case String  v -> pdc.set(key, PersistentDataType.STRING,        v);
+                case Boolean v -> pdc.set(key, PersistentDataType.BOOLEAN,       v);
+                case Integer v -> pdc.set(key, PersistentDataType.INTEGER,       v);
+                case Long    v -> pdc.set(key, PersistentDataType.LONG,          v);
+                case Double  v -> pdc.set(key, PersistentDataType.DOUBLE,        v);
+                case Byte    v -> pdc.set(key, PersistentDataType.BYTE,          v);
+                case int[]   v -> pdc.set(key, PersistentDataType.INTEGER_ARRAY, v);
+                case long[]  v -> pdc.set(key, PersistentDataType.LONG_ARRAY,    v);
+                case byte[]  v -> pdc.set(key, PersistentDataType.BYTE_ARRAY,    v);
+                default -> throw new IllegalArgumentException(
+                        "Unsupported PDC type: " + entry.getValue().getClass().getName());
+            }
+        }
+    }
+
+    private void readPdcKey(final PersistentDataContainer pdc, final NamespacedKey key) {
+        if      (pdc.has(key, PersistentDataType.STRING))        persistentData.put(key, pdc.get(key, PersistentDataType.STRING));
+        else if (pdc.has(key, PersistentDataType.BOOLEAN))       persistentData.put(key, pdc.get(key, PersistentDataType.BOOLEAN));
+        else if (pdc.has(key, PersistentDataType.INTEGER))       persistentData.put(key, pdc.get(key, PersistentDataType.INTEGER));
+        else if (pdc.has(key, PersistentDataType.LONG))          persistentData.put(key, pdc.get(key, PersistentDataType.LONG));
+        else if (pdc.has(key, PersistentDataType.DOUBLE))        persistentData.put(key, pdc.get(key, PersistentDataType.DOUBLE));
+        else if (pdc.has(key, PersistentDataType.BYTE))          persistentData.put(key, pdc.get(key, PersistentDataType.BYTE));
+        else if (pdc.has(key, PersistentDataType.INTEGER_ARRAY)) persistentData.put(key, pdc.get(key, PersistentDataType.INTEGER_ARRAY));
+        else if (pdc.has(key, PersistentDataType.LONG_ARRAY))    persistentData.put(key, pdc.get(key, PersistentDataType.LONG_ARRAY));
+        else if (pdc.has(key, PersistentDataType.BYTE_ARRAY))    persistentData.put(key, pdc.get(key, PersistentDataType.BYTE_ARRAY));
     }
 }

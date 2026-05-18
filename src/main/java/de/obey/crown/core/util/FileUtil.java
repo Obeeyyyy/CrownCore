@@ -11,6 +11,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -118,6 +119,14 @@ public final class FileUtil {
 
     public String getString(final YamlConfiguration configuration, final String path, String defaultValue) {
         if (configuration.contains(path))
+            return TextUtil.convertLegacyToMiniMessage(configuration.getString(path));
+
+        configuration.set(path, defaultValue);
+        return defaultValue;
+    }
+
+    public String getRawString(final YamlConfiguration configuration, final String path, String defaultValue) {
+        if (configuration.contains(path))
             return configuration.getString(path);
 
         configuration.set(path, defaultValue);
@@ -151,9 +160,8 @@ public final class FileUtil {
         return defaultValue;
     }
     public List<Double> getDoubleList(final YamlConfiguration configuration, final String path, final List<Double> defaultValue) {
-        if (configuration.contains(path)) {
+        if (configuration.contains(path))
             return (List<Double>) configuration.getList(path);
-        }
 
         configuration.set(path, defaultValue);
 
@@ -164,19 +172,7 @@ public final class FileUtil {
         if (!configuration.contains((path)))
             return defaultValue;
 
-        final ArrayList<ItemStack> items = new ArrayList<>();
-
-        if (!configuration.contains(path))
-            return items;
-
-        if (configuration.getConfigurationSection(path).getKeys(false).isEmpty())
-            return items;
-
-        for (final String key : configuration.getConfigurationSection(path).getKeys(false)) {
-            items.add(configuration.getItemStack(path + "." + key));
-        }
-
-        return items;
+        return (List<ItemStack>) configuration.getList(path);
     }
 
     public void setItemStackList(final YamlConfiguration configuration, final String path, final ArrayList<ItemStack> items) {
@@ -292,11 +288,16 @@ public final class FileUtil {
         if (!section.contains(path))
             return items;
 
-        if (section.getConfigurationSection(path).getKeys(false).isEmpty())
+        final ConfigurationSection section2 = section.getConfigurationSection(path);
+
+        if(section2 == null)
             return items;
 
-        for (final String key : section.getConfigurationSection(path).getKeys(false)) {
-            items.add(section.getItemStack(path + "." + key));
+        if (section2.getKeys(false).isEmpty())
+            return items;
+
+        for (final String key : section2.getKeys(false)) {
+            items.add(section2.getItemStack(key));
         }
 
         return items;

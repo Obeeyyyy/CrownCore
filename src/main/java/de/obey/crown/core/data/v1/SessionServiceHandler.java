@@ -44,7 +44,7 @@ public class SessionServiceHandler implements Listener {
                 sessionService.saveAllAsync();
 
                 for (final CrownPlayerSession<?> session : sessionService.getSessions().values()) {
-                    if(session.getPlayer().map(Player::isOnline).orElse(false))  {
+                    if(!session.getPlayer().map(Player::isOnline).orElse(false))  {
                         if(System.currentTimeMillis() - session.getLastSeen() >= pluginConfig.getDataCacheTime()) {
                             sessionService.unload(session.getUuid());
                         }
@@ -78,7 +78,7 @@ public class SessionServiceHandler implements Listener {
             return;
 
         for (final CrownPlayerSessionService<?, UUID> sessionService : sessionServiceMap.values()) {
-            sessionService.load(event.getPlayer().getUniqueId()).thenAcceptAsync(( session) -> session.setPlayer(event.getPlayer()));
+            sessionService.load(event.getPlayer().getUniqueId());
         }
     }
 

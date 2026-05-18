@@ -8,7 +8,10 @@ package de.obey.crown.core.util;
 */
 
 import com.google.common.collect.Maps;
+import de.obey.crown.core.data.plugin.CrownConfig;
+import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.noobf.Placeholders;
+import de.obey.crown.core.noobf.PluginConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
@@ -27,7 +30,7 @@ public class PlaceholderUtil {
     public static void initialize() {
         papiEnabled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
 
-        placeholders = new Placeholders();
+        placeholders = new Placeholders(CrownCore.getInstance().getPluginConfig());
 
         if(papiEnabled) {
             placeholders.register();

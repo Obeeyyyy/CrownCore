@@ -10,8 +10,6 @@ core-thread-pool: 16 # if you don't know what this is, do not change it
 
 offline-mode: false # toggle this if your server is cracked
 
-color-mode: legacy # you can choose between legacy and minimessage.
-
 data-cache-time: 3600000 # the time player data stays cached after a player left in ms
 
 teleport:
@@ -36,5 +34,6 @@ number-format:
   use-short-format: false # toggle this to use the short format (1k, 1m etc)
 
 time-formats:
-  default: "%hh%:%mm%:%ss%" # the default format to use when nothing else is specified
+  default: "(%hh%h):(%mm%m):(%ss%s)" # the default format to use when nothing else is specified
   teleportation: "%ss%.%t%" # the format for the teleportation messages
+  playtime: "(%dd%d) (%hh%h) (%mm%m)"

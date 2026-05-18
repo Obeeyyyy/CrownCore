@@ -22,6 +22,8 @@ import java.util.Set;
 
 public final class Placeholders extends PlaceholderExpansion {
 
+    private final PluginConfig pluginConfig;
+
     @Override
     public @NotNull String getIdentifier() {
         return "cc";
@@ -42,7 +44,8 @@ public final class Placeholders extends PlaceholderExpansion {
         return true;
     }
 
-    public Placeholders() {
+    public Placeholders(PluginConfig pluginConfig) {
+        this.pluginConfig = pluginConfig;
         loadPlaceholders();
     }
 
@@ -59,10 +62,19 @@ public final class Placeholders extends PlaceholderExpansion {
 
             if (args[0].equalsIgnoreCase("white"))
                 return TextUtil.translateCorePlaceholder("%white%");
+
+            if(args[0].equalsIgnoreCase("playtime")) {
+                try {
+                    final long seconds = Long.parseLong(PlaceholderAPI.setPlaceholders(player, "%statistic_seconds_played%"));
+                    return TextUtil.formatTimeStringWithFormat(seconds*1000, pluginConfig.getPlaytimeTimeFormat());
+                } catch (final NumberFormatException exception) {
+                    return "0";
+                }
+            }
         }
 
         if(placeholders.containsKey(params))
-            return TextUtil.translateColors(placeholders.get(params));
+            return PlaceholderAPI.setPlaceholders(player, placeholders.get(params));
 
         return "&cinvalid placeholder";
     }
@@ -87,7 +99,7 @@ public final class Placeholders extends PlaceholderExpansion {
             return;
 
         for (final String key : keys) {
-            placeholders.put(key, FileUtil.getString(configuration, "placeholders." + key, ""));
+            placeholders.put(key, FileUtil.getRawString(configuration, "placeholders." + key, ""));
         }
     }
 }

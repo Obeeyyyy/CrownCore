@@ -3,7 +3,7 @@ version: 1.7.2
 main: de.obey.crown.core.noobf.CrownCore
 author: Obey
 website: https://builtbybit.com/resources/crowncore.52753/
-api-version: '1.20'
+api-version: '1.21'
 folia-supported: true
 
 libraries:
@@ -26,6 +26,8 @@ commands:
     description: Command to manage locations
     permission: core.command.location
   crowncore:
+    aliases:
+      - core
     description: Command for core
     permission: core.command.core
   crowngui:

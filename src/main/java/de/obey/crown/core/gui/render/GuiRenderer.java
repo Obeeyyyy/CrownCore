@@ -14,6 +14,8 @@ import de.obey.crown.core.gui.model.GuiHolder;
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.util.PlaceholderUtil;
 import de.obey.crown.core.util.TextUtil;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -52,11 +54,24 @@ public class GuiRenderer {
         open(player, target, gui);
     }
 
+    public static void preRender(final Player player, final OfflinePlayer target, final String key) {
+
+        final CrownGui gui = GuiRegistry.get(key);
+
+        if (gui == null) {
+            CrownCore.getInstance().getMessanger().sendNonConfigMessage(player, "%prefix% unknown gui: " + key);
+            CrownCore.log.warn("unknown gui " + key);
+            return;
+        }
+
+        preRender(player, target, gui);
+    }
+
     public static void open(final Player player, final OfflinePlayer target, final CrownGui gui) {
         final Inventory inventory = Bukkit.createInventory(
                 new GuiHolder(gui),
                 gui.size(),
-                TextUtil.translateColors(PlaceholderUtil.resolve(target, gui.title()))
+                MiniMessage.miniMessage().deserialize(PlaceholderUtil.resolve(target, gui.title()))
         );
 
         applyFill(target, inventory, gui);
@@ -72,6 +87,21 @@ public class GuiRenderer {
         }
 
         player.openInventory(inventory);
+    }
+
+    public static void preRender(final Player player, final OfflinePlayer target, final CrownGui gui) {
+        final Inventory inventory = Bukkit.createInventory(
+                new GuiHolder(gui),
+                gui.size(),
+                MiniMessage.miniMessage().deserialize(PlaceholderUtil.resolve(target, gui.title()))
+        );
+
+        applyFill(target, inventory, gui);
+
+        gui.items().values().forEach(item -> {
+            if (!item.canView(player)) return;
+            inventory.setItem(item.slot(), item.itemBuilder().build(target));
+        });
     }
 
     private static void applyFill(final OfflinePlayer player, final Inventory inventory, final CrownGui gui) {

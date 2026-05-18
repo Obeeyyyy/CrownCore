@@ -9,6 +9,7 @@ package de.obey.crown.core.gui.util;
 
 import de.obey.crown.core.gui.model.GuiItem;
 import de.obey.crown.core.gui.model.GuiItemClickAction;
+import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.util.ItemBuilder;
 import de.obey.crown.core.util.PlaceholderUtil;
 import org.bukkit.Material;
@@ -42,6 +43,8 @@ public class GuiItemParser {
         }
 
         final ItemBuilder builder = new ItemBuilder(material);
+
+        CrownCore.log.debug("[CrownGUI] [ItemParser] Parsing name: " + section.getString("name"));
 
         builder.name(section.getString("name"))
                 .lore(section.getStringList("lore"))

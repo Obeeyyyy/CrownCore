@@ -31,9 +31,9 @@ public final class VaultHook {
     }
 
     public double get(final OfflinePlayer player) {
-        if (economy == null || !economy.isEnabled()) {
+        if (economy == null || !economy.isEnabled())
             return 0;
-        }
+
         return economy.getBalance(player);
     }
 

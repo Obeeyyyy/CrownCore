@@ -15,12 +15,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
-import net.royawesome.jlibnoise.module.combiner.Min;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -34,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
@@ -65,7 +64,7 @@ public final class Messanger {
         loadCorePlaceholders();
         loadPluginPlaceholders(configuration);
 
-        checkForMissingMultiLineMessageEntries();
+        //checkForMissingMultiLineMessageEntries();
         checkForMissingMessageEntries();
     }
 
@@ -95,6 +94,8 @@ public final class Messanger {
     private void loadCoreMessages() {
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(FileUtil.getCoreFile("messages.yml"));
 
+        CrownCore.log.debug("[Messenger] <" + plugin.getName() + "> loading core messages");
+
         if (!configuration.contains("messages"))
             return;
 
@@ -104,13 +105,32 @@ public final class Messanger {
             return;
 
         for (final String key : section.getKeys(false)) {
-            final String value = configuration.getString("messages." + key);
+            final Object value = configuration.get("messages." + key);
 
             if(value == null)
-                return;
+                continue;
 
-            legacyMessages.put(key, value);
-            messages.put(key, TextUtil.convertLegacyToMiniMessage(value));
+            if(value instanceof String valueString) {
+                CrownCore.log.debug("[Messenger] <" + plugin.getName() + "> loading core message " + key + " as string");
+
+                legacyMessages.put(key, valueString);
+                messages.put(key, TextUtil.convertLegacyToMiniMessage(valueString));
+                continue;
+            }
+
+            if(value instanceof List<?> valueList) {
+                CrownCore.log.debug("[Messenger] <" + plugin.getName() + "> loading core message " + key + " as list");
+
+                final List<String> stringArrayList = (List<String>) valueList;
+                final List<String> tmp = new ArrayList<>();
+
+                legacyMultiLineMessages.put(key, stringArrayList);
+
+                for (final String line : stringArrayList)
+                    tmp.add(TextUtil.convertLegacyToMiniMessage(line));
+
+                multiLineMessages.put(key, tmp);
+            }
         }
     }
 
@@ -118,22 +138,94 @@ public final class Messanger {
      * loading messages from plugin messages.yml
      * @param configuration YamlConfiguration of messages.yml
      */
-    private void loadMessages(final YamlConfiguration configuration) {
+    private void loadMessages(final File file, final YamlConfiguration configuration) {
+        // move all multi line messages into messages
+
+        if(configuration.contains("multi-line-messages")) {
+            backupMessageFile(file);
+
+            CrownCore.log.debug("[Messenger] <" + plugin.getName() + " found old multi-line-messages");
+            CrownCore.log.debug("[Messenger] <" + plugin.getName() + " migrating entries into messages");
+            final ConfigurationSection section = configuration.getConfigurationSection("multi-line-messages");
+
+            if(section != null) {
+                for (final String key : section.getKeys(false)) {
+                    configuration.set("messages." + key, configuration.getStringList("multi-line-messages." + key));
+                    CrownCore.log.debug("[Messenger] <" + plugin.getName() + " migrating entry: " + key);
+                }
+            }
+
+            try {
+                configuration.set("multi-line-messages", null);
+                configuration.save(FileUtil.getGeneratedFile(plugin, "messages.yml", true));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         if (configuration.contains("messages")) {
             final ConfigurationSection section = configuration.getConfigurationSection("messages");
 
             if(section == null)
                 return;
 
+            CrownCore.log.debug("[Messenger] <" + plugin.getName() + " loading messages");
+
             for (final String key : section.getKeys(false)) {
-                final String value = configuration.getString("messages." + key);
+                final Object value = configuration.get("messages." + key);
 
-                if(value == null)
-                    return;
+                if(value == null) {
+                    CrownCore.log.debug("[Messenger] <" + plugin.getName() + " value for key is null: " + key);
+                    continue;
+                }
 
-                legacyMessages.put(key, value);
-                messages.put(key, TextUtil.convertLegacyToMiniMessage(value));
+                if(value instanceof String valueString) {
+                    CrownCore.log.debug("[Messenger] <" + plugin.getName() + "> loading " + key + " as string");
+
+                    legacyMessages.put(key, valueString);
+                    messages.put(key, TextUtil.convertLegacyToMiniMessage(valueString));
+                    continue;
+                }
+
+                if(value instanceof List<?> valueList) {
+                    CrownCore.log.debug("[Messenger] <" + plugin.getName() + "> loading " + key + " as list");
+
+                    final List<String> stringArrayList = (List<String>) valueList;
+                    final List<String> tmp = new ArrayList<>();
+
+                    legacyMultiLineMessages.put(key, stringArrayList);
+
+                    for (final String line : stringArrayList)
+                        tmp.add(TextUtil.convertLegacyToMiniMessage(line));
+
+                    multiLineMessages.put(key, tmp);
+                }
             }
+        }
+    }
+
+    private void backupMessageFile(final File original) {
+        if (!original.exists())
+            return;
+
+        final File backupFolder = new File(original.getParentFile(), "config-backups");
+
+        if (!backupFolder.exists())
+            backupFolder.mkdirs();
+
+        final String timestamp = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+
+        final File backupFile = new File(backupFolder, original.getName().replace(".yml", "") + "-" + timestamp + ".yml");
+
+        try {
+            Files.copy(original.toPath(), backupFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+            CrownCore.log.info("(" + plugin.getName() + ") created message backup: " + backupFile.getName());
+
+        } catch (IOException exception) {
+            CrownCore.log.warn("(" + plugin.getName() + ") failed to create message backup");
+            exception.printStackTrace();
         }
     }
 
@@ -156,11 +248,11 @@ public final class Messanger {
                 tmp.add(TextUtil.convertLegacyToMiniMessage(line));
 
             multiLineMessages.put(key, tmp);
-
         }
     }
 
     private void checkForMissingMessageEntries() {
+        CrownCore.log.debug("[Messenger] <" + plugin.getName() + " checking for missing entries");
         crownCore.getExecutor().execute(() -> {
             final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
             final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
@@ -187,12 +279,11 @@ public final class Messanger {
                     if (configuration.contains("messages." + messageKey))
                         continue;
 
-                    CrownCore.log.info("generated missing message key '" + messageKey + "' for plugin " + plugin.getName());
-
+                    CrownCore.log.info("[Messenger] <" + plugin.getName() + " generated missing entry: " + messageKey);
                     configuration.set("messages." + messageKey, defaults.getString("messages." + messageKey));
                 }
 
-                loadMessages(configuration);
+                loadMessages(file, configuration);
                 FileUtil.saveConfigurationIntoFile(configuration, file);
 
             } catch (final IOException | InvalidConfigurationException ignored) {}
@@ -231,7 +322,7 @@ public final class Messanger {
                     configuration.set("multi-line-messages." + messageKey, defaults.getStringList("multi-line-messages." + messageKey));
                 }
 
-                loadMultiLineMessages(configuration);
+                //loadMultiLineMessages(configuration);
                 FileUtil.saveConfigurationIntoFile(configuration, file);
             } catch (final IOException | InvalidConfigurationException ignored) {}
         });
@@ -239,7 +330,7 @@ public final class Messanger {
 
 
     private void generateMessageEntryIfMissing(final String key) {
-        if (!legacyMessages.containsKey(key)) {
+        if (!legacyMessages.containsKey(key) || !messages.containsKey(key)) {
             final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
             final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
             final YamlConfiguration defaults = new YamlConfiguration();
@@ -255,9 +346,11 @@ public final class Messanger {
                 final String value = defaults.getString("messages." + key);
                 configuration.set("messages." + key, value);
                 legacyMessages.put(key, value);
+                messages.put(key, TextUtil.convertLegacyToMiniMessage(value));
             } else {
                 configuration.set("messages." + key, "");
                 legacyMessages.put(key, "");
+                messages.put(key, "");
             }
 
             FileUtil.saveConfigurationIntoFile(configuration, file);
@@ -265,7 +358,7 @@ public final class Messanger {
     }
 
     private void generateMultiLineMessageEntryIfMissing(final String key) {
-        if (!legacyMultiLineMessages.containsKey(key)) {
+        if (!legacyMultiLineMessages.containsKey(key) || !multiLineMessages.containsKey(key)) {
             final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
             final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
@@ -277,13 +370,22 @@ public final class Messanger {
                 throw new RuntimeException(exception);
             }
 
-            if (defaults.contains("multi-line-messages." + key)) {
-                final List<String> value = defaults.getStringList("multi-line-messages." + key);
-                configuration.set("multi-line-messages." + key, value);
+            if (defaults.contains("messages." + key)) {
+                final List<String> value = defaults.getStringList("messages." + key);
+                configuration.set("messages." + key, value);
+
                 legacyMultiLineMessages.put(key, new ArrayList<>(value));
+                final List<String> tmp = new ArrayList<>();
+
+
+                for (final String line : value)
+                    tmp.add(TextUtil.convertLegacyToMiniMessage(line));
+
+                multiLineMessages.put(key, tmp);
             } else {
-                configuration.set("multi-line-messages." + key, new ArrayList<>());
+                configuration.set("messages." + key, new ArrayList<>());
                 legacyMultiLineMessages.put(key, new ArrayList<>());
+                multiLineMessages.put(key, new ArrayList<>());
             }
 
             FileUtil.saveConfigurationIntoFile(configuration, file);
@@ -319,6 +421,9 @@ public final class Messanger {
     public Component getMessageComponentWithPlaceholderAPI(final OfflinePlayer player, final String key, final String[] placeholders, final String... replacements) {
         generateMessageEntryIfMissing(key);
 
+        if(!messages.containsKey(key))
+            return Component.empty();
+
         if (messages.get(key).equalsIgnoreCase(""))
             return Component.empty();
 
@@ -347,7 +452,7 @@ public final class Messanger {
             while (matcher.find()) {
                 String placeholder = matcher.group();
 
-                String value = PlaceholderAPI.setPlaceholders(player, placeholder);
+                String value = TextUtil.convertLegacyToMiniMessage(PlaceholderAPI.setPlaceholders(player, placeholder));
 
                 if (!value.equals(placeholder)) {
                     matcher.appendReplacement(result, Matcher.quoteReplacement(value));
@@ -460,7 +565,7 @@ public final class Messanger {
                 String placeholder = matcher.group();
 
                 String value = PlaceholderAPI.setPlaceholders(player, placeholder);
-                value = TextUtil.miniToLegacyIfMini(value);
+                value = TextUtil.convertLegacyToMiniMessage(value);
 
                 if (!value.equals(placeholder)) {
                     matcher.appendReplacement(result, Matcher.quoteReplacement(value));
@@ -494,6 +599,9 @@ public final class Messanger {
 
         final List<String> lines = multiLineMessages.get(key);
         final List<String> temp = new ArrayList<>();
+
+        if(lines == null)
+            return temp;
 
         for (String line : lines) {
             if (placeholders != null) {
@@ -610,6 +718,12 @@ public final class Messanger {
     }
 
     public void sendMultiLineMessage(final CommandSender sender, final String key, final String[] placeholders, final String... replacements) {
+        if (!multiLineMessages.containsKey(key) && messages.containsKey(key)) {
+            CrownCore.log.debug("did not find multiline key but found in messages: " + key);
+            sendMessage(sender, key, placeholders, replacements);
+            return;
+        }
+
         final List<String> lines = getMultiLineMessage(key, placeholders, replacements);
         if (lines.isEmpty())
             return;
@@ -631,7 +745,7 @@ public final class Messanger {
 
 
         for (final String translatedLine : temp) {
-            sender.sendMessage(MiniMessage.miniMessage().deserialize(PlaceholderAPI.setPlaceholders(null, translatedLine)));
+            sender.sendMessage(MiniMessage.miniMessage().deserialize(TextUtil.convertLegacyToMiniMessage(PlaceholderAPI.setPlaceholders(null, translatedLine))));
         }
     }
 
@@ -692,7 +806,10 @@ public final class Messanger {
 
     public void sendActionbar(final CommandSender sender, final String key, final String[] placeholders, final String... replacements) {
         //final TextComponent textComponent = TextUtil.translateComponent(getRawMessage(key, placeholders, replacements));
-        sender.sendActionBar(MiniMessage.miniMessage().deserialize(getMessage(key, placeholders, replacements)));
+        //sender.sendActionBar(MiniMessage.miniMessage().deserialize(getMessage(key, placeholders, replacements)));
+
+        if(sender instanceof Player player)
+            sender.sendActionBar(getMessageComponentWithPlaceholderAPI(player, key, placeholders, replacements));
     }
 
     public void sendActionbarToAll(final String key) {
@@ -721,48 +838,22 @@ public final class Messanger {
     /*  Text Components   */
     /*                    */
 
-    public Component getComonentNonFile(final String message) {
-        return TextUtil.translateComponent(TextUtil.translateCorePlaceholderRaw(message));
+    public Component getComponentNonFile(final String message) {
+        return MiniMessage.miniMessage().deserialize(TextUtil.translateCorePlaceholderRaw(message));
     }
 
-    public Component getComonent(final String key) {
-        return getRawComponent(key, null);
+    public Component getComponent(final String key) {
+        return MiniMessage.miniMessage().deserialize(getMessage(key, null));
     }
 
     public Component getRawComponent(final String key, final String[] placeholders, final String... replacements) {
-        return TextUtil.translateComponent(getRawMessage(key, placeholders, replacements));
+        return MiniMessage.miniMessage().deserialize(getRawMessage(key, placeholders, replacements));
     }
 
     public Component getComponent(final String key, final String[] placeholders, final String... replacements) {
-        return TextUtil.translateComponent(getMessage(key, placeholders, replacements));
+        return MiniMessage.miniMessage().deserialize(getMessage(key, placeholders, replacements));
     }
 
-    public void sendHoverableMessage(final CommandSender sender, Component component, final String hoverKey, final String[] placeholders, final String... replacements) {
-        component = component.hoverEvent(HoverEvent.showText(getRawComponent(hoverKey, placeholders, replacements)));
-        sender.sendMessage(component);
-    }
-
-    public void sendClickableMessage(final CommandSender sender, final String command, final String key) {
-        sendClickableMessage(sender, command, key, null);
-    }
-
-    public void sendClickableMessage(final CommandSender sender, final String command, final String key, final String[] placeholders, final String... replacements) {
-        sendClickableMessageWithHoverOption(sender, "&8 » &f" + command, command, key, placeholders, replacements);
-    }
-
-    public void sendClickableMessageWithHoverOption(final CommandSender sender, final String hoverOption, final String command, final String key) {
-        final Component component = getRawComponent(key, null, "")
-                .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, command))
-                .hoverEvent(HoverEvent.showText(TextUtil.translateComponent(hoverOption)));
-        sender.sendMessage(component);
-    }
-
-    public void sendClickableMessageWithHoverOption(final CommandSender sender, final String hoverOption, final String command, final String key, final String[] placeholders, final String... replacements) {
-        final Component component = getRawComponent(key, placeholders, replacements)
-                .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, command))
-                .hoverEvent(HoverEvent.showText(TextUtil.translateComponent(hoverOption)));
-        sender.sendMessage(component);
-    }
 
     /*               */
     /*  Methods      */
@@ -778,7 +869,7 @@ public final class Messanger {
         sender.sendMessage("");
         sendMessage(sender, "command-syntax", new String[]{"command"}, command);
         for (final String line : lines) {
-            sender.sendMessage(syntaxPrefix + line);
+            sender.sendMessage(MiniMessage.miniMessage().deserialize(syntaxPrefix + line));
         }
     }
 
@@ -787,6 +878,7 @@ public final class Messanger {
             return true;
 
         sendMessage(player, "not-enough-money", new String[]{"missing"}, TextUtil.formatNumber(amount - VaultHook.get(player)));
+        sounds.playSoundToPlayer(player, "not-enough-money");
 
         return false;
     }

@@ -47,7 +47,6 @@ public abstract class CrownPlayerSessionService<S extends CrownPlayerSession<S>,
         }
 
         final S session = newSession(id);
-        session.setPlayer(Bukkit.getPlayer(id));
         session.setLastSeen(System.currentTimeMillis());
 
         return session.loadAsync();
@@ -55,9 +54,8 @@ public abstract class CrownPlayerSessionService<S extends CrownPlayerSession<S>,
 
     @Override
     public CompletableFuture<S> save(ID id) {
-        if(!sessions.containsKey(id)) {
+        if(!sessions.containsKey(id))
             return CompletableFuture.completedFuture(null);
-        }
 
         final S session = get(id);
 
@@ -84,9 +82,8 @@ public abstract class CrownPlayerSessionService<S extends CrownPlayerSession<S>,
 
     @Override
     public void saveAllAsync() {
-        sessions.keySet()
-                .stream()
-                .map(this::save);
+        for (final ID id : sessions.keySet())
+            save(id);
     }
 
     @Override

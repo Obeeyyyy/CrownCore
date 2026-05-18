@@ -9,3 +9,4 @@ sounds:
   teleport-instant-2: "minecraft:entity.shulker.teleport:0.5:3.0"
   teleport-cancelled: "minecraft:entity.item.break:0.5:3.0"
   teleport-tick: "minecraft:block.note_block.banjo:0.5:0.6"
+  not-enough-money: "minecraft:entity.generic.explode:0.2:1.0"
