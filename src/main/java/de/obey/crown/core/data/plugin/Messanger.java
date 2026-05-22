@@ -704,12 +704,12 @@ public final class Messanger {
                 }
             }
 
-            temp.add(TextUtil.translateColors(tempLine));
+            temp.add(tempLine);
         }
 
 
         for (final String translatedLine : temp) {
-            sender.sendMessage(PlaceholderAPI.setPlaceholders(null, translatedLine));
+            sender.sendMessage(MiniMessage.miniMessage().deserialize(TextUtil.convertLegacyToMiniMessage(PlaceholderAPI.setPlaceholders(null, translatedLine))));
         }
     }
 

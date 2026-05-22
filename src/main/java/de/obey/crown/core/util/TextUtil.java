@@ -518,22 +518,22 @@ public final class TextUtil {
     private final Map<Character, String> LEGACY_TO_MINI = Maps.newConcurrentMap();
 
     static {
-        LEGACY_TO_MINI.put('0', "<black>");
-        LEGACY_TO_MINI.put('1', "<dark_blue>");
-        LEGACY_TO_MINI.put('2', "<dark_green>");
-        LEGACY_TO_MINI.put('3', "<dark_aqua>");
-        LEGACY_TO_MINI.put('4', "<dark_red>");
-        LEGACY_TO_MINI.put('5', "<dark_purple>");
-        LEGACY_TO_MINI.put('6', "<gold>");
-        LEGACY_TO_MINI.put('7', "<gray>");
-        LEGACY_TO_MINI.put('8', "<dark_gray>");
-        LEGACY_TO_MINI.put('9', "<blue>");
-        LEGACY_TO_MINI.put('a', "<green>");
-        LEGACY_TO_MINI.put('b', "<aqua>");
-        LEGACY_TO_MINI.put('c', "<red>");
-        LEGACY_TO_MINI.put('d', "<light_purple>");
-        LEGACY_TO_MINI.put('e', "<yellow>");
-        LEGACY_TO_MINI.put('f', "<white>");
+        LEGACY_TO_MINI.put('0', "<b:false><i:false><black>");
+        LEGACY_TO_MINI.put('1', "<b:false><i:false><dark_blue>");
+        LEGACY_TO_MINI.put('2', "<b:false><i:false><dark_green>");
+        LEGACY_TO_MINI.put('3', "<b:false><i:false><dark_aqua>");
+        LEGACY_TO_MINI.put('4', "<b:false><i:false><dark_red>");
+        LEGACY_TO_MINI.put('5', "<b:false><i:false><dark_purple>");
+        LEGACY_TO_MINI.put('6', "<b:false><i:false><gold>");
+        LEGACY_TO_MINI.put('7', "<b:false><i:false><gray>");
+        LEGACY_TO_MINI.put('8', "<b:false><i:false><dark_gray>");
+        LEGACY_TO_MINI.put('9', "<b:false><i:false><blue>");
+        LEGACY_TO_MINI.put('a', "<b:false><i:false><green>");
+        LEGACY_TO_MINI.put('b', "<b:false><i:false><aqua>");
+        LEGACY_TO_MINI.put('c', "<b:false><i:false><red>");
+        LEGACY_TO_MINI.put('d', "<b:false><i:false><light_purple>");
+        LEGACY_TO_MINI.put('e', "<b:false><i:false><yellow>");
+        LEGACY_TO_MINI.put('f', "<b:false><i:false><white>");
         LEGACY_TO_MINI.put('k', "<obfuscated>");
         LEGACY_TO_MINI.put('l', "<bold>");
         LEGACY_TO_MINI.put('m', "<strikethrough>");
