@@ -235,9 +235,16 @@ public final class FileUtil {
     }
 
     public String getString(final ConfigurationSection section, final String path, String defaultValue) {
-        if (section.contains(path)) {
+        if (section.contains(path))
+            return TextUtil.convertLegacyToMiniMessage(section.getString(path));
+
+        section.set(path, defaultValue);
+        return defaultValue;
+    }
+
+    public String getRawString(final ConfigurationSection section, final String path, String defaultValue) {
+        if (section.contains(path))
             return section.getString(path);
-        }
 
         section.set(path, defaultValue);
         return defaultValue;
