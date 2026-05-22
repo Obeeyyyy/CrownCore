@@ -32,9 +32,8 @@ public class PlaceholderUtil {
 
         placeholders = new Placeholders(CrownCore.getInstance().getPluginConfig());
 
-        if(papiEnabled) {
+        if(papiEnabled)
             placeholders.register();
-        }
 
         register("player", OfflinePlayer::getName);
         register("uuid", p -> p.getUniqueId().toString());
