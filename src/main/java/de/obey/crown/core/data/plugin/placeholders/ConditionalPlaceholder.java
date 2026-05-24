@@ -8,11 +8,14 @@ package de.obey.crown.core.data.plugin.placeholders;
     Project: CrownCore
 */
 
+import de.obey.crown.core.util.TextUtil;
 import lombok.Getter;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+
+import java.awt.*;
 
 @Getter
 public class ConditionalPlaceholder {
@@ -77,7 +80,7 @@ public class ConditionalPlaceholder {
         };
 
         final String result = conditionMet ? output : elseOutput;
-        return PlaceholderAPI.setPlaceholders(player, result);
+        return TextUtil.convertLegacyToMiniMessage(PlaceholderAPI.setPlaceholders(player, result));
     }
 
     public String evaluate(final OfflinePlayer player) {
@@ -95,7 +98,7 @@ public class ConditionalPlaceholder {
         };
 
         final String result = conditionMet ? output : elseOutput;
-        return PlaceholderAPI.setPlaceholders(player, result);
+        return TextUtil.convertLegacyToMiniMessage(PlaceholderAPI.setPlaceholders(player, result));
     }
 
     private double compareNumbers(final String a, final String b) {
