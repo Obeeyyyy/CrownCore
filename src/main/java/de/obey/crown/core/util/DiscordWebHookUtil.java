@@ -22,9 +22,17 @@ import java.io.IOException;
 @UtilityClass
 public class DiscordWebHookUtil {
 
-    public void post(final String webhookURL, final String content) {
+    public void post(final String webhookURL, String content, final String[] placeholders, final String... replacements) {
         CrownCore.log.debug("posting webhook");
         CrownCore.log.debug(" - content: " + content);
+
+        if (placeholders != null) {
+            int count = 0;
+            for (final String placeholder : placeholders) {
+                content = content.replace("%" + placeholder + "%", replacements[count]);
+                count++;
+            }
+        }
 
         final JSONObject jsonObject = new JSONObject(content);
 
