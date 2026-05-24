@@ -555,7 +555,7 @@ public final class TextUtil {
                 if (prev != '<' && prev != ':') {
                     final String hex = input.substring(i + 1, i + 7);
                     if (hex.matches("[0-9a-fA-F]{6}")) {
-                        sb.append('<').append('#').append(hex).append('>');
+                        sb.append("<b:false><i:false>").append("<#").append(hex).append('>');
                         i += 6;
                         continue;
                     }
@@ -567,7 +567,7 @@ public final class TextUtil {
                 if (i + 7 < input.length() && input.charAt(i + 1) == '#') {
                     final String hex = input.substring(i + 2, i + 8);
                     if (hex.matches("[0-9a-fA-F]{6}")) {
-                        sb.append('<').append('#').append(hex).append('>');
+                        sb.append("<b:false><i:false>").append("<#").append(hex).append('>');
                         i += 7;
                         continue;
                     }

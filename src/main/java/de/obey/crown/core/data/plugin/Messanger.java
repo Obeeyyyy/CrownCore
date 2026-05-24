@@ -772,27 +772,13 @@ public final class Messanger {
     }
 
     public void broadcastMultiLineMessage(final String key, final String[] placeholders, final String... replacements) {
-        final List<String> lines = getMultiLineMessage(key);
+        final List<String> lines = getMultiLineMessage(key,  placeholders, replacements);
         if (lines.isEmpty())
             return;
 
-        final List<String> temp = new ArrayList<>();
-
-        for (String line : lines) {
-            if (placeholders != null) {
-                int count = 0;
-                for (final String placeholder : placeholders) {
-                    line = line.replace("%" + placeholder + "%", replacements[count]);
-                    count++;
-                }
-            }
-
-            temp.add(line);
-        }
-
-
-        for (final String translatedLine : temp) {
-            sendLineToEveryPlayer(PlaceholderAPI.setPlaceholders(null, translatedLine));
+        for (final String translatedLine : lines) {
+            final String finalfinal = PlaceholderAPI.setPlaceholders(null, translatedLine);
+            sendLineToEveryPlayer(finalfinal);
         }
     }
 
