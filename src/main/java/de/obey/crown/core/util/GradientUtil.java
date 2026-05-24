@@ -8,12 +8,19 @@ package de.obey.crown.core.util;
     Project: CrownCore
 */
 
+import de.obey.crown.core.noobf.CrownCore;
 import lombok.experimental.UtilityClass;
+
+import java.util.Arrays;
 
 @UtilityClass
 public class GradientUtil {
 
     public String interpolateGradient(final String[] colors, final int index, final int totalFilledBars, final String text) {
+        CrownCore.log.debug("interpolateGradient called");
+        CrownCore.log.debug(" - colors: " + Arrays.toString(colors));
+        CrownCore.log.debug(" - text: " + text);
+
         if (colors.length == 1)
             return colors[0];
 
