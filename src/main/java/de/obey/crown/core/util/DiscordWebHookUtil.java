@@ -10,6 +10,7 @@ package de.obey.crown.core.util;
 
 import de.obey.crown.core.noobf.CrownCore;
 import lombok.experimental.UtilityClass;
+import me.clip.placeholderapi.PlaceholderAPI;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -33,6 +34,8 @@ public class DiscordWebHookUtil {
                 count++;
             }
         }
+
+        content = PlaceholderAPI.setPlaceholders(null, content);
 
         final JSONObject jsonObject = new JSONObject(content);
 
