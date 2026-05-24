@@ -28,7 +28,6 @@ public final class VersionChecker {
     private final ExecutorService executor;
     private final OkHttpClient okHttpClient;
 
-    private final String singleUrl = "https://versions.obeeyyyy.de/version/%plugin%/%version%";
     private final String url = "https://versions.obeeyyyy.de/versions";
 
     private final Map<String, String> newestVersions = Maps.newConcurrentMap();
@@ -42,8 +41,6 @@ public final class VersionChecker {
 
             try (final Response response = okHttpClient.newCall(request).execute()) {
                 final ResponseBody responseBody = response.body();
-                if(responseBody == null)
-                    return;
 
                 final String bodyString = responseBody.string();
 
@@ -53,9 +50,7 @@ public final class VersionChecker {
                 for (final Map.Entry<String, JsonElement> entry : jsonResponse.entrySet()) {
                     newestVersions.put(entry.getKey(), entry.getValue().getAsString());
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            } catch (final IOException ignored) {}
         });
     }
 
