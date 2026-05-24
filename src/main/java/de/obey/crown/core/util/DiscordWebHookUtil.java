@@ -22,7 +22,7 @@ import java.io.IOException;
 @UtilityClass
 public class DiscordWebHookUtil {
 
-    private void post(final String webhookURL, final String content) {
+    public void post(final String webhookURL, final String content) {
         CrownCore.log.debug("posting webhook");
         CrownCore.log.debug(" - content: " + content);
 
