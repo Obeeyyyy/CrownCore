@@ -8,10 +8,8 @@ package de.obey.crown.core.util;
 */
 
 import com.google.common.collect.Maps;
-import de.obey.crown.core.data.plugin.CrownConfig;
 import de.obey.crown.core.noobf.CrownCore;
-import de.obey.crown.core.noobf.Placeholders;
-import de.obey.crown.core.noobf.PluginConfig;
+import de.obey.crown.core.data.plugin.placeholders.Placeholders;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 

@@ -89,5 +89,6 @@ public final class PluginConfig extends CrownConfig {
         super.reload();
 
         PlaceholderUtil.placeholders.loadPlaceholders();
+        PlaceholderUtil.placeholders.loadConditionalPlaceholders();
     }
 }

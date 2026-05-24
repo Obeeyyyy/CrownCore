@@ -1,13 +1,14 @@
 /* CrownPlugins - CrownCore */
 /* 11.02.2025 - 02:28 */
 
-package de.obey.crown.core.noobf;
+package de.obey.crown.core.data.plugin.placeholders;
 
 import com.google.common.collect.Maps;
+import de.obey.crown.core.noobf.CrownCore;
+import de.obey.crown.core.noobf.PluginConfig;
 import de.obey.crown.core.util.FileUtil;
 import de.obey.crown.core.util.PlaceholderUtil;
 import de.obey.crown.core.util.TextUtil;
-import lombok.RequiredArgsConstructor;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
@@ -47,6 +48,7 @@ public final class Placeholders extends PlaceholderExpansion {
     public Placeholders(PluginConfig pluginConfig) {
         this.pluginConfig = pluginConfig;
         loadPlaceholders();
+        loadConditionalPlaceholders();
     }
 
     @Override
@@ -76,10 +78,26 @@ public final class Placeholders extends PlaceholderExpansion {
         if(placeholders.containsKey(params))
             return PlaceholderAPI.setPlaceholders(player, placeholders.get(params));
 
+        if(conditionalPlaceholders.containsKey(params))
+            return conditionalPlaceholders.get(params).evaluate(player);
+
+        return "&cinvalid placeholder";
+    }
+
+    @Override
+    public @Nullable String onPlaceholderRequest(final Player player, @NotNull final String params) {
+
+        if(placeholders.containsKey(params))
+            return PlaceholderAPI.setPlaceholders(player, placeholders.get(params));
+
+        if(conditionalPlaceholders.containsKey(params))
+            return conditionalPlaceholders.get(params).evaluate(player);
+
         return "&cinvalid placeholder";
     }
 
     private final Map<String, String> placeholders = Maps.newConcurrentMap();
+    private final Map<String, ConditionalPlaceholder> conditionalPlaceholders = Maps.newConcurrentMap();
 
     public void loadPlaceholders() {
         if(!PlaceholderUtil.papiEnabled)
@@ -101,5 +119,29 @@ public final class Placeholders extends PlaceholderExpansion {
         for (final String key : keys) {
             placeholders.put(key, FileUtil.getRawString(configuration, "placeholders." + key, ""));
         }
+    }
+
+    public void loadConditionalPlaceholders() {
+        if(!PlaceholderUtil.papiEnabled)
+            return;
+
+        conditionalPlaceholders.clear();
+
+        final File file = FileUtil.getGeneratedFile(CrownCore.getInstance(), "placeholders.yml", true);
+        final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+
+        if(!configuration.contains("conditional-placeholders"))
+            return;
+
+        final Set<String> keys = configuration.getConfigurationSection("conditional-placeholders").getKeys(false);
+
+        if(keys.isEmpty())
+            return;
+
+        for (final String key : keys) {
+            final ConditionalPlaceholder conditionalPlaceholder = new ConditionalPlaceholder(key, configuration.getConfigurationSection("conditional-placeholders." + key));
+            conditionalPlaceholders.put(key, conditionalPlaceholder);
+        }
+
     }
 }

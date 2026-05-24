@@ -1,2 +1,10 @@
 placeholders:
   test: "&6&lTEST PLACEHOLDER"
+
+conditional-placeholders:
+  test-cond:
+    type: "=="
+    input: "%player_name%"
+    value: "Obeeyyyy"
+    output: "This is Obey"
+    else: "This is not Obey"
