@@ -681,7 +681,9 @@ public final class Messanger {
     public void sendMessage(final CommandSender sender, final String key, final String[] placeholders,
                             final String... replacements) {
 
-        sender.sendMessage(getMessageComponent(key, placeholders, replacements));
+        final Component component = getMessageComponent(key, placeholders, replacements);
+
+        sender.sendMessage(component);
     }
 
     public void sendNonConfigMultiLineMessage(final CommandSender sender, final List<String> lines) {

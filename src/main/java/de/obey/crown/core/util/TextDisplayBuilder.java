@@ -2,6 +2,7 @@ package de.obey.crown.core.util;
 
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.entity.Display;
@@ -68,7 +69,7 @@ public class TextDisplayBuilder {
             text = text + line + "\n";
         }
 
-        textDisplay.text(TextUtil.translateComponent(text));
+        textDisplay.text(MiniMessage.miniMessage().deserialize(text));
         return this;
     }
 

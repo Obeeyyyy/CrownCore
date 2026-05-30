@@ -378,6 +378,105 @@ public final class ItemBuilder {
         return item;
     }
 
+    public ItemMeta buildMeta() {
+        return buildMeta(null);
+    }
+
+    public ItemMeta buildMeta(final OfflinePlayer player) {
+        final ItemStack item = new ItemStack(material, amount);
+        final ItemMeta  meta = item.getItemMeta();
+        if (meta == null) return null;
+
+        /* display */
+        if (name != null) {
+            String resolved = player == null ? name : PlaceholderUtil.resolve(player, name);
+            resolved = "<i:false>" + TextUtil.convertLegacyToMiniMessage(resolved);
+            meta.displayName(MiniMessage.miniMessage().deserialize(resolved));
+        }
+
+        /* lore */
+        if (lore != null) {
+            final List<Component> resolvedLore = new ArrayList<>();
+            for (final String line : lore) {
+                String resolved = player == null ? line : PlaceholderUtil.resolve(player, line);
+                resolved = "<i:false>" + TextUtil.convertLegacyToMiniMessage(resolved);
+                resolvedLore.add(MiniMessage.miniMessage().deserialize(resolved));
+            }
+            meta.lore(resolvedLore);
+        }
+
+        /* enchants */
+        enchantments.forEach((e, lvl) -> meta.addEnchant(e, lvl, true));
+
+        /* glow */
+        if (enchantmentGlintOverride != null) {
+            meta.setEnchantmentGlintOverride(enchantmentGlintOverride);
+        } else if (glow) {
+            meta.addEnchant(Enchantment.UNBREAKING, 1, true);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
+        /* flags */
+        flags.forEach(meta::addItemFlags);
+
+        /* unbreakable */
+        if (unbreakable)
+            meta.setUnbreakable(true);
+
+        /* attribute modifiers */
+        if (attributeModifiers != null) {
+            meta.setAttributeModifiers(attributeModifiers);
+        } else if (meta.hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
+            for (final Attribute attribute : new Attribute[]{
+                    Attribute.GENERIC_ATTACK_DAMAGE,
+                    Attribute.GENERIC_ATTACK_SPEED,
+                    Attribute.GENERIC_ARMOR,
+                    Attribute.GENERIC_ARMOR_TOUGHNESS,
+                    Attribute.GENERIC_MAX_HEALTH,
+                    Attribute.GENERIC_KNOCKBACK_RESISTANCE
+            }) {
+                meta.addAttributeModifier(
+                        attribute,
+                        new AttributeModifier(
+                                new NamespacedKey("crownplugins", "zero_" + attribute.getKey().getKey()),
+                                -1.0,
+                                AttributeModifier.Operation.MULTIPLY_SCALAR_1,
+                                EquipmentSlotGroup.ANY
+                        )
+                );
+            }
+        }
+
+        /* custom model data */
+        if (customModelData != null)
+            meta.setCustomModelData(customModelData);
+
+        /* leather armor */
+        if (leatherColor != null && meta instanceof LeatherArmorMeta leather)
+            leather.setColor(leatherColor);
+
+        /* firework */
+        if (fireworkColor != null && meta instanceof FireworkEffectMeta firework) {
+            firework.setEffect(FireworkEffect.builder().withColor(fireworkColor).build());
+            firework.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
+        /* skull owner */
+        if (skullOwner != null && meta instanceof SkullMeta skull) {
+            final String resolved = player == null ? skullOwner : PlaceholderUtil.resolve(player, skullOwner);
+            skull.setOwner(resolved);
+            skull.setOwningPlayer(Bukkit.getOfflinePlayer(resolved));
+        }
+
+        /* skull texture */
+        if (skullTexture != null && meta instanceof SkullMeta skull)
+            applySkullTexture(skull);
+
+        /* persistent data */
+        applyPersistentData(meta);
+        return meta;
+    }
+
     /* skull util */
 
     private void applySkullTexture(final SkullMeta skull) {
