@@ -80,7 +80,7 @@ public class ConditionalPlaceholder {
         };
 
         final String result = conditionMet ? output : elseOutput;
-        return TextUtil.convertLegacyToMiniMessage(PlaceholderAPI.setPlaceholders(player, result));
+        return TextUtil.convertLegacyToMiniMessage(PlaceholderAPI.setPlaceholders(player, PlaceholderAPI.setPlaceholders(player, result)));
     }
 
     public String evaluate(final OfflinePlayer player) {

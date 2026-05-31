@@ -683,6 +683,9 @@ public final class Messanger {
 
         final Component component = getMessageComponent(key, placeholders, replacements);
 
+        if(component == Component.empty())
+            return;
+
         sender.sendMessage(component);
     }
 
