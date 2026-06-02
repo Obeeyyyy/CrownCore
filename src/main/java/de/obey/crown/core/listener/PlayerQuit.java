@@ -20,9 +20,6 @@ public class PlayerQuit implements Listener {
     public void on(final PlayerQuitEvent event) {
         final Player player = event.getPlayer();
 
-        if(!Scheduler.isFolia)
-            player.closeInventory();
-
         Teleporter.quit(player);
 
         playerDataService.saveAsync(player.getUniqueId()).thenRun(() -> {
