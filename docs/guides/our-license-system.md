@@ -32,6 +32,12 @@ Our Plugins will tell you the correct IP needed for the whitelist in the invalid
 
 <div align="left"><figure><img src="../.gitbook/assets/grafik.png" alt=""><figcaption></figcaption></figure></div>
 
+The Reasons your license might by invalid are:
+
+* No Access to XYZ - Meaning your Key does not have access to the requested Plugin.
+* Invalid Key - Meaning the Key in your config is not valid.
+* Invalid Server - Meaning the Server is not whitelisted on your Key.
+
 ## Where do I find my license key? <a href="#where-do-i-find-my-license-key" id="where-do-i-find-my-license-key"></a>
 
 Use the `/license` command in our [Discord](https://discord.com/invite/bJQRV5GeZg).\
