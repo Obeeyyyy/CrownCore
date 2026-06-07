@@ -26,7 +26,7 @@ Open a **license ticket** in our [Discord](https://discord.com/invite/bJQRV5GeZg
 
 ## How do I get my Server IP?
 
-* The IP you whitelist does **not** look like this play.example.com
+* The IP you whitelist does **not** look like this: `play.example.com`
 
 Our Plugins will tell you the correct IP needed for the whitelist in the invalid key message.
 
