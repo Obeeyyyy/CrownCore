@@ -24,12 +24,20 @@ Open a **license ticket** in our [Discord](https://discord.com/invite/bJQRV5GeZg
 * Your BuiltByBit username
 * The plugin you purchased
 
+## How do I get my Server IP?
+
+* The IP you whitelist does **not** look like this play.example.com
+
+Our Plugins will tell you the correct IP needed for the whitelist in the invalid key message.
+
+<div align="left"><figure><img src="../.gitbook/assets/grafik.png" alt=""><figcaption></figcaption></figure></div>
+
 ## Where do I find my license key? <a href="#where-do-i-find-my-license-key" id="where-do-i-find-my-license-key"></a>
 
 Use the `/license` command in our [Discord](https://discord.com/invite/bJQRV5GeZg).\
 You will find your license key in the embed message that is sent.
 
-![Image](https://wiki.obeeyyyy.de/assets/images/license-1-8b5c68c35af14af0744c6d381d90222d.png)
+<img src="https://wiki.obeeyyyy.de/assets/images/license-1-8b5c68c35af14af0744c6d381d90222d.png" alt="Image" height="444" width="682">
 
 If you do not have a key yet, create a license ticket and ask for one.
 
