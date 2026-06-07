@@ -8,6 +8,7 @@ package de.obey.crown.core.data.v1.api;
     Project: CrownCore
 */
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -26,6 +27,8 @@ public interface ICrownPlayerSessionService<S extends ICrownPlayerSession<S>, ID
     CompletableFuture<S> save(final ID id);
 
     S get(final ID id);
+
+    Optional<S> getOptional(final ID id);
 
 
 }

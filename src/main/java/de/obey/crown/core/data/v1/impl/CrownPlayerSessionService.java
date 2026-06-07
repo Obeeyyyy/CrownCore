@@ -17,6 +17,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -70,6 +71,14 @@ public abstract class CrownPlayerSessionService<S extends CrownPlayerSession<S>,
             return null;
 
         return sessions.get(id);
+    }
+
+    @Override
+    public Optional<S> getOptional(final ID id) {
+        if(!sessions.containsKey(id))
+            return null;
+
+        return Optional.ofNullable(sessions.get(id));
     }
 
     @Override
