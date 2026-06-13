@@ -36,7 +36,7 @@ public final class VaultPermissionHook {
     }
 
     public CompletableFuture<Boolean> hasPermission(final OfflinePlayer player, final String value) {
-        return CompletableFuture.supplyAsync(() -> permission != null && permission.playerHas(null, player, value));
+        return CompletableFuture.supplyAsync(() -> permission != null && permission.playerHas(null, player, value), CrownCore.getInstance().getExecutor());
     }
 
 }

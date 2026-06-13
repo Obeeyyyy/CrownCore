@@ -74,8 +74,8 @@ public class UUIDFetcher {
     public CompletableFuture<UUID> getUniqueId(@NotNull String username) {
         final boolean offlineMode = CrownCore.getInstance().getPluginConfig().isOfflineMode();
 
-        if(!offlineMode)
-            username = username.toLowerCase(Locale.ROOT);
+                if(!offlineMode)
+                    username = username.toLowerCase(Locale.ROOT);
 
         UUID uniqueId = NAME_TO_UNIQUE_ID_CACHE.getIfPresent(username);
 
