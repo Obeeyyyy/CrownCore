@@ -72,7 +72,7 @@ Then reload the plugin and check the console output.
 * If you **do not see any message** stating that the license key is invalid, then your license key is working.
 * If you **do see a message**, check the reason and continue below.
 
-### Reasons why your license key might not work <a href="#reasons-why-your-license-key-might-not-work" id="reasons-why-your-license-key-might-not-work"></a>
+### Reasons your license key might not work <a href="#reasons-why-your-license-key-might-not-work" id="reasons-why-your-license-key-might-not-work"></a>
 
 #### **Invalid server**
 
@@ -87,6 +87,10 @@ Make sure you are using the **server IP address**, not your panel URL or domain.
 This means the license key found in your `config.yml` is **incorrect**.
 
 Retrieve your license key from our [Discord](https://discord.com/invite/bJQRV5GeZg) again and update the value in the config.
+
+#### Reason 01 / 02 and 03
+
+These are internal codes and you should contact us in [Discord](https://discord.com/invite/bJQRV5GeZg) if you are getting one of them.
 
 ## How do i reset my license key ? <a href="#how-do-i-reset-my-license-key" id="how-do-i-reset-my-license-key"></a>
 
