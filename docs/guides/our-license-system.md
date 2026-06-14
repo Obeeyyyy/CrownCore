@@ -47,7 +47,7 @@ You will find your license key in the embed message that is sent.
 
 If you do not have a key yet, create a license ticket and ask for one.
 
-### How do I whitelist my server on my license key? <a href="#how-do-i-whitelist-my-server-on-my-license-key" id="how-do-i-whitelist-my-server-on-my-license-key"></a>
+## How do I whitelist my server on my license key? <a href="#how-do-i-whitelist-my-server-on-my-license-key" id="how-do-i-whitelist-my-server-on-my-license-key"></a>
 
 1. Use `/license` in our [Discord](https://discord.com/invite/bJQRV5GeZg).
 2. Click the **Manage Servers** button.
@@ -60,7 +60,7 @@ If you do not have a key yet, create a license ticket and ask for one.
     `80.166.4.321,80.166.4.322`
 5. Click **Save** and reload the plugin. A server restart is not required.
 
-### My license key is not working <a href="#my-license-key-is-not-working" id="my-license-key-is-not-working"></a>
+## My license key is not working <a href="#my-license-key-is-not-working" id="my-license-key-is-not-working"></a>
 
 First, check if the plugin is enabled.
 
@@ -72,16 +72,9 @@ Then reload the plugin and check the console output.
 * If you **do not see any message** stating that the license key is invalid, then your license key is working.
 * If you **do see a message**, check the reason and continue below.
 
-#### How do i reset my license key ? <a href="#how-do-i-reset-my-license-key" id="how-do-i-reset-my-license-key"></a>
+### Reasons why your license key might not work <a href="#reasons-why-your-license-key-might-not-work" id="reasons-why-your-license-key-might-not-work"></a>
 
-* To reset your license key, you will need to use the /license command in our [Discord](https://discord.com/invite/bJQRV5GeZg).
-* Then press the "**Reset License**" button.
-* Confirm the action by typing "**YES**" and press "**Submit**".
-* This will generate a new license key for you.
-
-#### Reasons why your license key might not work <a href="#reasons-why-your-license-key-might-not-work" id="reasons-why-your-license-key-might-not-work"></a>
-
-**Invalid server**
+#### **Invalid server**
 
 This means your server is **not whitelisted** on your license key.
 
@@ -89,12 +82,19 @@ Follow the instructions above to whitelist your server.
 
 Make sure you are using the **server IP address**, not your panel URL or domain.
 
-**Invalid key**
+#### **Invalid key**
 
 This means the license key found in your `config.yml` is **incorrect**.
 
 Retrieve your license key from our [Discord](https://discord.com/invite/bJQRV5GeZg) again and update the value in the config.
 
-#### Video Guide <a href="#video-guide" id="video-guide"></a>
+## How do i reset my license key ? <a href="#how-do-i-reset-my-license-key" id="how-do-i-reset-my-license-key"></a>
 
-* Check the video guide [here](https://www.youtube.com/watch?v=MScahBi-tms).
+* To reset your license key, you will need to use the /license command in our [Discord](https://discord.com/invite/bJQRV5GeZg).
+* Then press the "**Reset License**" button.
+* Confirm the action by typing "**YES**" and press "**Submit**".
+* This will generate a new license key for you.
+
+## Video Guide <a href="#video-guide" id="video-guide"></a>
+
+* Check the video guide [here](https://www.youtube.com/watch?v=MScahBi-tms). (This guide is a little outdated.)
