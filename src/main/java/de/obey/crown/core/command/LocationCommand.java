@@ -36,12 +36,11 @@ public final class LocationCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
 
             if (args[0].equalsIgnoreCase("list")) {
-
-                player.sendMessage(TextUtil.translateColors("%prefix% Current Locations &8(%accent%" + LocationHandler.getLocations().size() + "&8)"));
+                messanger.sendNonConfigMessage(player,"%prefix% Current Locations &8(%accent%" + LocationHandler.getLocations().size() + "&8)");
 
                 LocationHandler.getLocations().keySet().forEach(name -> {
                     final Location location = LocationHandler.getLocation(name);
-                    player.sendMessage(TextUtil.translateColors("§8    => %accent%" + name + "§8 - (%white% " + location.getWorld().getName() + ", " + location.getX() + ", " + location.getY() + ", " + location.getZ() + " §8)"));
+                    messanger.sendNonConfigMessage(player, "&8    => %accent%" + name + "&8 - (%white% " + location.getWorld().getName() + ", " + location.getX() + ", " + location.getY() + ", " + location.getZ() + " &8)");
                 });
 
                 return true;

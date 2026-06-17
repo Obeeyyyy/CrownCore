@@ -29,6 +29,7 @@ public class CoreThreadFactory implements ThreadFactory {
     public Thread newThread(@NonNull Runnable r) {
         final Thread thread = new Thread(r);
         thread.setName(name + "-" + thread.getId());
+        CrownCore.log.info("Created thread: " + thread.getName());
         return thread;
     }
 }
