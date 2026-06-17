@@ -55,9 +55,6 @@ public class UUIDFetcher {
         UNIQUE_ID_TO_NAME_CACHE.put(uuid, username);
     }
 
-    public CompletableFuture<String> getUserNameAsync(@NonNull UUID uniqueId) {
-        return CompletableFuture.supplyAsync(() -> getUserName(uniqueId), CrownCore.getInstance().getExecutor());
-    }
 
     public CompletableFuture<UUID> resolveUUID(final String input) {
         CrownCore.log.debug("resolving uuid for '" + input + "'");
@@ -110,17 +107,21 @@ public class UUIDFetcher {
         if(offlineMode)
             return CompletableFuture.completedFuture(getOfflineUUID(username));
 
-        String[] data = getRemoteUserData(username);
-
-        if (data != null && data.length == 2) {
-            uniqueId = UUID.fromString(data[1]);
-            NAME_TO_UNIQUE_ID_CACHE.put(username, uniqueId);
-            return CompletableFuture.completedFuture(uniqueId);
-        }
-
-        return CompletableFuture.completedFuture(null);
+        String finalUsername = username;
+        return getRemoteUserDataAsync(username).thenApply(data -> {
+            if (data != null && data.length == 2) {
+                UUID resolved = UUID.fromString(data[1]);
+                NAME_TO_UNIQUE_ID_CACHE.put(finalUsername, resolved);
+                return resolved;
+            }
+            return null;
+        });
     }
 
+    @Deprecated
+    /***
+     * Use getUsernameAsync instead
+     */
     public @Nullable String getUserName(@NonNull UUID uniqueId) {
         String name = UNIQUE_ID_TO_NAME_CACHE.getIfPresent(uniqueId);
         if (name != null) {
@@ -143,10 +144,40 @@ public class UUIDFetcher {
         return null;
     }
 
+    public @Nullable String getUserNameCached(@NonNull UUID uniqueId) {
+        String name = UNIQUE_ID_TO_NAME_CACHE.getIfPresent(uniqueId);
+        if (name != null) return name;
+        for (Function<UUID, String> function : UNIQUE_ID_TO_NAME_CONVERTER_LIST) {
+            name = function.apply(uniqueId);
+            if (name != null) {
+                UNIQUE_ID_TO_NAME_CACHE.put(uniqueId, name);
+                return name;
+            }
+        }
+        return null;
+    }
+
+    public CompletableFuture<String> getUserNameAsync(@NonNull UUID uniqueId) {
+        String cached = getUserNameCached(uniqueId);
+        if (cached != null) return CompletableFuture.completedFuture(cached);
+
+        return getRemoteUserDataAsync(uniqueId.toString()).thenApply(data -> {
+            if (data != null && data.length == 2) {
+                UNIQUE_ID_TO_NAME_CACHE.put(uniqueId, data[0]);
+                return data[0];
+            }
+            return null;
+        });
+    }
+
     private UUID getOfflineUUID(final String username) {
         return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
     }
 
+    @Deprecated
+    /***
+        Use getRemoteUserDataAsync instead
+     */
     private String[] getRemoteUserData(@NotNull String nameOrUuid) {
         try {
 
@@ -205,6 +236,10 @@ public class UUIDFetcher {
             CrownCore.log.debug(" - exception while fetching uuid " + e.getMessage());
         }
         return null;
+    }
+
+    private CompletableFuture<String[]> getRemoteUserDataAsync(@NotNull String nameOrUuid) {
+        return CompletableFuture.supplyAsync(() -> getRemoteUserData(nameOrUuid), CrownCore.getInstance().getExecutor());
     }
 
     private @Nullable UUID validateUniqueId(@NotNull String string) {

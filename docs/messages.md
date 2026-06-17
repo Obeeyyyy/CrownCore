@@ -14,7 +14,7 @@ accent: "&e"
 messages:
   no-permission: "%prefix% You are not allowed to do that! &8(%white%%permission%&8)"
   command-syntax: "%prefix% Usage for %accent%%command%%white%:"
-  command-syntax-prefix: "&8  ➥ &7"
+  command-syntax-prefix: "<shadow:#000000FF>&8  ➥ &7"
   command-cooldown: "%prefix% Please wait %accent%%remaining%%white% before executing another command."
   message-cooldown: "%prefix% Please wait %accent%%remaining%%white% before sending another message."
   invalid-number: "%prefix% Please enter a valid number."

@@ -67,7 +67,7 @@ public final class CrownCore extends JavaPlugin {
          * Used for all core and child plugins tasks.
          */
         final int threadCount = getConfig().contains("core-thread-pool") ? getConfig().getInt("core-thread-pool") : 16;
-        executor =  Executors.newFixedThreadPool(threadCount, new CoreThreadFactory("Crown-Worker"));
+        executor =  Executors.newFixedThreadPool(threadCount, new CoreThreadFactory("CrownWorker"));
 
         okHttpClient = new OkHttpClient();
         pluginStorageManager = new PluginStorageManager(executor);

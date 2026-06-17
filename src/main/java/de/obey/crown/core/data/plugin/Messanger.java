@@ -280,7 +280,8 @@ public final class Messanger {
                         continue;
 
                     CrownCore.log.info("[Messenger] <" + plugin.getName() + " generated missing entry: " + messageKey);
-                    configuration.set("messages." + messageKey, defaults.getString("messages." + messageKey));
+                    final Object defaultobj = defaults.get("messages." + messageKey);
+                    configuration.set("messages." + messageKey, defaultobj);
                 }
 
                 loadMessages(file, configuration);

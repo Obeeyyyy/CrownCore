@@ -20,6 +20,7 @@ import de.obey.crown.core.util.task.CrownTask;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -62,9 +63,12 @@ public class SessionServiceHandler implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void on(final AsyncPlayerPreLoginEvent event) {
         if(sessionServiceMap.isEmpty())
+            return;
+
+        if(event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED)
             return;
 
         for (final CrownPlayerSessionService<?, UUID> sessionService : sessionServiceMap.values()) {

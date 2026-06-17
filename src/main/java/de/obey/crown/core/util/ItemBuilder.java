@@ -465,7 +465,7 @@ public final class ItemBuilder {
         if (skullOwner != null && meta instanceof SkullMeta skull) {
             final String resolved = player == null ? skullOwner : PlaceholderUtil.resolve(player, skullOwner);
             skull.setOwner(resolved);
-            skull.setOwningPlayer(Bukkit.getOfflinePlayer(resolved));
+            //skull.setOwningPlayer(Bukkit.getOfflinePlayer(resolved));
         }
 
         /* skull texture */
