@@ -15,10 +15,13 @@ import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import org.bukkit.plugin.Plugin;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 @UtilityClass
 public class DiscordWebHookUtil {
@@ -115,6 +118,14 @@ public class DiscordWebHookUtil {
             } else if (value instanceof JSONArray nestedArray) {
                 replaceNewlines(nestedArray);
             }
+        }
+    }
+
+    public String readJSONFile(final Plugin plugin, final String fileName) {
+        try {
+            return Files.readString(FileUtil.getGeneratedFile(plugin, fileName, true).toPath(), StandardCharsets.UTF_8);
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
