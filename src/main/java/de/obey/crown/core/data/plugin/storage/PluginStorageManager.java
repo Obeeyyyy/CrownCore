@@ -567,4 +567,8 @@ public class PluginStorageManager {
 
         return playerData;
     }
+
+    public List<PluginDataSchema> getPluginDataSchemas(final Plugin plugin) {
+        return pluginDataSchemas.get(plugin.getName().toLowerCase());
+    }
 }

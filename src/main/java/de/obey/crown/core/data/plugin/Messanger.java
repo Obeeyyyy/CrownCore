@@ -713,9 +713,8 @@ public final class Messanger {
             temp.add(tempLine);
         }
 
-
         for (final String translatedLine : temp) {
-            sender.sendMessage(MiniMessage.miniMessage().deserialize(TextUtil.convertLegacyToMiniMessage(PlaceholderAPI.setPlaceholders(null, translatedLine))));
+            sender.sendMessage(MiniMessage.miniMessage().deserialize(TextUtil.convertLegacyToMiniMessage(PlaceholderAPI.setPlaceholders(sender instanceof Player ? (Player) sender : null, translatedLine))));
         }
     }
 
