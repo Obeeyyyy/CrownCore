@@ -83,7 +83,7 @@ public final class Messanger {
     private void loadCorePlaceholders() {
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(FileUtil.getCoreFile("messages.yml"));
 
-        prefix = TextUtil.registerCorePlaceholder("%prefix%", FileUtil.getString(configuration, "prefix", "&5&lCORE &8●&f"));
+        prefix = TextUtil.registerCorePlaceholder("%prefix%", FileUtil.getString(configuration, "prefix", "&6&lCROWN &8●&f"));
         whiteColor = TextUtil.registerCorePlaceholder("%white%", FileUtil.getString(configuration, "white", "&f"));
         accentColor = TextUtil.registerCorePlaceholder("%accent%", FileUtil.getString(configuration, "accent", "&5"));
     }
