@@ -29,3 +29,5 @@ Make sure to join our [**Discord Server**](https://discord.gg/crowndev).
 * [Sounds](sounds.md)
 * [Placeholders](placeholders.md)
 * [Custom Placeholders](features/custom-placeholders.md)
+* [GUI System](features/gui-system.md)
+* [Location System](features/location-system.md)
