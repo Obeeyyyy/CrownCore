@@ -18,18 +18,37 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class GuiItemParser {
 
-    public static GuiItem parse(final ConfigurationSection section, final String guiKey, final int guiSize) {
+    public static GuiItem parse(final ConfigurationSection section, final String guiKey, final int guiSize, final List<String> defaultFlags) {
         final String itemKey = section.getName();
 
-        GuiValidation.require(section, "slot", itemKey);
+        final boolean add = section.getBoolean("add", false);
+
+        if (!add && !section.contains("slot") && !section.contains("slots")) {
+            throw new IllegalArgumentException(
+                    "[CrownGUI] Missing required field 'slot', 'slots' or 'add: true' for item '" + itemKey +
+                            "' in GUI " + guiKey
+            );
+        }
         GuiValidation.require(section, "material", itemKey);
 
-        final int slot = section.getInt("slot");
-        GuiValidation.validateSlot(guiKey, itemKey, slot, guiSize);
+        final List<Integer> slots = new ArrayList<>();
+        if (!add) {
+            if (section.contains("slots")) {
+                slots.addAll(section.getIntegerList("slots"));
+            } else {
+                slots.add(section.getInt("slot"));
+            }
+
+            for (final int slot : slots) {
+                GuiValidation.validateSlot(guiKey, itemKey, slot, guiSize);
+            }
+        }
 
         final Material material = Material.matchMaterial(
                 section.getString("material", "")
@@ -64,15 +83,18 @@ public class GuiItemParser {
         }
 
         parseEnchantments(section, builder, itemKey);
-        parseFlags(section, builder, itemKey);
+        parseFlags(section, builder, itemKey, defaultFlags);
 
         final GuiItemClickAction clickAction = parseClick(section.getConfigurationSection("click"));
+        final String action = section.getString("action");
         final String permission = section.getString("permission");
 
         return new GuiItem(
-                slot,
+                slots,
+                add,
                 builder,
                 clickAction,
+                action,
                 permission
         );
     }
@@ -102,10 +124,11 @@ public class GuiItemParser {
         });
     }
 
-    private static void parseFlags(final ConfigurationSection section, final ItemBuilder builder, final String itemKey) {
-        if (!section.contains("flags")) return;
+    private static void parseFlags(final ConfigurationSection section, final ItemBuilder builder, final String itemKey, final List<String> defaultFlags) {
+        final List<String> flags = section.contains("flags") ? section.getStringList("flags") : defaultFlags;
+        if (flags == null) return;
 
-        for (final String flagName : section.getStringList("flags")) {
+        for (final String flagName : flags) {
             try {
                 final ItemFlag flag = ItemFlag.valueOf(flagName.toUpperCase());
                 builder.flag(flag);

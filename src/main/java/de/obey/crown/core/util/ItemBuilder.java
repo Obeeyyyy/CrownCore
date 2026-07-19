@@ -584,4 +584,53 @@ public final class ItemBuilder {
         else if (pdc.has(key, PersistentDataType.LONG_ARRAY))    persistentData.put(key, pdc.get(key, PersistentDataType.LONG_ARRAY));
         else if (pdc.has(key, PersistentDataType.BYTE_ARRAY))    persistentData.put(key, pdc.get(key, PersistentDataType.BYTE_ARRAY));
     }
+
+    public ItemBuilder clone() {
+        final ItemBuilder clone = new ItemBuilder(this.material, this.amount);
+        clone.name = this.name;
+        if (this.lore != null) {
+            clone.lore = new ArrayList<>(this.lore);
+        }
+        clone.glow = this.glow;
+        clone.enchantmentGlintOverride = this.enchantmentGlintOverride;
+        clone.customModelData = this.customModelData;
+        clone.leatherColor = this.leatherColor;
+        clone.fireworkColor = this.fireworkColor;
+        clone.skullOwner = this.skullOwner;
+        clone.skullTexture = this.skullTexture;
+        clone.skullUUID = this.skullUUID;
+        clone.enchantments.putAll(this.enchantments);
+        clone.flags.addAll(this.flags);
+        clone.persistentData.putAll(this.persistentData);
+        if (this.attributeModifiers != null) {
+            clone.attributeModifiers = LinkedHashMultimap.create(this.attributeModifiers);
+        }
+        return clone;
+    }
+
+    public void resolvePlaceholders(final String[] placeholders, final String... replacements) {
+        if (placeholders == null || replacements == null || placeholders.length == 0) {
+            return;
+        }
+        if (name != null) {
+            for (int i = 0; i < placeholders.length; i++) {
+                name = name.replace("%" + placeholders[i] + "%", replacements[i]);
+            }
+        }
+        if (lore != null) {
+            final List<String> newLore = new ArrayList<>();
+            for (String line : lore) {
+                for (int i = 0; i < placeholders.length; i++) {
+                    line = line.replace("%" + placeholders[i] + "%", replacements[i]);
+                }
+                newLore.add(line);
+            }
+            this.lore = newLore;
+        }
+        if (skullOwner != null) {
+            for (int i = 0; i < placeholders.length; i++) {
+                skullOwner = skullOwner.replace("%" + placeholders[i] + "%", replacements[i]);
+            }
+        }
+    }
 }

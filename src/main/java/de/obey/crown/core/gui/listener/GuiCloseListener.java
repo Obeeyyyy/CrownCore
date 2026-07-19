@@ -8,12 +8,14 @@ package de.obey.crown.core.gui.listener;
 */
 
 import de.obey.crown.core.data.plugin.sound.SoundData;
+import de.obey.crown.core.gui.GuiRegistry;
 import de.obey.crown.core.gui.model.CrownGui;
 import de.obey.crown.core.gui.model.GuiHolder;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 public class GuiCloseListener implements Listener {
 
@@ -32,5 +34,9 @@ public class GuiCloseListener implements Listener {
         }
     }
 
+    @EventHandler
+    public void onQuit(final PlayerQuitEvent event) {
+        GuiRegistry.clearPlayerCache(event.getPlayer().getUniqueId());
+    }
 
 }

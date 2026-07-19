@@ -72,6 +72,7 @@ dependencies {
     implementation("net.kyori:adventure-text-serializer-legacy:4.26.1")
     implementation("com.j256.ormlite:ormlite-jdbc:6.1")
     implementation("javax.persistence:javax.persistence-api:2.2")
+    implementation("de.rapha149.signgui:signgui:2.5.4")
 }
 
 java {
@@ -102,6 +103,7 @@ tasks.shadowJar {
     relocate("kotlin", "${project.group}.lib.kotlin")
     relocate("org.intellij", "${project.group}.lib.intellij")
     relocate("org.jetbrains", "${project.group}.lib.jetbrains")
+    relocate("de.rapha149", "${project.group}.lib.de.rapha149")
 }
 
 tasks.named<Jar>("jar") {

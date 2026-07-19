@@ -29,6 +29,7 @@ import java.net.URL;
 import java.security.CodeSource;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -38,8 +39,7 @@ public class GuiLoader {
     public static void loadAll(final Plugin plugin) {
         final File guiFolder = new File(plugin.getDataFolder(), "gui");
 
-        if (!guiFolder.exists())
-            extractGuiResources(plugin, guiFolder);
+        extractGuiResources(plugin, guiFolder);
 
         if (!guiFolder.exists()) return;
 
@@ -63,23 +63,37 @@ public class GuiLoader {
 
             GuiValidation.validateSize(file.getName(), size);
 
+            final GuiSettings guiSettings = parseSettings(configuration);
+
             final Map<String, GuiItem> items = new HashMap<>();
             final ConfigurationSection section = configuration.getConfigurationSection("items");
 
             if (section != null) {
                 for (final String key : section.getKeys(false)) {
-                    items.put(key, GuiItemParser.parse(section.getConfigurationSection(key), plugin.getName() + ":" + id, size));
+                    items.put(key, GuiItemParser.parse(section.getConfigurationSection(key), plugin.getName() + ":" + id, size, guiSettings.defaultFlags()));
                 }
             }
 
-            final GuiSettings guiSettings = parseSettings(configuration);
+            final Map<String, List<Integer>> dynamicSlots = new HashMap<>();
+            final ConfigurationSection dynamicSection = configuration.getConfigurationSection("dynamic-slots");
+            if (dynamicSection != null) {
+                for (final String key : dynamicSection.getKeys(false)) {
+                    final List<Integer> list = dynamicSection.getIntegerList(key);
+                    for (final int slot : list) {
+                        GuiValidation.validateSlot(file.getName(), "dynamic-slots." + key, slot, size);
+                    }
+                    dynamicSlots.put(key, list);
+                }
+            }
+
             final CrownGui gui = new CrownGui(
                     plugin.getName(),
                     id,
                     title,
                     size,
                     guiSettings,
-                    items
+                    items,
+                    dynamicSlots
             );
 
             GuiRegistry.register(gui);
@@ -93,6 +107,9 @@ public class GuiLoader {
         final SoundData openSoundData = parseSoundData(cfg.getString("open-sound"));
         final SoundData closeSoundData = parseSoundData(cfg.getString("close-sound"));
         final int updateInterval = cfg.getInt("update-interval", -1);
+        final boolean cache = cfg.getBoolean("cache", false);
+        final boolean cachePerPlayer = cfg.getBoolean("cache-per-player", false);
+        final List<String> defaultFlags = cfg.getStringList("default-flags");
 
         final GuiFill fill = parseFill(cfg.getConfigurationSection("fill"));
 
@@ -100,7 +117,10 @@ public class GuiLoader {
                 openSoundData,
                 closeSoundData,
                 updateInterval,
-                fill
+                fill,
+                cache,
+                cachePerPlayer,
+                defaultFlags
         );
     }
 
@@ -159,18 +179,13 @@ public class GuiLoader {
         return new GuiFill(true, builder);
     }
 
-    private static void extractGuiResources(
-            final Plugin plugin,
-            final File targetFolder
-    ) {
+    private static void extractGuiResources(final Plugin plugin, final File targetFolder) {
         try {
             final URL resourceUrl = plugin.getClass()
                     .getClassLoader()
                     .getResource("gui");
 
             if (resourceUrl == null) return;
-
-            CrownCore.log.info("extracting GUI resources for " + plugin.getName());
 
             targetFolder.mkdirs();
 
@@ -218,6 +233,8 @@ public class GuiLoader {
             if (outFile.exists()) continue;
 
             outFile.getParentFile().mkdirs();
+
+            CrownCore.log.info("Extracting new GUI config: " + relative + " for " + plugin.getName());
 
             try (final InputStream in = jarFile.getInputStream(entry);
                  final OutputStream out = new FileOutputStream(outFile)) {
