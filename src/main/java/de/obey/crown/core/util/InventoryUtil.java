@@ -10,7 +10,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.io.BukkitObjectInputStream;
+import org.bukkit.util.io.BukkitObjectOutputStream;
+import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 @UtilityClass
 public final class InventoryUtil {
@@ -137,6 +143,41 @@ public final class InventoryUtil {
 
     public boolean hasItemInHand(final Player player) {
         return player.getInventory().getItemInMainHand().getType() != Material.AIR;
+    }
+
+    public String itemStackArrayToBase64(final ItemStack[] items) {
+        try {
+            final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            final BukkitObjectOutputStream dataOutput = new BukkitObjectOutputStream(outputStream);
+
+            dataOutput.writeInt(items.length);
+
+            for (final ItemStack item : items)
+                dataOutput.writeObject(item);
+
+            dataOutput.close();
+            return Base64Coder.encodeLines(outputStream.toByteArray());
+        } catch (final Exception e) {
+            throw new IllegalStateException("Unable to save item stacks.", e);
+        }
+    }
+
+    public ItemStack[] itemStackArrayFromBase64(final String data) {
+        if (data == null || data.isEmpty()) return new ItemStack[0];
+        try {
+            final ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(data));
+            final BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
+            final ItemStack[] items = new ItemStack[dataInput.readInt()];
+
+            for (int i = 0; i < items.length; i++) {
+                items[i] = (ItemStack) dataInput.readObject();
+            }
+
+            dataInput.close();
+            return items;
+        } catch (final ClassNotFoundException | IOException e) {
+            throw new IllegalStateException("Unable to load item stacks.", e);
+        }
     }
 
 }
