@@ -100,12 +100,10 @@ public class GuiLoader {
         });
     }
 
-    private static GuiSettings parseSettings(
-            final YamlConfiguration cfg
-    ) {
+    private static GuiSettings parseSettings(final YamlConfiguration cfg) {
 
-        final SoundData openSoundData = parseSoundData(cfg.getString("open-sound"));
-        final SoundData closeSoundData = parseSoundData(cfg.getString("close-sound"));
+        final SoundData openSoundData = parseSoundData(cfg.getString("open-sound", "none"));
+        final SoundData closeSoundData = parseSoundData(cfg.getString("close-sound", "none"));
         final int updateInterval = cfg.getInt("update-interval", -1);
         final boolean cache = cfg.getBoolean("cache", false);
         final boolean cachePerPlayer = cfg.getBoolean("cache-per-player", false);
@@ -125,20 +123,25 @@ public class GuiLoader {
     }
 
     private static SoundData parseSoundData(final String value) {
+        if (value == null || value.isEmpty() || value.equalsIgnoreCase("none"))
+            return null;
+
         final String[] data = value.split(":");
         final SoundData soundData = new SoundData();
         final int indexOffset = data[0].equalsIgnoreCase("minecraft") ? 1 : 0;
 
         try {
-            final Sound sound = Sound.valueOf(data[0]);
-
+            final Sound sound = Sound.valueOf(data[0].toUpperCase());
             soundData.setSound(sound.getKey().toString());
-
         } catch (final IllegalArgumentException exception) {
-            soundData.setSound(data[0] + ":" + data[1]);
+            if (data.length > 1) {
+                soundData.setSound(data[0] + ":" + data[1]);
+            } else {
+                soundData.setSound(data[0]);
+            }
         }
 
-        if (data.length > 1) {
+        if (data.length > (1 + indexOffset)) {
             try {
                 final float volume = Float.parseFloat(data[1 + indexOffset]);
                 soundData.setVolume(volume);
@@ -147,7 +150,7 @@ public class GuiLoader {
             }
         }
 
-        if (data.length > 2) {
+        if (data.length > (2 + indexOffset)) {
             try {
                 final float pitch = Float.parseFloat(data[2 + indexOffset]);
                 soundData.setPitch(pitch);
@@ -181,9 +184,7 @@ public class GuiLoader {
 
     private static void extractGuiResources(final Plugin plugin, final File targetFolder) {
         try {
-            final URL resourceUrl = plugin.getClass()
-                    .getClassLoader()
-                    .getResource("gui");
+            final URL resourceUrl = plugin.getClass().getClassLoader().getResource("gui");
 
             if (resourceUrl == null) return;
 

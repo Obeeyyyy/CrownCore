@@ -72,9 +72,14 @@ public final class CrownCore extends JavaPlugin {
         okHttpClient = new OkHttpClient();
         pluginStorageManager = new PluginStorageManager(executor);
 
-        pluginConfig = new PluginConfig(this);
-        messanger = pluginConfig.getMessanger();
-        sounds = pluginConfig.getSounds();
+        try {
+            pluginConfig = new PluginConfig(this);
+            messanger = pluginConfig.getMessanger();
+            sounds = pluginConfig.getSounds();
+        } catch (Throwable e) {
+            log.warn("Failed to load PluginConfig in onLoad(): " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /***
@@ -82,6 +87,20 @@ public final class CrownCore extends JavaPlugin {
      */
     @Override
     public void onEnable() {
+        if (pluginConfig == null) {
+            log.warn("pluginConfig was null in onEnable()! Attempting initialization now...");
+            try {
+                pluginConfig = new PluginConfig(this);
+                messanger = pluginConfig.getMessanger();
+                sounds = pluginConfig.getSounds();
+            } catch (Throwable e) {
+                log.warn("Failed to initialize PluginConfig in onEnable(): " + e.getMessage());
+                e.printStackTrace();
+                getServer().getPluginManager().disablePlugin(this);
+                return;
+            }
+        }
+
         Scheduler.initialize();
         PlaceholderUtil.initialize();
         FloodgateUtil.initialize();

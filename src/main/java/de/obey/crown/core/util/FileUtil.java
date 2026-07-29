@@ -118,16 +118,24 @@ public final class FileUtil {
     }
 
     public String getString(final YamlConfiguration configuration, final String path, String defaultValue) {
-        if (configuration.contains(path))
-            return TextUtil.convertLegacyToMiniMessage(configuration.getString(path));
+        if (configuration.contains(path)) {
+            final String val = configuration.getString(path);
+            if (val != null) {
+                return TextUtil.convertLegacyToMiniMessage(val);
+            }
+        }
 
         configuration.set(path, defaultValue);
         return defaultValue;
     }
 
     public String getRawString(final YamlConfiguration configuration, final String path, String defaultValue) {
-        if (configuration.contains(path))
-            return configuration.getString(path);
+        if (configuration.contains(path)) {
+            final String val = configuration.getString(path);
+            if (val != null) {
+                return val;
+            }
+        }
 
         configuration.set(path, defaultValue);
         return defaultValue;
@@ -143,8 +151,12 @@ public final class FileUtil {
     }
 
     public List<String> getStringArrayList(final YamlConfiguration configuration, final String path, final List<String> defaultValue) {
-        if (configuration.contains(path))
-            return (List<String>) configuration.getList(path);
+        if (configuration.contains(path)) {
+            final List<String> list = (List<String>) configuration.getList(path);
+            if (list != null) {
+                return list;
+            }
+        }
 
         configuration.set(path, defaultValue);
 
@@ -152,16 +164,24 @@ public final class FileUtil {
     }
 
     public List<Integer> getIntArrayList(final YamlConfiguration configuration, final String path, final List<Integer> defaultValue) {
-        if (configuration.contains(path))
-            return (List<Integer>) configuration.getList(path);
+        if (configuration.contains(path)) {
+            final List<Integer> list = (List<Integer>) configuration.getList(path);
+            if (list != null) {
+                return list;
+            }
+        }
 
         configuration.set(path, defaultValue);
 
         return defaultValue;
     }
     public List<Double> getDoubleList(final YamlConfiguration configuration, final String path, final List<Double> defaultValue) {
-        if (configuration.contains(path))
-            return (List<Double>) configuration.getList(path);
+        if (configuration.contains(path)) {
+            final List<Double> list = (List<Double>) configuration.getList(path);
+            if (list != null) {
+                return list;
+            }
+        }
 
         configuration.set(path, defaultValue);
 
@@ -235,16 +255,24 @@ public final class FileUtil {
     }
 
     public String getString(final ConfigurationSection section, final String path, String defaultValue) {
-        if (section.contains(path))
-            return TextUtil.convertLegacyToMiniMessage(section.getString(path));
+        if (section.contains(path)) {
+            final String val = section.getString(path);
+            if (val != null) {
+                return TextUtil.convertLegacyToMiniMessage(val);
+            }
+        }
 
         section.set(path, defaultValue);
         return defaultValue;
     }
 
     public String getRawString(final ConfigurationSection section, final String path, String defaultValue) {
-        if (section.contains(path))
-            return section.getString(path);
+        if (section.contains(path)) {
+            final String val = section.getString(path);
+            if (val != null) {
+                return val;
+            }
+        }
 
         section.set(path, defaultValue);
         return defaultValue;
@@ -260,8 +288,12 @@ public final class FileUtil {
     }
 
     public List<String> getStringArrayList(final ConfigurationSection section, final String path, final List<String> defaultValue) {
-        if (section.contains(path))
-            return (List<String>) section.getList(path);
+        if (section.contains(path)) {
+            final List<String> list = (List<String>) section.getList(path);
+            if (list != null) {
+                return list;
+            }
+        }
 
         section.set(path, defaultValue);
 
@@ -269,8 +301,12 @@ public final class FileUtil {
     }
 
     public List<Integer> getIntArrayList(final ConfigurationSection section, final String path, final List<Integer> defaultValue) {
-        if (section.contains(path))
-            return (List<Integer>) section.getList(path);
+        if (section.contains(path)) {
+            final List<Integer> list = (List<Integer>) section.getList(path);
+            if (list != null) {
+                return list;
+            }
+        }
 
         section.set(path, defaultValue);
 
@@ -278,7 +314,10 @@ public final class FileUtil {
     }
     public List<Double> getDoubleList(final ConfigurationSection section, final String path, final List<Double> defaultValue) {
         if (section.contains(path)) {
-            return (List<Double>) section.getList(path);
+            final List<Double> list = (List<Double>) section.getList(path);
+            if (list != null) {
+                return list;
+            }
         }
 
         section.set(path, defaultValue);

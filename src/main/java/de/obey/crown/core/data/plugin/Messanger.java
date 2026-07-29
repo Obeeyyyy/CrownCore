@@ -825,6 +825,14 @@ public final class Messanger {
         sender.showTitle(obj);
     }
 
+    public void sendTitle(final CommandSender sender, final String titleKey, final String subTitleKey, final String[] placeholders, String... replacements) {
+        final Component title = getComponent(titleKey, placeholders, replacements);
+        final Component subTitle = getComponent(subTitleKey, placeholders, replacements);
+
+        final Title obj = Title.title(title, subTitle);
+        sender.showTitle(obj);
+    }
+
     /*                    */
     /*  Text Components   */
     /*                    */

@@ -79,9 +79,8 @@ public class CrownGuiCommand implements CommandExecutor, TabCompleter {
         Player target;
 
         if (args.length >= 3) {
-            if(!messanger.isOnline(sender, args[2])) {
+            if(!messanger.isOnline(sender, args[2]))
                 return;
-            }
 
             target = Bukkit.getPlayer(args[2]);
         } else {

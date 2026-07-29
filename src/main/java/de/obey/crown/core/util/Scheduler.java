@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 public final class Scheduler {
 
     public boolean isFolia = false;
+    public boolean isCanvas = false;
 
     public void initialize() {
         try {
@@ -30,6 +31,14 @@ public final class Scheduler {
             isFolia = true;
         } catch (final ClassNotFoundException ignored) {
             isFolia = false;
+        }
+
+        try {
+            Class.forName("io.canvasmc.canvas.event.PlayerRespawnAsyncEvent");
+            CrownCore.log.debug("detected canvas server");
+            isCanvas = true;
+        } catch (final ClassNotFoundException ignored) {
+            isCanvas = false;
         }
     }
 
