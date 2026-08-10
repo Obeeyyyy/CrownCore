@@ -10,6 +10,7 @@ package de.obey.crown.core.util;
 import com.google.common.collect.Maps;
 import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.data.plugin.placeholders.Placeholders;
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
@@ -58,7 +59,7 @@ public class PlaceholderUtil {
 
         if (papiEnabled) {
             try {
-                result = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, result);
+                result = PlaceholderAPI.setPlaceholders(player, result);
             } catch (final Throwable ignored) {}
         }
 

@@ -9,7 +9,6 @@ import de.obey.crown.core.data.plugin.storage.player.PlayerDataService;
 import de.obey.crown.core.util.Scheduler;
 import de.obey.crown.core.util.VersionChecker;
 import lombok.RequiredArgsConstructor;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

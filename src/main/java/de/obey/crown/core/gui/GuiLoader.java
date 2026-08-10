@@ -22,10 +22,15 @@ import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
+import java.lang.reflect.Method;
+import java.net.JarURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.security.CodeSource;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -37,16 +42,22 @@ import java.util.jar.JarFile;
 public class GuiLoader {
 
     public static void loadAll(final Plugin plugin) {
+        CrownCore.log.debug("[GuiLoader] loadAll called for plugin: " + plugin.getName());
         final File guiFolder = new File(plugin.getDataFolder(), "gui");
 
         extractGuiResources(plugin, guiFolder);
 
+        CrownCore.log.debug("[GuiLoader] guiFolder exists for " + plugin.getName() + ": " + guiFolder.exists() + " (" + guiFolder.getAbsolutePath() + ")");
         if (!guiFolder.exists()) return;
 
         final File[] files = guiFolder.listFiles(f -> f.isFile() && f.getName().toLowerCase().endsWith(".yml"));
 
-        if (files == null) return;
+        if (files == null) {
+            CrownCore.log.debug("[GuiLoader] listFiles returned null for " + plugin.getName());
+            return;
+        }
 
+        CrownCore.log.debug("[GuiLoader] Found " + files.length + " GUI file(s) for " + plugin.getName());
         for (final File file : files)
             load(plugin, file);
     }
@@ -183,55 +194,161 @@ public class GuiLoader {
     }
 
     private static void extractGuiResources(final Plugin plugin, final File targetFolder) {
+        CrownCore.log.debug("[GuiLoader] Extracting GUI resources for plugin: " + plugin.getName() + " -> " + targetFolder.getAbsolutePath());
         try {
-            final URL resourceUrl = plugin.getClass().getClassLoader().getResource("gui");
+            // 1. Try JavaPlugin getFile() via reflection (Primary for Paper / Canvas / Spigot)
+            final File pluginJar = getPluginJarFile(plugin);
+            CrownCore.log.debug("[GuiLoader] getPluginJarFile returned: " + (pluginJar == null ? "null" : pluginJar.getAbsolutePath() + " (exists=" + pluginJar.exists() + ")"));
 
-            if (resourceUrl == null) return;
+            if (pluginJar != null && pluginJar.exists()) {
+                if (pluginJar.isDirectory()) {
+                    final File guiSourceDir = new File(pluginJar, "gui");
+                    CrownCore.log.debug("[GuiLoader] pluginJar is directory. guiSourceDir: " + guiSourceDir.getAbsolutePath() + " (exists=" + guiSourceDir.exists() + ")");
+                    if (guiSourceDir.exists() && guiSourceDir.isDirectory()) {
+                        copyDirectory(guiSourceDir, targetFolder, plugin);
+                        return;
+                    }
+                } else if (pluginJar.isFile()) {
+                    final boolean extracted = copyFolderFromJarFile(plugin, pluginJar, "gui", targetFolder);
+                    CrownCore.log.debug("[GuiLoader] copyFolderFromJarFile (getPluginJarFile) returned: " + extracted);
+                    if (extracted) {
+                        return;
+                    }
+                }
+            }
 
-            targetFolder.mkdirs();
+            // 2. Try ProtectionDomain CodeSource location (with URL decoding / jar:file: stripping)
+            final CodeSource source = plugin.getClass().getProtectionDomain().getCodeSource();
+            CrownCore.log.debug("[GuiLoader] CodeSource location: " + (source == null ? "null" : source.getLocation()));
+            if (source != null && source.getLocation() != null) {
+                final File sourceFile = urlToFile(source.getLocation());
+                CrownCore.log.debug("[GuiLoader] urlToFile returned: " + (sourceFile == null ? "null" : sourceFile.getAbsolutePath() + " (exists=" + sourceFile.exists() + ")"));
+                if (sourceFile != null && sourceFile.exists()) {
+                    if (sourceFile.isDirectory()) {
+                        final File guiSourceDir = new File(sourceFile, "gui");
+                        CrownCore.log.debug("[GuiLoader] sourceFile is directory. guiSourceDir: " + guiSourceDir.getAbsolutePath() + " (exists=" + guiSourceDir.exists() + ")");
+                        if (guiSourceDir.exists() && guiSourceDir.isDirectory()) {
+                            copyDirectory(guiSourceDir, targetFolder, plugin);
+                            return;
+                        }
+                    } else if (sourceFile.isFile()) {
+                        final boolean extracted = copyFolderFromJarFile(plugin, sourceFile, "gui", targetFolder);
+                        CrownCore.log.debug("[GuiLoader] copyFolderFromJarFile (CodeSource) returned: " + extracted);
+                        if (extracted) {
+                            return;
+                        }
+                    }
+                }
+            }
 
-            copyFolderFromJar(plugin, "gui", targetFolder);
+            // 3. Fallback via ClassLoader & JarURLConnection
+            CrownCore.log.debug("[GuiLoader] Falling back to copyFolderFromClassLoader for " + plugin.getName());
+            copyFolderFromClassLoader(plugin, "gui", targetFolder);
 
         } catch (final Exception ex) {
-            CrownCore.log.warn("failed to extract GUI resources for " + plugin.getName());
+            CrownCore.log.warn("[GuiLoader] Failed to extract GUI resources for " + plugin.getName() + ": " + ex.getMessage());
             ex.printStackTrace();
         }
     }
 
-    private static void copyFolderFromJar(
+    private static File getPluginJarFile(final Plugin plugin) {
+        try {
+            if (plugin instanceof JavaPlugin) {
+                final Method method = JavaPlugin.class.getDeclaredMethod("getFile");
+                method.setAccessible(true);
+                final File file = (File) method.invoke(plugin);
+                CrownCore.log.debug("[GuiLoader] getFile() reflection result: " + (file == null ? "null" : file.getAbsolutePath()));
+                return file;
+            }
+        } catch (final Exception ex) {
+            CrownCore.log.debug("[GuiLoader] getFile() reflection failed: " + ex.getMessage());
+        }
+        return null;
+    }
+
+    private static File urlToFile(final URL url) {
+        if (url == null) return null;
+        try {
+            String path = url.toExternalForm();
+            if (path.startsWith("jar:")) {
+                path = path.substring(4);
+            }
+            if (path.startsWith("file:")) {
+                path = path.substring(5);
+            }
+            final int bangIdx = path.indexOf("!");
+            if (bangIdx != -1) {
+                path = path.substring(0, bangIdx);
+            }
+            path = URLDecoder.decode(path, StandardCharsets.UTF_8);
+            final File file = new File(path);
+            CrownCore.log.debug("[GuiLoader] urlToFile decoded path: " + path + " (exists=" + file.exists() + ")");
+            if (file.exists()) {
+                return file;
+            }
+        } catch (final Exception ex) {
+            CrownCore.log.debug("[GuiLoader] urlToFile exception: " + ex.getMessage());
+        }
+
+        try {
+            final File file = new File(url.toURI());
+            CrownCore.log.debug("[GuiLoader] urlToFile URI result: " + file.getAbsolutePath() + " (exists=" + file.exists() + ")");
+            return file;
+        } catch (final Exception ignored) {}
+
+        return null;
+    }
+
+    private static boolean copyFolderFromJarFile(
             final Plugin plugin,
+            final File jarFileFile,
             final String jarPath,
             final File targetFolder
-    ) throws IOException, URISyntaxException {
+    ) {
+        CrownCore.log.debug("[GuiLoader] copyFolderFromJarFile attempting to open JarFile: " + jarFileFile.getAbsolutePath());
+        try (final JarFile jarFile = new JarFile(jarFileFile)) {
+            return copyFolderFromJar(plugin, jarFile, jarPath, targetFolder);
+        } catch (final Exception ex) {
+            CrownCore.log.warn("[GuiLoader] copyFolderFromJarFile failed for " + jarFileFile.getAbsolutePath() + ": " + ex.getMessage());
+            return false;
+        }
+    }
 
-        final CodeSource source = plugin.getClass()
-                .getProtectionDomain()
-                .getCodeSource();
-
-        if (source == null) return;
-
-        final URL jar = source.getLocation();
-        final JarFile jarFile = new JarFile(new File(jar.toURI()));
+    private static boolean copyFolderFromJar(
+            final Plugin plugin,
+            final JarFile jarFile,
+            final String jarPath,
+            final File targetFolder
+    ) throws IOException {
 
         final Enumeration<JarEntry> entries = jarFile.entries();
+        final String prefix = jarPath.endsWith("/") ? jarPath : jarPath + "/";
+        boolean extractedAny = false;
+        int matchCount = 0;
 
         while (entries.hasMoreElements()) {
             final JarEntry entry = entries.nextElement();
-
             final String name = entry.getName();
-            if (!name.startsWith(jarPath + "/")) continue;
 
-            final String relative = name.substring(jarPath.length() + 1);
+            if (!name.startsWith(prefix)) continue;
+
+            matchCount++;
+            final String relative = name.substring(prefix.length());
             if (relative.isEmpty()) continue;
 
-            File outFile = new File(targetFolder, relative);
+            extractedAny = true;
+            targetFolder.mkdirs();
+            final File outFile = new File(targetFolder, relative);
 
             if (entry.isDirectory()) {
                 outFile.mkdirs();
                 continue;
             }
 
-            if (outFile.exists()) continue;
+            if (outFile.exists()) {
+                CrownCore.log.debug("[GuiLoader] GUI config already exists: " + relative + " for " + plugin.getName());
+                continue;
+            }
 
             outFile.getParentFile().mkdirs();
 
@@ -239,13 +356,66 @@ public class GuiLoader {
 
             try (final InputStream in = jarFile.getInputStream(entry);
                  final OutputStream out = new FileOutputStream(outFile)) {
-
                 in.transferTo(out);
             }
         }
 
-        jarFile.close();
+        CrownCore.log.debug("[GuiLoader] Scanned JarFile " + jarFile.getName() + " -> found " + matchCount + " entries matching prefix '" + prefix + "' for " + plugin.getName());
+        return extractedAny;
     }
 
+    private static void copyDirectory(final File sourceDir, final File targetFolder, final Plugin plugin) throws IOException {
+        final File[] files = sourceDir.listFiles();
+        if (files == null) return;
 
+        for (final File file : files) {
+            final File targetFile = new File(targetFolder, file.getName());
+            if (file.isDirectory()) {
+                copyDirectory(file, targetFile, plugin);
+            } else if (!targetFile.exists()) {
+                targetFolder.mkdirs();
+                CrownCore.log.info("Extracting new GUI config: " + file.getName() + " for " + plugin.getName());
+                try (final InputStream in = new FileInputStream(file);
+                     final OutputStream out = new FileOutputStream(targetFile)) {
+                    in.transferTo(out);
+                }
+            }
+        }
+    }
+
+    private static void copyFolderFromClassLoader(final Plugin plugin, final String jarPath, final File targetFolder) {
+        try {
+            URL url = plugin.getClass().getClassLoader().getResource(jarPath);
+            CrownCore.log.debug("[GuiLoader] ClassLoader.getResource(" + jarPath + ") -> " + url);
+            if (url == null) {
+                url = plugin.getClass().getClassLoader().getResource(jarPath + "/");
+                CrownCore.log.debug("[GuiLoader] ClassLoader.getResource(" + jarPath + "/) -> " + url);
+            }
+            if (url == null) {
+                url = plugin.getClass().getResource("/" + jarPath);
+                CrownCore.log.debug("[GuiLoader] Class.getResource(/" + jarPath + ") -> " + url);
+            }
+            if (url == null) return;
+
+            if ("file".equals(url.getProtocol())) {
+                final File file = new File(url.toURI());
+                CrownCore.log.debug("[GuiLoader] ClassLoader URL is file: " + file.getAbsolutePath());
+                if (file.isDirectory()) {
+                    copyDirectory(file, targetFolder, plugin);
+                }
+            } else if ("jar".equals(url.getProtocol())) {
+                CrownCore.log.debug("[GuiLoader] ClassLoader URL is jar: " + url);
+                final java.net.URLConnection urlConnection = url.openConnection();
+                if (urlConnection instanceof JarURLConnection) {
+                    final JarURLConnection jarConnection = (JarURLConnection) urlConnection;
+                    try (final JarFile jarFile = jarConnection.getJarFile()) {
+                        copyFolderFromJar(plugin, jarFile, jarPath, targetFolder);
+                    }
+                }
+            }
+        } catch (final Exception ex) {
+            CrownCore.log.warn("[GuiLoader] Exception in copyFolderFromClassLoader: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
 }

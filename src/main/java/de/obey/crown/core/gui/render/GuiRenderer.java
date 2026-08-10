@@ -94,7 +94,7 @@ public class GuiRenderer {
         }
 
         if (inventory == null) {
-            String title = gui.title();
+            String title = gui.title(); // TODO
             if (placeholders != null && replacements != null) {
                 for (int i = 0; i < placeholders.length; i++) {
                     title = title.replace("%" + placeholders[i] + "%", replacements[i]);
@@ -115,7 +115,7 @@ public class GuiRenderer {
             final GuiHolder holder = (GuiHolder) inventory.getHolder();
             holder.getItemLayout().clear();
 
-            // Phase 1: Fixed items
+            // fixed items
             gui.items().values().forEach(item -> {
                 if (item.add()) return;
                 if (!item.canView(player)) return;
@@ -129,7 +129,7 @@ public class GuiRenderer {
                 }
             });
 
-            // Phase 2: Add items
+            // fdd items
             gui.items().values().forEach(item -> {
                 if (!item.add()) return;
                 if (!item.canView(player)) return;
@@ -184,7 +184,7 @@ public class GuiRenderer {
         final GuiHolder holder = (GuiHolder) inventory.getHolder();
         holder.getItemLayout().clear();
 
-        // Phase 1: Fixed items
+        // fixed items
         gui.items().values().forEach(item -> {
             if (item.add()) return;
             if (!item.canView(player)) return;
@@ -198,7 +198,7 @@ public class GuiRenderer {
             }
         });
 
-        // Phase 2: Add items
+        // add items
         gui.items().values().forEach(item -> {
             if (!item.add()) return;
             if (!item.canView(player)) return;

@@ -15,8 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
@@ -252,7 +250,7 @@ public final class Messanger {
     }
 
     private void checkForMissingMessageEntries() {
-        CrownCore.log.debug("[Messenger] <" + plugin.getName() + " checking for missing entries");
+        CrownCore.log.debug("[Messenger] <" + plugin.getName() + "> checking for missing entries");
         crownCore.getExecutor().execute(() -> {
             final File file = FileUtil.getGeneratedFile(plugin, "messages.yml", true);
             final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
@@ -275,17 +273,27 @@ public final class Messanger {
                 if (messageKeys.isEmpty())
                     return;
 
+                boolean changed = false;
+
                 for (final String messageKey : messageKeys) {
                     if (configuration.contains("messages." + messageKey))
                         continue;
 
-                    CrownCore.log.info("[Messenger] <" + plugin.getName() + " generated missing entry: " + messageKey);
+                    if (!changed) {
+                        changed = true;
+                        backupMessageFile(file);
+                    }
+
+                    CrownCore.log.info("[Messenger] <" + plugin.getName() + "> generated missing entry: " + messageKey);
                     final Object defaultobj = defaults.get("messages." + messageKey);
                     configuration.set("messages." + messageKey, defaultobj);
                 }
 
+                if (changed) {
+                    FileUtil.saveConfigurationIntoFile(configuration, file);
+                }
+
                 loadMessages(file, configuration);
-                FileUtil.saveConfigurationIntoFile(configuration, file);
 
             } catch (final IOException | InvalidConfigurationException ignored) {}
         });
@@ -314,17 +322,25 @@ public final class Messanger {
                 if (messageKeys.isEmpty())
                     return;
 
+                boolean changed = false;
+
                 for (final String messageKey : messageKeys) {
                     if (configuration.contains("multi-line-messages." + messageKey))
                         continue;
+
+                    if (!changed) {
+                        changed = true;
+                        backupMessageFile(file);
+                    }
 
                     CrownCore.log.info("generated missing multi-line-message key '" + messageKey + "' for plugin " + plugin.getName());
 
                     configuration.set("multi-line-messages." + messageKey, defaults.getStringList("multi-line-messages." + messageKey));
                 }
 
-                //loadMultiLineMessages(configuration);
-                FileUtil.saveConfigurationIntoFile(configuration, file);
+                if (changed) {
+                    FileUtil.saveConfigurationIntoFile(configuration, file);
+                }
             } catch (final IOException | InvalidConfigurationException ignored) {}
         });
     }
@@ -342,6 +358,8 @@ public final class Messanger {
             } catch (final IOException | InvalidConfigurationException exception) {
                 throw new RuntimeException(exception);
             }
+
+            backupMessageFile(file);
 
             if (defaults.contains("messages." + key)) {
                 final String value = defaults.getString("messages." + key);
@@ -371,13 +389,14 @@ public final class Messanger {
                 throw new RuntimeException(exception);
             }
 
+            backupMessageFile(file);
+
             if (defaults.contains("messages." + key)) {
                 final List<String> value = defaults.getStringList("messages." + key);
                 configuration.set("messages." + key, value);
 
                 legacyMultiLineMessages.put(key, new ArrayList<>(value));
                 final List<String> tmp = new ArrayList<>();
-
 
                 for (final String line : value)
                     tmp.add(TextUtil.convertLegacyToMiniMessage(line));
@@ -829,7 +848,11 @@ public final class Messanger {
         final Component title = getComponent(titleKey, placeholders, replacements);
         final Component subTitle = getComponent(subTitleKey, placeholders, replacements);
 
+        if(title == Component.empty() && subTitle == Component.empty())
+            return;
+
         final Title obj = Title.title(title, subTitle);
+
         sender.showTitle(obj);
     }
 

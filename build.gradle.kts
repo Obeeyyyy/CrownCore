@@ -41,6 +41,7 @@ publishing {
 repositories {
     mavenCentral()
     mavenLocal()
+    maven("D:/Maven")
 
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://repo.papermc.io/repository/maven-public/")
@@ -72,7 +73,7 @@ dependencies {
     implementation("net.kyori:adventure-text-serializer-legacy:4.26.1")
     implementation("com.j256.ormlite:ormlite-jdbc:6.1")
     implementation("javax.persistence:javax.persistence-api:2.2")
-    implementation("de.rapha149.signgui:signgui:2.5.4")
+    implementation("de.rapha149.signgui:signgui:2.5.5")
 }
 
 java {
