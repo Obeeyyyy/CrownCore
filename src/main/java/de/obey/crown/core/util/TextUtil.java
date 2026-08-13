@@ -596,6 +596,24 @@ public final class TextUtil {
         return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
     }
 
+    public static String capitalize(final String str) {
+        if (str == null || str.isEmpty()) {
+            return "";
+        }
+        final String[] words = str.split("_|\\s+");
+        final StringBuilder builder = new StringBuilder();
+        for (final String word : words) {
+            if (!word.isEmpty()) {
+                if (builder.length() > 0) {
+                    builder.append(" ");
+                }
+                builder.append(Character.toUpperCase(word.charAt(0)))
+                        .append(word.substring(1).toLowerCase());
+            }
+        }
+        return builder.toString();
+    }
+
 
 
 }

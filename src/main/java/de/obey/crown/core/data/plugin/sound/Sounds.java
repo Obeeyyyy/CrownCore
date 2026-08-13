@@ -35,6 +35,8 @@ public final class Sounds {
         final File file = FileUtil.getGeneratedFile(plugin, "sounds.yml", true);
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
+        sounds.clear();
+
         checkForMissingEntries(file, configuration);
 
         if (configuration.contains("sounds")) {
@@ -91,20 +93,17 @@ public final class Sounds {
                     defaults.load(new InputStreamReader(stream));
                 }
 
-                if (!defaults.contains("sounds")) {
+                if (!defaults.contains("sounds"))
                     return;
-                }
 
                 final Set<String> soundKeys = defaults.getConfigurationSection("sounds").getKeys(false);
 
-                if (soundKeys.isEmpty()) {
+                if (soundKeys.isEmpty())
                     return;
-                }
 
                 for (final String soundKey : soundKeys) {
-                    if(configuration.contains("sounds." + soundKey)) {
+                    if(configuration.contains("sounds." + soundKey))
                         continue;
-                    }
 
                     CrownCore.log.info("generated missing sound key '" + soundKey + "' for plugin " + plugin.getName());
 
@@ -121,6 +120,9 @@ public final class Sounds {
         if (!sounds.containsKey(key)) {
             final File file = FileUtil.getGeneratedFile(plugin, "sounds.yml", true);
             final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+
+            if(configuration.contains("sounds."+ key))
+                return;
 
             String value = "minecraft:entity.generic.explode:0.5:3.0";
             configuration.set("sounds." + key, value);
@@ -144,7 +146,13 @@ public final class Sounds {
     public void playSoundToPlayerAtLocation(final Player player, final String key, final Location location) {
         generateMessageEntryIfMissing(key);
 
+        if(!sounds.containsKey(key))
+            return;
+
         final SoundData soundData = sounds.get(key);
+
+        if(soundData.getSound().isEmpty())
+            return;
 
         player.playSound(location, soundData.getSound(), soundData.getVolume(), soundData.getPitch());
     }
