@@ -66,61 +66,82 @@ public class GuiLoader {
         CrownCore.getInstance().getExecutor().execute(() -> {
             CrownCore.log.debug("loading gui for plugin " + plugin.getName() + ": " + file.getName());
 
-            final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+            try {
+                final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
-            final String id = file.getName().split("\\.")[0];
-            final String title = FileUtil.getString(configuration, "title", "Default Title");
-            final int size = FileUtil.getInt(configuration, "size", 27);
+                final String id = file.getName().split("\\.")[0];
+                final String guiKey = plugin.getName() + ":" + id;
+                final String title = FileUtil.getString(configuration, "title", "Default Title");
+                final int size = FileUtil.getInt(configuration, "size", 27);
 
-            GuiValidation.validateSize(file.getName(), size);
+                GuiValidation.validateSize(file.getName(), size);
 
-            final GuiSettings guiSettings = parseSettings(configuration);
+                final GuiSettings guiSettings = parseSettings(configuration, guiKey);
 
-            final Map<String, GuiItem> items = new HashMap<>();
-            final ConfigurationSection section = configuration.getConfigurationSection("items");
+                final Map<String, GuiItem> items = new HashMap<>();
+                final ConfigurationSection section = configuration.getConfigurationSection("items");
 
-            if (section != null) {
-                for (final String key : section.getKeys(false)) {
-                    items.put(key, GuiItemParser.parse(section.getConfigurationSection(key), plugin.getName() + ":" + id, size, guiSettings.defaultFlags()));
-                }
-            }
-
-            final Map<String, List<Integer>> dynamicSlots = new HashMap<>();
-            final ConfigurationSection dynamicSection = configuration.getConfigurationSection("dynamic-slots");
-            if (dynamicSection != null) {
-                for (final String key : dynamicSection.getKeys(false)) {
-                    final List<Integer> list = dynamicSection.getIntegerList(key);
-                    for (final int slot : list) {
-                        GuiValidation.validateSlot(file.getName(), "dynamic-slots." + key, slot, size);
+                if (section != null) {
+                    for (final String key : section.getKeys(false)) {
+                        final ConfigurationSection itemSection = section.getConfigurationSection(key);
+                        if (itemSection == null) continue;
+                        try {
+                            final GuiItem item = GuiItemParser.parse(itemSection, guiKey, size, guiSettings.defaultFlags());
+                            if (item != null) {
+                                items.put(key, item);
+                            }
+                        } catch (final Exception ex) {
+                            CrownCore.log.warn("[CrownGUI] Failed to parse item '" + key + "' in GUI " + guiKey + ": " + ex.getMessage());
+                        }
                     }
-                    dynamicSlots.put(key, list);
                 }
+
+                final Map<String, List<Integer>> dynamicSlots = new HashMap<>();
+                final ConfigurationSection dynamicSection = configuration.getConfigurationSection("dynamic-slots");
+                if (dynamicSection != null) {
+                    for (final String key : dynamicSection.getKeys(false)) {
+                        try {
+                            final List<Integer> list = dynamicSection.getIntegerList(key);
+                            final List<Integer> validSlots = new java.util.ArrayList<>();
+                            for (final int slot : list) {
+                                if (GuiValidation.validateSlot(guiKey, "dynamic-slots." + key, slot, size)) {
+                                    validSlots.add(slot);
+                                }
+                            }
+                            dynamicSlots.put(key, validSlots);
+                        } catch (final Exception ex) {
+                            CrownCore.log.warn("[CrownGUI] Failed to parse dynamic slot '" + key + "' in GUI " + guiKey + ": " + ex.getMessage());
+                        }
+                    }
+                }
+
+                final CrownGui gui = new CrownGui(
+                        plugin.getName(),
+                        id,
+                        title,
+                        size,
+                        guiSettings,
+                        items,
+                        dynamicSlots
+                );
+
+                GuiRegistry.register(gui);
+            } catch (final Exception ex) {
+                CrownCore.log.warn("[CrownGUI] Failed to load GUI from file '" + file.getName() + "' for plugin " + plugin.getName() + ": " + ex.getMessage());
             }
-
-            final CrownGui gui = new CrownGui(
-                    plugin.getName(),
-                    id,
-                    title,
-                    size,
-                    guiSettings,
-                    items,
-                    dynamicSlots
-            );
-
-            GuiRegistry.register(gui);
         });
     }
 
-    private static GuiSettings parseSettings(final YamlConfiguration cfg) {
+    private static GuiSettings parseSettings(final YamlConfiguration cfg, final String guiKey) {
 
-        final SoundData openSoundData = parseSoundData(cfg.getString("open-sound", "none"));
-        final SoundData closeSoundData = parseSoundData(cfg.getString("close-sound", "none"));
+        final SoundData openSoundData = parseSoundData(cfg.getString("open-sound", "none"), guiKey, "open-sound");
+        final SoundData closeSoundData = parseSoundData(cfg.getString("close-sound", "none"), guiKey, "close-sound");
         final int updateInterval = cfg.getInt("update-interval", -1);
         final boolean cache = cfg.getBoolean("cache", false);
         final boolean cachePerPlayer = cfg.getBoolean("cache-per-player", false);
         final List<String> defaultFlags = cfg.getStringList("default-flags");
 
-        final GuiFill fill = parseFill(cfg.getConfigurationSection("fill"));
+        final GuiFill fill = parseFill(cfg.getConfigurationSection("fill"), guiKey);
 
         return new GuiSettings(
                 openSoundData,
@@ -133,7 +154,7 @@ public class GuiLoader {
         );
     }
 
-    private static SoundData parseSoundData(final String value) {
+    private static SoundData parseSoundData(final String value, final String guiKey, final String soundType) {
         if (value == null || value.isEmpty() || value.equalsIgnoreCase("none"))
             return null;
 
@@ -157,7 +178,7 @@ public class GuiLoader {
                 final float volume = Float.parseFloat(data[1 + indexOffset]);
                 soundData.setVolume(volume);
             } catch (final NumberFormatException exception) {
-                CrownCore.log.warn("Invalid sound volume value @ " + value);
+                CrownCore.log.warn("[CrownGUI] Invalid sound volume value '" + data[1 + indexOffset] + "' for " + soundType + " in GUI " + guiKey);
             }
         }
 
@@ -166,24 +187,23 @@ public class GuiLoader {
                 final float pitch = Float.parseFloat(data[2 + indexOffset]);
                 soundData.setPitch(pitch);
             } catch (final NumberFormatException exception) {
-                CrownCore.log.warn("Invalid sound pitch value @ " + value);
+                CrownCore.log.warn("[CrownGUI] Invalid sound pitch value '" + data[2 + indexOffset] + "' for " + soundType + " in GUI " + guiKey);
             }
         }
 
         return soundData;
     }
 
-    private static GuiFill parseFill(final ConfigurationSection section) {
+    private static GuiFill parseFill(final ConfigurationSection section, final String guiKey) {
         if (section == null || !section.getBoolean("enabled", false)) {
             return new GuiFill(false, null);
         }
 
-        final Material material = Material.matchMaterial(
-                section.getString("material", "")
-        );
+        final String materialStr = section.getString("material", "");
+        final Material material = Material.matchMaterial(materialStr);
 
         if (material == null) {
-            CrownCore.log.warn("[CrownGUI] Invalid fill material");
+            CrownCore.log.warn("[CrownGUI] Invalid fill material '" + materialStr + "' in GUI " + guiKey);
             return new GuiFill(false, null);
         }
 

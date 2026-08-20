@@ -35,28 +35,30 @@ public class GuiItemParser {
                             "' in GUI " + guiKey
             );
         }
-        GuiValidation.require(section, "material", itemKey);
+        GuiValidation.require(section, "material", "item '" + itemKey + "' in GUI " + guiKey);
 
         final List<Integer> slots = new ArrayList<>();
         if (!add) {
+            final List<Integer> rawSlots = new ArrayList<>();
             if (section.contains("slots")) {
-                slots.addAll(section.getIntegerList("slots"));
+                rawSlots.addAll(section.getIntegerList("slots"));
             } else {
-                slots.add(section.getInt("slot"));
+                rawSlots.add(section.getInt("slot"));
             }
 
-            for (final int slot : slots) {
-                GuiValidation.validateSlot(guiKey, itemKey, slot, guiSize);
+            for (final int slot : rawSlots) {
+                if (GuiValidation.validateSlot(guiKey, itemKey, slot, guiSize)) {
+                    slots.add(slot);
+                }
             }
         }
 
-        final Material material = Material.matchMaterial(
-                section.getString("material", "")
-        );
+        final String materialName = section.getString("material", "");
+        final Material material = Material.matchMaterial(materialName);
 
         if (material == null) {
             throw new IllegalArgumentException(
-                    "[CrownGUI] Invalid material for item '" + itemKey +
+                    "[CrownGUI] Invalid material '" + materialName + "' for item '" + itemKey +
                             "' in GUI " + guiKey
             );
         }
@@ -82,10 +84,15 @@ public class GuiItemParser {
             builder.skullOwner(section.getString("owner"));
         }
 
-        parseEnchantments(section, builder, itemKey);
-        parseFlags(section, builder, itemKey, defaultFlags);
+        parseEnchantments(section, builder, itemKey, guiKey);
+        parseFlags(section, builder, itemKey, guiKey, defaultFlags);
 
-        final GuiItemClickAction clickAction = parseClick(section.getConfigurationSection("click"));
+        final ConfigurationSection leftClickSection = section.contains("left-click")
+                ? section.getConfigurationSection("left-click")
+                : section.getConfigurationSection("click");
+        final GuiItemClickAction clickAction = parseClick(leftClickSection, itemKey, guiKey);
+        final GuiItemClickAction rightClickAction = parseClick(section.getConfigurationSection("right-click"), itemKey, guiKey);
+
         final String action = section.getString("action");
         final String permission = section.getString("permission");
 
@@ -94,15 +101,16 @@ public class GuiItemParser {
                 add,
                 builder,
                 clickAction,
+                rightClickAction,
                 action,
                 permission
         );
     }
 
-    private static void parseEnchantments(final ConfigurationSection section, final ItemBuilder builder, final String itemKey) {
+    private static void parseEnchantments(final ConfigurationSection section, final ItemBuilder builder, final String itemKey, final String guiKey) {
         if (!section.contains("enchantments")) return;
 
-        ConfigurationSection enchSection =
+        final ConfigurationSection enchSection =
                 section.getConfigurationSection("enchantments");
 
         if (enchSection == null) return;
@@ -114,8 +122,8 @@ public class GuiItemParser {
 
             if (enchant == null) {
                 GuiValidation.warn(
-                        "unknown enchantment '" + key +
-                                "' on item '" + itemKey + "'"
+                        "[CrownGUI] Unknown enchantment '" + key +
+                                "' on item '" + itemKey + "' in GUI " + guiKey
                 );
                 return;
             }
@@ -124,7 +132,7 @@ public class GuiItemParser {
         });
     }
 
-    private static void parseFlags(final ConfigurationSection section, final ItemBuilder builder, final String itemKey, final List<String> defaultFlags) {
+    private static void parseFlags(final ConfigurationSection section, final ItemBuilder builder, final String itemKey, final String guiKey, final List<String> defaultFlags) {
         final List<String> flags = section.contains("flags") ? section.getStringList("flags") : defaultFlags;
         if (flags == null) return;
 
@@ -134,24 +142,24 @@ public class GuiItemParser {
                 builder.flag(flag);
             } catch (final IllegalArgumentException ex) {
                 GuiValidation.warn(
-                        "invalid item flag '" + flagName +
-                                "' on item '" + itemKey + "'"
+                        "[CrownGUI] Invalid item flag '" + flagName +
+                                "' on item '" + itemKey + "' in GUI " + guiKey
                 );
             }
         }
     }
 
-    private static GuiItemClickAction parseClick(final ConfigurationSection section) {
+    private static GuiItemClickAction parseClick(final ConfigurationSection section, final String itemKey, final String guiKey) {
         if (section == null) {
-            return new GuiItemClickAction(GuiItemClickAction.Type.NONE, null, false);
+            return null;
         }
 
+        final String typeStr = section.getString("type", "NONE");
         GuiItemClickAction.Type type;
         try {
-            type = GuiItemClickAction.Type.valueOf(
-                    section.getString("type", "NONE").toUpperCase()
-            );
-        } catch (IllegalArgumentException ex) {
+            type = GuiItemClickAction.Type.valueOf(typeStr.toUpperCase());
+        } catch (final IllegalArgumentException ex) {
+            GuiValidation.warn("[CrownGUI] Invalid click type '" + typeStr + "' on item '" + itemKey + "' in GUI " + guiKey);
             type = GuiItemClickAction.Type.NONE;
         }
 

@@ -15,21 +15,22 @@ public class GuiValidation {
     public static void validateSize(final String fileName, final int size) {
         if (size <= 0 || size % 9 != 0 || size > 54) {
             throw new IllegalArgumentException(
-                    "[CrownGUI] Invalid inventory size in " + fileName +
+                    "[CrownGUI] Invalid inventory size " + size + " in " + fileName +
                             " (must be a multiple of 9 between 9 and 54)"
             );
         }
     }
 
-    public static void validateSlot(final String guiKey, final String itemKey, final int slot, final int size) {
+    public static boolean validateSlot(final String guiKey, final String itemKey, final int slot, final int size) {
         if (slot < 0 || slot >= size) {
-            throw new IllegalArgumentException(
-                    "[CrownGUI] Invalid slot " + slot +
-                            " for item '" + itemKey +
-                            "' in GUI " + guiKey +
-                            " (size=" + size + ")"
+            warn("[CrownGUI] Invalid slot " + slot +
+                    " for item '" + itemKey +
+                    "' in GUI " + guiKey +
+                    " (size=" + size + ")"
             );
+            return false;
         }
+        return true;
     }
 
     public static void require(

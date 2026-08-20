@@ -160,14 +160,16 @@ Items in the `items` section are defined with their config name and support the 
 | `permission`        | String           | Bungee/Spigot permission required to view the item.                                                                      |
 | `enchantments`      | Section          | List of enchantments and their levels.                                                                                   |
 | `flags`             | List of Strings  | Item flags (e.g. `HIDE_ENCHANTS`, `HIDE_ATTRIBUTES`). Overrides `default-flags`.                                         |
-| `click`             | Section          | Click action configuration.                                                                                              |
-| `action`            | String           | Key of a registered custom action handler.                                                                               |
+| `click`             | Section          | Click action configuration (triggers on left-click).                                                                     |
+| `left-click`        | Section          | Explicit left-click action configuration (alias to `click`).                                                             |
+| `right-click`       | Section          | Right-click action configuration.                                                                                        |
+| `action`            | String           | Key of a registered custom action handler (triggers on left-click).                                                      |
 
 ***
 
 ## Custom Action System
 
-In addition to built-in click actions, you can register custom action handlers in Java and link them to GUI items using the `action` configuration key.
+In addition to built-in click actions, you can register custom action handlers in Java and link them to GUI items using the `action` configuration key. Custom actions are triggered when the player **left-clicks** the item.
 
 ### Java API
 
@@ -199,13 +201,35 @@ items:
 
 ## Click Actions
 
-Each item can define an action under the `click` key to run logic when clicked:
+Each item can define actions for left and right clicks:
+
+### Standard Click (Left-Click)
 
 ```yaml
 click:
   type: COMMAND
   value: "/spawn"
   close: true
+```
+
+### Explicit Left-Click and Right-Click
+
+```yaml
+items:
+  example_kit:
+    slot: 12
+    material: DIAMOND_SWORD
+    name: "<green>Warrior Kit"
+    # Triggered on left click:
+    left-click:
+      type: COMMAND
+      value: "/kit claim warrior"
+      close: true
+    # Triggered on right click:
+    right-click:
+      type: COMMAND
+      value: "/kit preview warrior"
+      close: false
 ```
 
 ### Click Action Options

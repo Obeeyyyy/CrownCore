@@ -16,6 +16,7 @@ import de.obey.crown.core.noobf.CrownCore;
 import java.util.Map;
 import de.obey.crown.core.util.ItemBuilder;
 import de.obey.crown.core.util.PlaceholderUtil;
+import de.obey.crown.core.util.Scheduler;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -86,6 +87,11 @@ public class GuiRenderer {
     }
 
     public static void open(final Player player, final OfflinePlayer target, final CrownGui gui, final String[] placeholders, final String... replacements) {
+        if (Scheduler.isFolia && !Bukkit.isOwnedByCurrentRegion(player)) {
+            Scheduler.runEntityTask(CrownCore.getInstance(), player, () -> open(player, target, gui, placeholders, replacements));
+            return;
+        }
+
         Inventory inventory = null;
         if (gui.guiSettings().cache()) {
             inventory = GuiRegistry.getCachedInventory(gui.getKey());
@@ -124,6 +130,7 @@ public class GuiRenderer {
                 builder.resolvePlaceholders(placeholders, replacements);
                 final ItemStack itemStack = builder.build(target);
                 for (final int slot : item.slots()) {
+                    if (slot < 0 || slot >= finalInventory.getSize()) continue;
                     finalInventory.setItem(slot, itemStack);
                     holder.getItemLayout().put(slot, item);
                 }
@@ -193,6 +200,7 @@ public class GuiRenderer {
             builder.resolvePlaceholders(placeholders, replacements);
             final ItemStack itemStack = builder.build(target);
             for (final int slot : item.slots()) {
+                if (slot < 0 || slot >= inventory.getSize()) continue;
                 inventory.setItem(slot, itemStack);
                 holder.getItemLayout().put(slot, item);
             }

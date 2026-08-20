@@ -24,20 +24,18 @@ public final class PlayerJoin implements Listener {
 
     @EventHandler
     public void on(final PlayerJoinEvent event) {
-        event.getPlayer().closeInventory();
+        final Player player = event.getPlayer();
 
-        playerDataService.loadAsync(event.getPlayer().getUniqueId()).thenAccept((data) -> data.join(event.getPlayer()));
+        playerDataService.loadAsync(player.getUniqueId()).thenAccept((data) -> data.join(player));
 
         if (!pluginConfig.isUpdateReminder())
             return;
 
-        if (!event.getPlayer().hasPermission("core.version.checker"))
+        if (!player.hasPermission("core.version.checker"))
             return;
 
         if (versionChecker.getOutdatedPlugins().isEmpty())
             return;
-
-        final Player player = event.getPlayer();
 
         Scheduler.runEntityTaskLater(CrownCore.getInstance(), player, () -> {
             for (final Plugin plugin : versionChecker.getOutdatedPlugins()) {

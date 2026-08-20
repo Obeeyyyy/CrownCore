@@ -14,7 +14,9 @@ import de.obey.crown.core.gui.model.GuiHolder;
 import de.obey.crown.core.gui.model.GuiItem;
 import de.obey.crown.core.gui.model.GuiItemClickAction;
 import de.obey.crown.core.gui.render.GuiRenderer;
+import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.util.PlaceholderUtil;
+import de.obey.crown.core.util.Scheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -51,20 +53,37 @@ public class GuiClickListener implements Listener {
         if (!clickedItem.canView(player))
             return;
 
-        final String customAction = clickedItem.action();
-        if (customAction != null) {
-            final GuiAction guiAction = GuiActionRegistry.get(customAction);
-            if (guiAction != null) {
-                guiAction.execute(player, clickedItem, event);
+        if (event.isLeftClick()) {
+            final String customAction = clickedItem.action();
+            if (customAction != null) {
+                final GuiAction guiAction = GuiActionRegistry.get(customAction);
+                if (guiAction != null) {
+                    guiAction.execute(player, clickedItem, event);
+                }
             }
-        }
 
-        final GuiItemClickAction action = clickedItem.guiItemClickAction();
-        if (action == null) {
+            handleClickAction(player, clickedItem.guiItemClickAction());
+        } else if (event.isRightClick()) {
+            handleClickAction(player, clickedItem.rightClickAction());
+        }
+    }
+
+    private void handleClickAction(final Player player, final GuiItemClickAction action) {
+        if (action == null || action.type() == GuiItemClickAction.Type.NONE) {
             return;
         }
-        if (action.close() || action.type() == GuiItemClickAction.Type.CLOSE)
+
+        if (action.type() != GuiItemClickAction.Type.OPEN_GUI && (action.close() || action.type() == GuiItemClickAction.Type.CLOSE)) {
             player.closeInventory();
+        }
+
+        if (action.type() == GuiItemClickAction.Type.CLOSE) {
+            return;
+        }
+
+        if (!player.isOnline() || !player.isValid()) {
+            return;
+        }
 
         switch (action.type()) {
             case OPEN_GUI -> {
@@ -78,7 +97,8 @@ public class GuiClickListener implements Listener {
                     if (command.startsWith("/")) {
                         command = command.substring(1);
                     }
-                    player.performCommand(command);
+                    final String finalCommand = command;
+                    Scheduler.runEntityTask(CrownCore.getInstance(), player, () -> player.performCommand(finalCommand));
                 }
             }
             case CONSOLE_COMMAND -> {
@@ -87,7 +107,8 @@ public class GuiClickListener implements Listener {
                     if (command.startsWith("/")) {
                         command = command.substring(1);
                     }
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                    final String finalCommand = command;
+                    Scheduler.runGlobalTask(CrownCore.getInstance(), () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand));
                 }
             }
         }

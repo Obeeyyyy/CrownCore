@@ -138,6 +138,8 @@ public class CrownConfig implements CrowPlugin {
 
         if (DataKeyRegistry.pluginHasKeys(plugin))
             crownCore.getPluginStorageManager().registerPlayerDataPlugin(this);
+
+        GuiLoader.loadAll(plugin);
     }
 
     private boolean compareDefaults(final YamlConfiguration defaults, final YamlConfiguration configuration) {
@@ -216,6 +218,7 @@ public class CrownConfig implements CrowPlugin {
                     key.contains("chances") ||
                     key.contains("map") ||
                     key.contains("events") ||
+                    key.contains("kits") ||
                     key.contains("custom-leaderboards") ||
                     key.contains("ranks") ||
                     key.contains("items") ||

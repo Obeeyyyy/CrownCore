@@ -13,18 +13,34 @@ import org.bukkit.entity.Player;
 import java.util.Collections;
 import java.util.List;
 
-public record GuiItem(List<Integer> slots, boolean add, ItemBuilder itemBuilder, GuiItemClickAction guiItemClickAction, String action, String permission) {
+public record GuiItem(
+        List<Integer> slots,
+        boolean add,
+        ItemBuilder itemBuilder,
+        GuiItemClickAction guiItemClickAction,
+        GuiItemClickAction rightClickAction,
+        String action,
+        String permission
+) {
+
+    public GuiItem(List<Integer> slots, boolean add, ItemBuilder itemBuilder, GuiItemClickAction guiItemClickAction, String action, String permission) {
+        this(slots, add, itemBuilder, guiItemClickAction, null, action, permission);
+    }
 
     public GuiItem(List<Integer> slots, ItemBuilder itemBuilder, GuiItemClickAction guiItemClickAction, String action, String permission) {
-        this(slots, false, itemBuilder, guiItemClickAction, action, permission);
+        this(slots, false, itemBuilder, guiItemClickAction, null, action, permission);
     }
 
     public GuiItem(List<Integer> slots, ItemBuilder itemBuilder, GuiItemClickAction guiItemClickAction, String permission) {
-        this(slots, false, itemBuilder, guiItemClickAction, null, permission);
+        this(slots, false, itemBuilder, guiItemClickAction, null, null, permission);
     }
 
     public GuiItem(int slot, ItemBuilder itemBuilder, GuiItemClickAction guiItemClickAction, String permission) {
-        this(Collections.singletonList(slot), false, itemBuilder, guiItemClickAction, null, permission);
+        this(Collections.singletonList(slot), false, itemBuilder, guiItemClickAction, null, null, permission);
+    }
+
+    public GuiItemClickAction leftClickAction() {
+        return guiItemClickAction;
     }
 
     public int slot() {

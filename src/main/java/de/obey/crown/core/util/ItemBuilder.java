@@ -75,9 +75,10 @@ public final class ItemBuilder {
         final ItemMeta meta = item.getItemMeta();
 
         this.material = item.getType();
-        this.amount   = item.getAmount();
+        this.amount = item.getAmount();
 
-        if (meta == null) return;
+        if (meta == null)
+            return;
 
         /* display */
         if (meta.hasDisplayName())
@@ -190,7 +191,8 @@ public final class ItemBuilder {
     }
 
     public ItemBuilder addLore(final List<String> extra) {
-        if (this.lore == null) this.lore = new ArrayList<>();
+        if (this.lore == null)
+            this.lore = new ArrayList<>();
         this.lore.addAll(extra);
         return this;
     }
@@ -250,14 +252,14 @@ public final class ItemBuilder {
 
     public ItemBuilder skullTexture(final String texture, final UUID uuid) {
         this.skullTexture = texture;
-        this.skullUUID    = uuid;
+        this.skullUUID = uuid;
         return this;
     }
 
     @Deprecated
     public ItemBuilder setTextur(final String texture, final UUID uuid) {
         this.skullTexture = texture;
-        this.skullUUID    = uuid;
+        this.skullUUID = uuid;
         return this;
     }
 
@@ -283,8 +285,9 @@ public final class ItemBuilder {
 
     private ItemStack buildInternal(final OfflinePlayer player) {
         final ItemStack item = new ItemStack(material, amount);
-        final ItemMeta  meta = item.getItemMeta();
-        if (meta == null) return item;
+        final ItemMeta meta = item.getItemMeta();
+        if (meta == null)
+            return item;
 
         /* display */
         if (name != null) {
@@ -326,7 +329,7 @@ public final class ItemBuilder {
         if (attributeModifiers != null) {
             meta.setAttributeModifiers(attributeModifiers);
         } else if (meta.hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
-            for (final Attribute attribute : new Attribute[]{
+            for (final Attribute attribute : new Attribute[] {
                     Attribute.GENERIC_ATTACK_DAMAGE,
                     Attribute.GENERIC_ATTACK_SPEED,
                     Attribute.GENERIC_ARMOR,
@@ -340,9 +343,7 @@ public final class ItemBuilder {
                                 new NamespacedKey("crownplugins", "zero_" + attribute.getKey().getKey()),
                                 -1.0,
                                 AttributeModifier.Operation.MULTIPLY_SCALAR_1,
-                                EquipmentSlotGroup.ANY
-                        )
-                );
+                                EquipmentSlotGroup.ANY));
             }
         }
 
@@ -384,8 +385,9 @@ public final class ItemBuilder {
 
     public ItemMeta buildMeta(final OfflinePlayer player) {
         final ItemStack item = new ItemStack(material, amount);
-        final ItemMeta  meta = item.getItemMeta();
-        if (meta == null) return null;
+        final ItemMeta meta = item.getItemMeta();
+        if (meta == null)
+            return null;
 
         /* display */
         if (name != null) {
@@ -427,7 +429,7 @@ public final class ItemBuilder {
         if (attributeModifiers != null) {
             meta.setAttributeModifiers(attributeModifiers);
         } else if (meta.hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
-            for (final Attribute attribute : new Attribute[]{
+            for (final Attribute attribute : new Attribute[] {
                     Attribute.GENERIC_ATTACK_DAMAGE,
                     Attribute.GENERIC_ATTACK_SPEED,
                     Attribute.GENERIC_ARMOR,
@@ -441,9 +443,7 @@ public final class ItemBuilder {
                                 new NamespacedKey("crownplugins", "zero_" + attribute.getKey().getKey()),
                                 -1.0,
                                 AttributeModifier.Operation.MULTIPLY_SCALAR_1,
-                                EquipmentSlotGroup.ANY
-                        )
-                );
+                                EquipmentSlotGroup.ANY));
             }
         }
 
@@ -465,7 +465,7 @@ public final class ItemBuilder {
         if (skullOwner != null && meta instanceof SkullMeta skull) {
             final String resolved = player == null ? skullOwner : PlaceholderUtil.resolve(player, skullOwner);
             skull.setOwner(resolved);
-            //skull.setOwningPlayer(Bukkit.getOfflinePlayer(resolved));
+            // skull.setOwningPlayer(Bukkit.getOfflinePlayer(resolved));
         }
 
         /* skull texture */
@@ -480,7 +480,7 @@ public final class ItemBuilder {
     /* skull util */
 
     private void applySkullTexture(final SkullMeta skull) {
-        final PlayerProfile  profile  = Bukkit.createPlayerProfile(
+        final PlayerProfile profile = Bukkit.createPlayerProfile(
                 skullUUID != null ? skullUUID : UUID.randomUUID(), "crownplugins");
         final PlayerTextures textures = profile.getTextures();
 
@@ -488,8 +488,8 @@ public final class ItemBuilder {
                 + skullTexture;
 
         try {
-            final byte[]     decoded = Base64.getDecoder().decode(full);
-            final JsonObject json    = new Gson().fromJson(
+            final byte[] decoded = Base64.getDecoder().decode(full);
+            final JsonObject json = new Gson().fromJson(
                     new String(decoded, StandardCharsets.UTF_8), JsonObject.class);
 
             final String url = json
@@ -501,7 +501,8 @@ public final class ItemBuilder {
             profile.setTextures(textures);
             skull.setOwnerProfile(profile);
 
-        } catch (final Exception ignored) {}
+        } catch (final Exception ignored) {
+        }
     }
 
     /* persistent data */
@@ -552,21 +553,22 @@ public final class ItemBuilder {
     }
 
     private void applyPersistentData(final ItemMeta meta) {
-        if (persistentData.isEmpty()) return;
+        if (persistentData.isEmpty())
+            return;
         final PersistentDataContainer pdc = meta.getPersistentDataContainer();
 
         for (final Map.Entry<NamespacedKey, Object> entry : persistentData.entrySet()) {
             final NamespacedKey key = entry.getKey();
             switch (entry.getValue()) {
-                case String  v -> pdc.set(key, PersistentDataType.STRING,        v);
-                case Boolean v -> pdc.set(key, PersistentDataType.BOOLEAN,       v);
-                case Integer v -> pdc.set(key, PersistentDataType.INTEGER,       v);
-                case Long    v -> pdc.set(key, PersistentDataType.LONG,          v);
-                case Double  v -> pdc.set(key, PersistentDataType.DOUBLE,        v);
-                case Byte    v -> pdc.set(key, PersistentDataType.BYTE,          v);
-                case int[]   v -> pdc.set(key, PersistentDataType.INTEGER_ARRAY, v);
-                case long[]  v -> pdc.set(key, PersistentDataType.LONG_ARRAY,    v);
-                case byte[]  v -> pdc.set(key, PersistentDataType.BYTE_ARRAY,    v);
+                case String v -> pdc.set(key, PersistentDataType.STRING, v);
+                case Boolean v -> pdc.set(key, PersistentDataType.BOOLEAN, v);
+                case Integer v -> pdc.set(key, PersistentDataType.INTEGER, v);
+                case Long v -> pdc.set(key, PersistentDataType.LONG, v);
+                case Double v -> pdc.set(key, PersistentDataType.DOUBLE, v);
+                case Byte v -> pdc.set(key, PersistentDataType.BYTE, v);
+                case int[] v -> pdc.set(key, PersistentDataType.INTEGER_ARRAY, v);
+                case long[] v -> pdc.set(key, PersistentDataType.LONG_ARRAY, v);
+                case byte[] v -> pdc.set(key, PersistentDataType.BYTE_ARRAY, v);
                 default -> throw new IllegalArgumentException(
                         "Unsupported PDC type: " + entry.getValue().getClass().getName());
             }
@@ -574,15 +576,24 @@ public final class ItemBuilder {
     }
 
     private void readPdcKey(final PersistentDataContainer pdc, final NamespacedKey key) {
-        if      (pdc.has(key, PersistentDataType.STRING))        persistentData.put(key, pdc.get(key, PersistentDataType.STRING));
-        else if (pdc.has(key, PersistentDataType.BOOLEAN))       persistentData.put(key, pdc.get(key, PersistentDataType.BOOLEAN));
-        else if (pdc.has(key, PersistentDataType.INTEGER))       persistentData.put(key, pdc.get(key, PersistentDataType.INTEGER));
-        else if (pdc.has(key, PersistentDataType.LONG))          persistentData.put(key, pdc.get(key, PersistentDataType.LONG));
-        else if (pdc.has(key, PersistentDataType.DOUBLE))        persistentData.put(key, pdc.get(key, PersistentDataType.DOUBLE));
-        else if (pdc.has(key, PersistentDataType.BYTE))          persistentData.put(key, pdc.get(key, PersistentDataType.BYTE));
-        else if (pdc.has(key, PersistentDataType.INTEGER_ARRAY)) persistentData.put(key, pdc.get(key, PersistentDataType.INTEGER_ARRAY));
-        else if (pdc.has(key, PersistentDataType.LONG_ARRAY))    persistentData.put(key, pdc.get(key, PersistentDataType.LONG_ARRAY));
-        else if (pdc.has(key, PersistentDataType.BYTE_ARRAY))    persistentData.put(key, pdc.get(key, PersistentDataType.BYTE_ARRAY));
+        if (pdc.has(key, PersistentDataType.STRING))
+            persistentData.put(key, pdc.get(key, PersistentDataType.STRING));
+        else if (pdc.has(key, PersistentDataType.BOOLEAN))
+            persistentData.put(key, pdc.get(key, PersistentDataType.BOOLEAN));
+        else if (pdc.has(key, PersistentDataType.INTEGER))
+            persistentData.put(key, pdc.get(key, PersistentDataType.INTEGER));
+        else if (pdc.has(key, PersistentDataType.LONG))
+            persistentData.put(key, pdc.get(key, PersistentDataType.LONG));
+        else if (pdc.has(key, PersistentDataType.DOUBLE))
+            persistentData.put(key, pdc.get(key, PersistentDataType.DOUBLE));
+        else if (pdc.has(key, PersistentDataType.BYTE))
+            persistentData.put(key, pdc.get(key, PersistentDataType.BYTE));
+        else if (pdc.has(key, PersistentDataType.INTEGER_ARRAY))
+            persistentData.put(key, pdc.get(key, PersistentDataType.INTEGER_ARRAY));
+        else if (pdc.has(key, PersistentDataType.LONG_ARRAY))
+            persistentData.put(key, pdc.get(key, PersistentDataType.LONG_ARRAY));
+        else if (pdc.has(key, PersistentDataType.BYTE_ARRAY))
+            persistentData.put(key, pdc.get(key, PersistentDataType.BYTE_ARRAY));
     }
 
     public ItemBuilder clone() {
