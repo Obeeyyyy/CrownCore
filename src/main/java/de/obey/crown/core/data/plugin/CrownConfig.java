@@ -220,6 +220,7 @@ public class CrownConfig implements CrowPlugin {
                     key.contains("events") ||
                     key.contains("kits") ||
                     key.contains("custom-leaderboards") ||
+                    key.contains("custom-currencies") ||
                     key.contains("ranks") ||
                     key.contains("items") ||
                     key.contains("permission-taxes") ||
