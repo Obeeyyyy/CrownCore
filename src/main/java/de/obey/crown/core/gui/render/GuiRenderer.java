@@ -115,8 +115,6 @@ public class GuiRenderer {
             ((GuiHolder) inventory.getHolder()).setInventory(inventory);
             ((GuiHolder) inventory.getHolder()).setRenderState(target, placeholders, replacements);
 
-            applyFill(target, inventory, gui, placeholders, replacements);
-
             final Inventory finalInventory = inventory;
             final GuiHolder holder = (GuiHolder) inventory.getHolder();
             holder.getItemLayout().clear();
@@ -136,7 +134,7 @@ public class GuiRenderer {
                 }
             });
 
-            // fdd items
+            // add items
             gui.items().values().forEach(item -> {
                 if (!item.add()) return;
                 if (!item.canView(player)) return;
@@ -150,6 +148,8 @@ public class GuiRenderer {
                     holder.getItemLayout().put(emptySlot, item);
                 }
             });
+
+            applyFill(target, inventory, gui, placeholders, replacements);
 
             if (gui.guiSettings().cache()) {
                 GuiRegistry.cacheInventory(gui.getKey(), inventory);
@@ -186,8 +186,6 @@ public class GuiRenderer {
         ((GuiHolder) inventory.getHolder()).setInventory(inventory);
         ((GuiHolder) inventory.getHolder()).setRenderState(target, placeholders, replacements);
 
-        applyFill(target, inventory, gui, placeholders, replacements);
-
         final GuiHolder holder = (GuiHolder) inventory.getHolder();
         holder.getItemLayout().clear();
 
@@ -220,6 +218,8 @@ public class GuiRenderer {
                 holder.getItemLayout().put(emptySlot, item);
             }
         });
+
+        applyFill(target, inventory, gui, placeholders, replacements);
 
         if (gui.guiSettings().cache()) {
             GuiRegistry.cacheInventory(gui.getKey(), inventory);
