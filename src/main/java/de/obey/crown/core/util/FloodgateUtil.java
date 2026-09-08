@@ -9,6 +9,7 @@ package de.obey.crown.core.util;
 
 import com.google.common.collect.Maps;
 import lombok.Getter;
+import lombok.experimental.UtilityClass;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.geysermc.floodgate.api.FloodgateApi;
@@ -19,29 +20,50 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+@UtilityClass
 public class FloodgateUtil {
 
-    private static final Map<String, UUID> CACHE = Maps.newConcurrentMap();
-    public static FloodgateApi floodgateApi;
+    private final Map<String, UUID> CACHE = Maps.newConcurrentMap();
+    public FloodgateApi floodgateApi;
 
     @Getter
-    private static boolean floodgateEnabled = false;
+    private boolean floodgateEnabled = false;
 
-    public static void initialize() {
+    public void initialize() {
         floodgateEnabled = Bukkit.getPluginManager().isPluginEnabled("floodgate");
 
         if(floodgateEnabled)
             floodgateApi = FloodgateApi.getInstance();
     }
 
-    public static String getBedrockPrefix() {
+    public String getBedrockPrefix() {
         if(!floodgateEnabled)
             return ".";
 
         return floodgateApi.getPlayerPrefix();
     }
 
-    public static CompletableFuture<Boolean> isBedrockPlayer(final String username) {
+    public boolean isBedrockPlayer(final Player player) {
+        if (player == null) return false;
+
+        if (floodgateEnabled && floodgateApi != null)
+            return floodgateApi.isFloodgatePlayer(player.getUniqueId());
+
+        final String prefix = getBedrockPrefix();
+        return prefix != null && !prefix.isEmpty() && player.getName().startsWith(prefix);
+    }
+
+    public boolean isBedrockPlayer(final UUID uuid) {
+        if (uuid == null) return false;
+
+        if (floodgateEnabled && floodgateApi != null)
+            return floodgateApi.isFloodgatePlayer(uuid);
+
+        final Player player = Bukkit.getPlayer(uuid);
+        return player != null && isBedrockPlayer(player);
+    }
+
+    public CompletableFuture<Boolean> isBedrockPlayer(final String username) {
         if(!username.startsWith(getBedrockPrefix()))
             return CompletableFuture.completedFuture(false);
 
@@ -51,7 +73,7 @@ public class FloodgateUtil {
         return floodgateApi.getUuidFor(username).thenApply(Objects::nonNull);
     }
 
-    public static CompletableFuture<UUID> getUuidByName(final String username) {
+    public CompletableFuture<UUID> getUuidByName(final String username) {
         final String name = username.trim();
 
         if (CACHE.containsKey(name.toLowerCase()))
@@ -72,7 +94,7 @@ public class FloodgateUtil {
         return floodgateApi.getUuidFor(name);
     }
 
-    private static UUID resolveFromOnlinePlayer(final Player player) {
+    private UUID resolveFromOnlinePlayer(final Player player) {
         if (!floodgateEnabled) return player.getUniqueId();
 
         try {

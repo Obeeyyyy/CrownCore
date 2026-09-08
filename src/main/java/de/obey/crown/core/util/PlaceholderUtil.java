@@ -26,12 +26,21 @@ public class PlaceholderUtil {
     public static boolean papiEnabled = false;
     public static Placeholders placeholders;
 
+    public static boolean isPapiEnabled() {
+        if (!papiEnabled) {
+            try {
+                papiEnabled = Bukkit.getPluginManager() != null && Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
+            } catch (final Throwable ignored) {}
+        }
+        return papiEnabled;
+    }
+
     public static void initialize() {
-        papiEnabled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
+        papiEnabled = Bukkit.getPluginManager() != null && Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
 
         placeholders = new Placeholders(CrownCore.getInstance().getPluginConfig());
 
-        if(papiEnabled)
+        if (papiEnabled)
             placeholders.register();
 
         register("player", OfflinePlayer::getName);
@@ -57,7 +66,7 @@ public class PlaceholderUtil {
             }
         }
 
-        if (papiEnabled) {
+        if (isPapiEnabled()) {
             try {
                 result = PlaceholderAPI.setPlaceholders(player, result);
             } catch (final Throwable ignored) {}
@@ -69,14 +78,39 @@ public class PlaceholderUtil {
     public static List<String> resolve(final OfflinePlayer player, final List<String> input) {
         if (input == null || input.isEmpty()) return input;
 
-        final List<String> resolved = new ArrayList<>(input.size());
+        List<String> result = new ArrayList<>(input.size());
         for (final String line : input) {
-            resolved.add(resolve(player, line));
+            if (line == null) continue;
+            String processed = line;
+            for (Map.Entry<String, Function<OfflinePlayer, String>> entry : PLACEHOLDERS.entrySet()) {
+                String token = "%" + entry.getKey() + "%";
+                if (processed.contains(token)) {
+                    processed = processed.replace(token, safe(entry.getValue(), player));
+                }
+            }
+            result.add(processed);
         }
 
-        return resolved;
-    }
+        if (isPapiEnabled()) {
+            try {
+                result = PlaceholderAPI.setPlaceholders(player, result);
+            } catch (final Throwable ignored) {}
+        }
 
+        final List<String> flattened = new ArrayList<>(result.size());
+        for (final String line : result) {
+            if (line == null) continue;
+            if (line.contains("\n") || line.contains("\r")) {
+                for (final String sub : line.split("\r?\n")) {
+                    flattened.add(sub);
+                }
+            } else {
+                flattened.add(line);
+            }
+        }
+
+        return flattened;
+    }
 
     private static String safe(final Function<OfflinePlayer, String> resolver, final OfflinePlayer player) {
         try {

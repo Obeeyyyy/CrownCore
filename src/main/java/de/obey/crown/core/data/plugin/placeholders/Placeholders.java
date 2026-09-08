@@ -27,7 +27,7 @@ public final class Placeholders extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getIdentifier() {
-        return "cc";
+        return "crowncore";
     }
 
     @Override
@@ -52,6 +52,13 @@ public final class Placeholders extends PlaceholderExpansion {
     }
 
     @Override
+    public boolean register() {
+        final boolean registered = super.register();
+        new CcPlaceholders(this).register();
+        return registered;
+    }
+
+    @Override
     public @Nullable String onRequest(OfflinePlayer player, @NotNull String params) {
         final String[] args = params.split("_");
 
@@ -65,20 +72,20 @@ public final class Placeholders extends PlaceholderExpansion {
             if (args[0].equalsIgnoreCase("white"))
                 return TextUtil.translateCorePlaceholder("%white%");
 
-            if(args[0].equalsIgnoreCase("playtime")) {
+            if (args[0].equalsIgnoreCase("playtime")) {
                 try {
                     final long seconds = Long.parseLong(PlaceholderAPI.setPlaceholders(player, "%statistic_seconds_played%"));
-                    return TextUtil.formatTimeStringWithFormat(seconds*1000, pluginConfig.getPlaytimeTimeFormat());
+                    return TextUtil.formatTimeStringWithFormat(seconds * 1000, pluginConfig.getPlaytimeTimeFormat());
                 } catch (final NumberFormatException exception) {
                     return "0";
                 }
             }
         }
 
-        if(placeholders.containsKey(params))
+        if (placeholders.containsKey(params))
             return PlaceholderAPI.setPlaceholders(player, placeholders.get(params));
 
-        if(conditionalPlaceholders.containsKey(params))
+        if (conditionalPlaceholders.containsKey(params))
             return conditionalPlaceholders.get(params).evaluate(player);
 
         return "&cinvalid placeholder";
@@ -86,14 +93,45 @@ public final class Placeholders extends PlaceholderExpansion {
 
     @Override
     public @Nullable String onPlaceholderRequest(final Player player, @NotNull final String params) {
+        return onRequest(player, params);
+    }
 
-        if(placeholders.containsKey(params))
-            return PlaceholderAPI.setPlaceholders(player, placeholders.get(params));
+    public static final class CcPlaceholders extends PlaceholderExpansion {
+        private final Placeholders parent;
 
-        if(conditionalPlaceholders.containsKey(params))
-            return conditionalPlaceholders.get(params).evaluate(player);
+        public CcPlaceholders(final Placeholders parent) {
+            this.parent = parent;
+        }
 
-        return "&cinvalid placeholder";
+        @Override
+        public @NotNull String getIdentifier() {
+            return "cc";
+        }
+
+        @Override
+        public @NotNull String getAuthor() {
+            return parent.getAuthor();
+        }
+
+        @Override
+        public @NotNull String getVersion() {
+            return parent.getVersion();
+        }
+
+        @Override
+        public boolean persist() {
+            return true;
+        }
+
+        @Override
+        public @Nullable String onRequest(final OfflinePlayer player, @NotNull final String params) {
+            return parent.onRequest(player, params);
+        }
+
+        @Override
+        public @Nullable String onPlaceholderRequest(final Player player, @NotNull final String params) {
+            return parent.onRequest(player, params);
+        }
     }
 
     private final Map<String, String> placeholders = Maps.newConcurrentMap();

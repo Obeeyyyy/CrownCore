@@ -13,14 +13,16 @@ import de.obey.crown.core.data.plugin.storage.PluginStorageManager;
 import de.obey.crown.core.data.v1.api.ICrownPlayerSessionService;
 import de.obey.crown.core.noobf.CrownCore;
 import lombok.Getter;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 public abstract class CrownPlayerSessionService<S extends CrownPlayerSession<S>, ID extends UUID > implements ICrownPlayerSessionService<S, ID> {
@@ -97,8 +99,20 @@ public abstract class CrownPlayerSessionService<S extends CrownPlayerSession<S>,
 
     @Override
     public void saveAllSync() {
+        if (sessions.isEmpty()) {
+            return;
+        }
+
+        final List<CompletableFuture<?>> futures = new ArrayList<>();
         for (final S session : sessions.values()) {
-            session.save();
+            futures.add(CompletableFuture.runAsync(session::save, executor));
+        }
+
+        try {
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                    .get(10, TimeUnit.SECONDS);
+        } catch (final Exception e) {
+            CrownCore.log.warn("Timed out or error while saving sessions for plugin " + plugin.getName() + ": " + e.getMessage());
         }
     }
 }

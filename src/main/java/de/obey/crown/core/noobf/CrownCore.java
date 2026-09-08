@@ -30,6 +30,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 @Setter
@@ -119,9 +120,24 @@ public final class CrownCore extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-        pluginStorageManager.shutdown();
-        sessionServiceHandler.saveAllSync();
-        executor.shutdown();
+        if (sessionServiceHandler != null) {
+            sessionServiceHandler.shutdown();
+        }
+
+        if (pluginStorageManager != null) {
+            pluginStorageManager.shutdown();
+        }
+
+        if (executor != null) {
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(3, TimeUnit.SECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (final InterruptedException e) {
+                executor.shutdownNow();
+            }
+        }
     }
 
     /***

@@ -64,9 +64,15 @@ A separate inventory instance is created and cached for each player.
 * **Dynamic Placeholders**: Player-specific placeholder values (e.g. current player coins, levels) are resolved individually for each player and cached under their UUID.
 * **Auto Invalidation**: To prevent memory leaks, a quit listener automatically removes the player's cached inventories when they disconnect.
 
-### Querying Cached Views
+### Reloading & Cache Invalidation
 
-To interact with cached inventories programmatically from other plugins, `CrownGuiService` provides several query methods:
+When GUIs are reloaded (e.g. via `/crowngui reload` or plugin reloads):
+* **Automatic Cache Clearing & Reloading**: Existing cached inventories are cleared and immediately pre-rendered (global caches and per-player caches for online players).
+* **Live View Refresh**: Any online players currently viewing a reloaded GUI have their open inventory automatically refreshed to reflect the new layout and items without needing to reopen the menu.
+
+### Querying and Managing Cached Views
+
+To interact with cached inventories programmatically from other plugins, `CrownGuiService` provides query and cache management methods:
 
 #### Get a Player's Cached Inventory
 
@@ -84,6 +90,19 @@ Inventory globalCachedInv = CrownGuiService.getCachedInventory("CrownCore:exampl
 
 ```java
 Collection<Inventory> activeViews = CrownGuiService.getCachedInventories("CrownCore:example");
+```
+
+#### Reload / Clear Caches Programmatically
+
+```java
+// Clear cache for a specific GUI
+CrownGuiService.clearCache("CrownCore:example");
+
+// Reload cache for a specific GUI (clears and pre-renders)
+CrownGuiService.reloadCache("CrownCore:example");
+
+// Clear all cached GUIs
+CrownGuiService.clearAllCaches();
 ```
 
 ***
@@ -106,6 +125,7 @@ dynamic-slots:
 
 ```java
 import de.obey.crown.core.gui.CrownGuiService;
+import de.obey.crown.core.gui.model.GuiItem;
 import java.util.List;
 
 // Fetch the list of slots under the "coinflips" key
@@ -115,7 +135,9 @@ int index = 0;
 for (CoinflipGame game : activeGames) {
     if (index >= slots.size()) break;
     int slot = slots.get(index);
-    inventory.setItem(slot, createGameItem(game));
+    
+    // Set dynamic item with click/action support:
+    CrownGuiService.setDynamicItem(inventory, slot, createGameItem(game), guiItem);
     index++;
 }
 ```

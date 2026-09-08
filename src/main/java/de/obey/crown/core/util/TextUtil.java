@@ -542,16 +542,39 @@ public final class TextUtil {
     }
 
     public String convertLegacyToMiniMessage(String input) {
+        if (input == null || input.isEmpty())
+            return "";
+
         input = translateCorePlaceholder(input);
         final StringBuilder sb = new StringBuilder(input.length());
 
         for (int i = 0; i < input.length(); i++) {
             final char c = input.charAt(i);
 
-            // #ffffff hex outside of mimimessage
+            // §x§r§r§g§g§b§b or &x&r&r&g&g&b&b (Bungee/Spigot legacy hex)
+            if ((c == '&' || c == '§') && i + 13 < input.length() && Character.toLowerCase(input.charAt(i + 1)) == 'x') {
+                final StringBuilder hexBuilder = new StringBuilder(6);
+                boolean valid = true;
+                for (int k = 0; k < 6; k++) {
+                    final char prefix = input.charAt(i + 2 + k * 2);
+                    final char hexDigit = input.charAt(i + 3 + k * 2);
+                    if ((prefix != '&' && prefix != '§') || !isHexChar(hexDigit)) {
+                        valid = false;
+                        break;
+                    }
+                    hexBuilder.append(hexDigit);
+                }
+                if (valid) {
+                    sb.append("<b:false><i:false>").append("<#").append(hexBuilder).append('>');
+                    i += 13;
+                    continue;
+                }
+            }
+
+            // #ffffff hex outside of minimessage
             if (c == '#' && i + 6 < input.length()) {
                 final char prev = i > 0 ? input.charAt(i - 1) : 0;
-                if (prev != '<' && prev != ':') {
+                if (prev != '<' && prev != ':' && prev != '/' && prev != '\\') {
                     final String hex = input.substring(i + 1, i + 7);
                     if (hex.matches("[0-9a-fA-F]{6}")) {
                         sb.append("<b:false><i:false>").append("<#").append(hex).append('>');

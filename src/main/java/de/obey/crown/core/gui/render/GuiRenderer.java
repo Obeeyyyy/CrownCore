@@ -92,18 +92,24 @@ public class GuiRenderer {
             return;
         }
 
+        final boolean hasCustomPlaceholders = placeholders != null && placeholders.length > 0;
         Inventory inventory = null;
-        if (gui.guiSettings().cache()) {
-            inventory = GuiRegistry.getCachedInventory(gui.getKey());
-        } else if (gui.guiSettings().cachePerPlayer()) {
-            inventory = GuiRegistry.getPlayerCachedInventory(gui.getKey(), target.getUniqueId());
+        if (!hasCustomPlaceholders) {
+            if (gui.guiSettings().cache()) {
+                inventory = GuiRegistry.getCachedInventory(gui.getKey());
+            } else if (gui.guiSettings().cachePerPlayer() && target != null) {
+                inventory = GuiRegistry.getPlayerCachedInventory(gui.getKey(), target.getUniqueId());
+            }
         }
 
         if (inventory == null) {
             String title = gui.title(); // TODO
             if (placeholders != null && replacements != null) {
-                for (int i = 0; i < placeholders.length; i++) {
-                    title = title.replace("%" + placeholders[i] + "%", replacements[i]);
+                final int limit = Math.min(placeholders.length, replacements.length);
+                for (int i = 0; i < limit; i++) {
+                    if (placeholders[i] != null && replacements[i] != null) {
+                        title = title.replace("%" + placeholders[i] + "%", replacements[i]);
+                    }
                 }
             }
 
@@ -142,7 +148,7 @@ public class GuiRenderer {
                 final ItemBuilder builder = item.itemBuilder().clone();
                 builder.resolvePlaceholders(placeholders, replacements);
                 final ItemStack itemStack = builder.build(target);
-                final int emptySlot = finalInventory.firstEmpty();
+                final int emptySlot = findFirstAvailableSlot(finalInventory, gui);
                 if (emptySlot != -1) {
                     finalInventory.setItem(emptySlot, itemStack);
                     holder.getItemLayout().put(emptySlot, item);
@@ -152,8 +158,10 @@ public class GuiRenderer {
             applyFill(target, inventory, gui, placeholders, replacements);
 
             if (gui.guiSettings().cache()) {
-                GuiRegistry.cacheInventory(gui.getKey(), inventory);
-            } else if (gui.guiSettings().cachePerPlayer()) {
+                if (!hasCustomPlaceholders) {
+                    GuiRegistry.cacheInventory(gui.getKey(), inventory);
+                }
+            } else if (gui.guiSettings().cachePerPlayer() && target != null) {
                 GuiRegistry.cachePlayerInventory(gui.getKey(), target.getUniqueId(), inventory);
             }
         }
@@ -168,13 +176,16 @@ public class GuiRenderer {
     public static void preRender(final Player player, final OfflinePlayer target, final CrownGui gui, final String[] placeholders, final String... replacements) {
         if (gui.guiSettings().cache() && GuiRegistry.getCachedInventory(gui.getKey()) != null)
             return;
-        if (gui.guiSettings().cachePerPlayer() && GuiRegistry.getPlayerCachedInventory(gui.getKey(), target.getUniqueId()) != null)
+        if (gui.guiSettings().cachePerPlayer() && target != null && GuiRegistry.getPlayerCachedInventory(gui.getKey(), target.getUniqueId()) != null)
             return;
 
         String title = gui.title();
         if (placeholders != null && replacements != null) {
-            for (int i = 0; i < placeholders.length; i++) {
-                title = title.replace("%" + placeholders[i] + "%", replacements[i]);
+            final int limit = Math.min(placeholders.length, replacements.length);
+            for (int i = 0; i < limit; i++) {
+                if (placeholders[i] != null && replacements[i] != null) {
+                    title = title.replace("%" + placeholders[i] + "%", replacements[i]);
+                }
             }
         }
 
@@ -192,7 +203,7 @@ public class GuiRenderer {
         // fixed items
         gui.items().values().forEach(item -> {
             if (item.add()) return;
-            if (!item.canView(player)) return;
+            if (player != null && !item.canView(player)) return;
 
             final ItemBuilder builder = item.itemBuilder().clone();
             builder.resolvePlaceholders(placeholders, replacements);
@@ -207,12 +218,12 @@ public class GuiRenderer {
         // add items
         gui.items().values().forEach(item -> {
             if (!item.add()) return;
-            if (!item.canView(player)) return;
+            if (player != null && !item.canView(player)) return;
 
             final ItemBuilder builder = item.itemBuilder().clone();
             builder.resolvePlaceholders(placeholders, replacements);
             final ItemStack itemStack = builder.build(target);
-            final int emptySlot = inventory.firstEmpty();
+            final int emptySlot = findFirstAvailableSlot(inventory, gui);
             if (emptySlot != -1) {
                 inventory.setItem(emptySlot, itemStack);
                 holder.getItemLayout().put(emptySlot, item);
@@ -221,26 +232,38 @@ public class GuiRenderer {
 
         applyFill(target, inventory, gui, placeholders, replacements);
 
+        final boolean hasCustomPlaceholders = placeholders != null && placeholders.length > 0;
         if (gui.guiSettings().cache()) {
-            GuiRegistry.cacheInventory(gui.getKey(), inventory);
-        } else if (gui.guiSettings().cachePerPlayer()) {
+            if (!hasCustomPlaceholders) {
+                GuiRegistry.cacheInventory(gui.getKey(), inventory);
+            }
+        } else if (gui.guiSettings().cachePerPlayer() && target != null) {
             GuiRegistry.cachePlayerInventory(gui.getKey(), target.getUniqueId(), inventory);
         }
     }
 
     private static void applyFill(final OfflinePlayer player, final Inventory inventory, final CrownGui gui, final String[] placeholders, final String... replacements) {
         final GuiFill fill = gui.guiSettings().fill();
-        if (!fill.enabled()) return;
+        if (!fill.enabled() || fill.item() == null) return;
 
         final ItemBuilder builder = fill.item().clone();
         builder.resolvePlaceholders(placeholders, replacements);
         final ItemStack fillItem = builder.build(player);
 
         for (int i = 0; i < inventory.getSize(); i++) {
-            if (inventory.getItem(i) == null) {
+            if (inventory.getItem(i) == null && !gui.isDynamicSlot(i)) {
                 inventory.setItem(i, fillItem);
             }
         }
+    }
+
+    public static int findFirstAvailableSlot(final Inventory inventory, final CrownGui gui) {
+        for (int i = 0; i < inventory.getSize(); i++) {
+            if (inventory.getItem(i) == null && !gui.isDynamicSlot(i)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public static void reAddItems(final Inventory inventory) {
@@ -252,8 +275,10 @@ public class GuiRenderer {
         layout.entrySet().removeIf(entry -> {
             final int slot = entry.getKey();
             final GuiItem item = entry.getValue();
-            if (item.add()) {
-                inventory.setItem(slot, null);
+            if (item != null && item.add()) {
+                if (!gui.isDynamicSlot(slot)) {
+                    inventory.setItem(slot, null);
+                }
                 return true;
             }
             return false;
@@ -268,7 +293,7 @@ public class GuiRenderer {
             final ItemBuilder builder = item.itemBuilder().clone();
             builder.resolvePlaceholders(holder.getPlaceholders(), holder.getReplacements());
             final ItemStack itemStack = builder.build(holder.getTarget());
-            final int emptySlot = inventory.firstEmpty();
+            final int emptySlot = findFirstAvailableSlot(inventory, gui);
             if (emptySlot != -1) {
                 inventory.setItem(emptySlot, itemStack);
                 layout.put(emptySlot, item);

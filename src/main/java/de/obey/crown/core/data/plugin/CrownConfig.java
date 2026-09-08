@@ -180,6 +180,10 @@ public class CrownConfig implements CrowPlugin {
     private boolean processSection(final ConfigurationSection section, final YamlConfiguration configuration, final String path) {
         boolean changed = false;
         for (final String key : section.getKeys(false)) {
+
+            if(isDynamicKey(key))
+                continue;
+
             final String fullPath = path == null || path.isEmpty()
                     ? key
                     : path + "." + key;
@@ -189,9 +193,13 @@ public class CrownConfig implements CrowPlugin {
             if (obj instanceof ConfigurationSection nested) {
                 configuration.setComments(fullPath, section.getComments(key));
                 configuration.setInlineComments(fullPath, section.getInlineComments(key));
+
                 changed |= processSection(nested, configuration, fullPath);
                 continue;
             }
+
+            if (isDynamicKey(fullPath) && configuration.isConfigurationSection(fullPath))
+                continue;
 
             if(!configuration.contains(fullPath)) {
                 changed = true;
@@ -214,18 +222,7 @@ public class CrownConfig implements CrowPlugin {
 
         for (String key : existingKeys) {
 
-            if(key.contains("permissions") ||
-                    key.contains("chances") ||
-                    key.contains("map") ||
-                    key.contains("events") ||
-                    key.contains("kits") ||
-                    key.contains("custom-leaderboards") ||
-                    key.contains("custom-currencies") ||
-                    key.contains("ranks") ||
-                    key.contains("items") ||
-                    key.contains("permission-taxes") ||
-                    key.contains("progress-bar")
-            )
+            if (isDynamicKey(key))
                 continue;
 
             if (!validKeys.contains(key)) {
@@ -237,6 +234,25 @@ public class CrownConfig implements CrowPlugin {
         }
 
         return changed;
+    }
+
+    private boolean isDynamicKey(final String key) {
+        if (key == null) return false;
+        final String lower = key.toLowerCase();
+        return lower.contains("permissions") ||
+                lower.contains("chances") ||
+                lower.contains("map") ||
+                lower.contains("events") ||
+                lower.contains("kits") ||
+                lower.contains("custom-leaderboards") ||
+                lower.contains("custom-currencies") ||
+                lower.contains("ranks") ||
+                lower.contains("items") ||
+                lower.contains("permission-taxes") ||
+                lower.contains("daily-rewards") ||
+                lower.contains("progress-bar") ||
+                lower.contains("steps") ||
+                lower.contains("sequence");
     }
 
     private void backupConfigFile() {

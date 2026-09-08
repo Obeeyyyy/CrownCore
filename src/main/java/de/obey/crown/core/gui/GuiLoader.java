@@ -32,6 +32,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.CodeSource;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -63,73 +64,71 @@ public class GuiLoader {
     }
 
     private static void load(final Plugin plugin, final File file) {
-        CrownCore.getInstance().getExecutor().execute(() -> {
-            CrownCore.log.debug("loading gui for plugin " + plugin.getName() + ": " + file.getName());
+        CrownCore.log.debug("loading gui for plugin " + plugin.getName() + ": " + file.getName());
 
-            try {
-                final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+        try {
+            final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
-                final String id = file.getName().split("\\.")[0];
-                final String guiKey = plugin.getName() + ":" + id;
-                final String title = FileUtil.getString(configuration, "title", "Default Title");
-                final int size = FileUtil.getInt(configuration, "size", 27);
+            final String id = file.getName().split("\\.")[0];
+            final String guiKey = plugin.getName() + ":" + id;
+            final String title = FileUtil.getString(configuration, "title", "Default Title");
+            final int size = FileUtil.getInt(configuration, "size", 27);
 
-                GuiValidation.validateSize(file.getName(), size);
+            GuiValidation.validateSize(file.getName(), size);
 
-                final GuiSettings guiSettings = parseSettings(configuration, guiKey);
+            final GuiSettings guiSettings = parseSettings(configuration, guiKey);
 
-                final Map<String, GuiItem> items = new HashMap<>();
-                final ConfigurationSection section = configuration.getConfigurationSection("items");
+            final Map<String, GuiItem> items = new HashMap<>();
+            final ConfigurationSection section = configuration.getConfigurationSection("items");
 
-                if (section != null) {
-                    for (final String key : section.getKeys(false)) {
-                        final ConfigurationSection itemSection = section.getConfigurationSection(key);
-                        if (itemSection == null) continue;
-                        try {
-                            final GuiItem item = GuiItemParser.parse(itemSection, guiKey, size, guiSettings.defaultFlags());
-                            if (item != null) {
-                                items.put(key, item);
-                            }
-                        } catch (final Exception ex) {
-                            CrownCore.log.warn("[CrownGUI] Failed to parse item '" + key + "' in GUI " + guiKey + ": " + ex.getMessage());
+            if (section != null) {
+                for (final String key : section.getKeys(false)) {
+                    final ConfigurationSection itemSection = section.getConfigurationSection(key);
+                    if (itemSection == null) continue;
+                    try {
+                        final GuiItem item = GuiItemParser.parse(itemSection, guiKey, size, guiSettings.defaultFlags());
+                        if (item != null) {
+                            items.put(key, item);
                         }
+                    } catch (final Exception ex) {
+                        CrownCore.log.warn("[CrownGUI] Failed to parse item '" + key + "' in GUI " + guiKey + ": " + ex.getMessage());
                     }
                 }
-
-                final Map<String, List<Integer>> dynamicSlots = new HashMap<>();
-                final ConfigurationSection dynamicSection = configuration.getConfigurationSection("dynamic-slots");
-                if (dynamicSection != null) {
-                    for (final String key : dynamicSection.getKeys(false)) {
-                        try {
-                            final List<Integer> list = dynamicSection.getIntegerList(key);
-                            final List<Integer> validSlots = new java.util.ArrayList<>();
-                            for (final int slot : list) {
-                                if (GuiValidation.validateSlot(guiKey, "dynamic-slots." + key, slot, size)) {
-                                    validSlots.add(slot);
-                                }
-                            }
-                            dynamicSlots.put(key, validSlots);
-                        } catch (final Exception ex) {
-                            CrownCore.log.warn("[CrownGUI] Failed to parse dynamic slot '" + key + "' in GUI " + guiKey + ": " + ex.getMessage());
-                        }
-                    }
-                }
-
-                final CrownGui gui = new CrownGui(
-                        plugin.getName(),
-                        id,
-                        title,
-                        size,
-                        guiSettings,
-                        items,
-                        dynamicSlots
-                );
-
-                GuiRegistry.register(gui);
-            } catch (final Exception ex) {
-                CrownCore.log.warn("[CrownGUI] Failed to load GUI from file '" + file.getName() + "' for plugin " + plugin.getName() + ": " + ex.getMessage());
             }
-        });
+
+            final Map<String, List<Integer>> dynamicSlots = new HashMap<>();
+            final ConfigurationSection dynamicSection = configuration.getConfigurationSection("dynamic-slots");
+            if (dynamicSection != null) {
+                for (final String key : dynamicSection.getKeys(false)) {
+                    try {
+                        final List<Integer> list = dynamicSection.getIntegerList(key);
+                        final List<Integer> validSlots = new ArrayList<>();
+                        for (final int slot : list) {
+                            if (GuiValidation.validateSlot(guiKey, "dynamic-slots." + key, slot, size)) {
+                                validSlots.add(slot);
+                            }
+                        }
+                        dynamicSlots.put(key, validSlots);
+                    } catch (final Exception ex) {
+                        CrownCore.log.warn("[CrownGUI] Failed to parse dynamic slot '" + key + "' in GUI " + guiKey + ": " + ex.getMessage());
+                    }
+                }
+            }
+
+            final CrownGui gui = new CrownGui(
+                    plugin.getName(),
+                    id,
+                    title,
+                    size,
+                    guiSettings,
+                    items,
+                    dynamicSlots
+            );
+
+            GuiRegistry.register(gui);
+        } catch (final Exception ex) {
+            CrownCore.log.warn("[CrownGUI] Failed to load GUI from file '" + file.getName() + "' for plugin " + plugin.getName() + ": " + ex.getMessage());
+        }
     }
 
     private static GuiSettings parseSettings(final YamlConfiguration cfg, final String guiKey) {

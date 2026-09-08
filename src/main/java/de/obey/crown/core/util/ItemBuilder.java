@@ -291,18 +291,29 @@ public final class ItemBuilder {
 
         /* display */
         if (name != null) {
-            String resolved = player == null ? name : PlaceholderUtil.resolve(player, name);
-            resolved = "<i:false>" + TextUtil.convertLegacyToMiniMessage(resolved);
-            meta.displayName(MiniMessage.miniMessage().deserialize(resolved));
+            final String resolved = PlaceholderUtil.resolve(player, name);
+            final String formatted = "<i:false>" + TextUtil.convertLegacyToMiniMessage(resolved);
+            try {
+                meta.displayName(MiniMessage.miniMessage().deserialize(formatted));
+            } catch (final Exception ex) {
+                meta.displayName(Component.text(resolved));
+            }
         }
 
         /* lore */
         if (lore != null) {
+            final List<String> resolvedLines = PlaceholderUtil.resolve(player, lore);
             final List<Component> resolvedLore = new ArrayList<>();
-            for (final String line : lore) {
-                String resolved = player == null ? line : PlaceholderUtil.resolve(player, line);
-                resolved = "<i:false>" + TextUtil.convertLegacyToMiniMessage(resolved);
-                resolvedLore.add(MiniMessage.miniMessage().deserialize(resolved));
+            for (final String line : resolvedLines) {
+                if (line == null) continue;
+                for (final String subLine : line.split("\r?\n")) {
+                    final String formatted = "<i:false>" + TextUtil.convertLegacyToMiniMessage(subLine);
+                    try {
+                        resolvedLore.add(MiniMessage.miniMessage().deserialize(formatted));
+                    } catch (final Exception ex) {
+                        resolvedLore.add(Component.text(subLine));
+                    }
+                }
             }
             meta.lore(resolvedLore);
         }
@@ -391,18 +402,29 @@ public final class ItemBuilder {
 
         /* display */
         if (name != null) {
-            String resolved = player == null ? name : PlaceholderUtil.resolve(player, name);
-            resolved = "<i:false>" + TextUtil.convertLegacyToMiniMessage(resolved);
-            meta.displayName(MiniMessage.miniMessage().deserialize(resolved));
+            final String resolved = PlaceholderUtil.resolve(player, name);
+            final String formatted = "<i:false>" + TextUtil.convertLegacyToMiniMessage(resolved);
+            try {
+                meta.displayName(MiniMessage.miniMessage().deserialize(formatted));
+            } catch (final Exception ex) {
+                meta.displayName(Component.text(resolved));
+            }
         }
 
         /* lore */
         if (lore != null) {
+            final List<String> resolvedLines = PlaceholderUtil.resolve(player, lore);
             final List<Component> resolvedLore = new ArrayList<>();
-            for (final String line : lore) {
-                String resolved = player == null ? line : PlaceholderUtil.resolve(player, line);
-                resolved = "<i:false>" + TextUtil.convertLegacyToMiniMessage(resolved);
-                resolvedLore.add(MiniMessage.miniMessage().deserialize(resolved));
+            for (final String line : resolvedLines) {
+                if (line == null) continue;
+                for (final String subLine : line.split("\r?\n")) {
+                    final String formatted = "<i:false>" + TextUtil.convertLegacyToMiniMessage(subLine);
+                    try {
+                        resolvedLore.add(MiniMessage.miniMessage().deserialize(formatted));
+                    } catch (final Exception ex) {
+                        resolvedLore.add(Component.text(subLine));
+                    }
+                }
             }
             meta.lore(resolvedLore);
         }
@@ -623,24 +645,33 @@ public final class ItemBuilder {
         if (placeholders == null || replacements == null || placeholders.length == 0) {
             return;
         }
+        final int limit = Math.min(placeholders.length, replacements.length);
         if (name != null) {
-            for (int i = 0; i < placeholders.length; i++) {
-                name = name.replace("%" + placeholders[i] + "%", replacements[i]);
+            for (int i = 0; i < limit; i++) {
+                if (placeholders[i] != null && replacements[i] != null) {
+                    name = name.replace("%" + placeholders[i] + "%", replacements[i]);
+                }
             }
         }
         if (lore != null) {
             final List<String> newLore = new ArrayList<>();
             for (String line : lore) {
-                for (int i = 0; i < placeholders.length; i++) {
-                    line = line.replace("%" + placeholders[i] + "%", replacements[i]);
+                if (line != null) {
+                    for (int i = 0; i < limit; i++) {
+                        if (placeholders[i] != null && replacements[i] != null) {
+                            line = line.replace("%" + placeholders[i] + "%", replacements[i]);
+                        }
+                    }
                 }
                 newLore.add(line);
             }
             this.lore = newLore;
         }
         if (skullOwner != null) {
-            for (int i = 0; i < placeholders.length; i++) {
-                skullOwner = skullOwner.replace("%" + placeholders[i] + "%", replacements[i]);
+            for (int i = 0; i < limit; i++) {
+                if (placeholders[i] != null && replacements[i] != null) {
+                    skullOwner = skullOwner.replace("%" + placeholders[i] + "%", replacements[i]);
+                }
             }
         }
     }

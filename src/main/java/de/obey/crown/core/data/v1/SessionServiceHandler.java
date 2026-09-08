@@ -9,11 +9,8 @@ package de.obey.crown.core.data.v1;
 */
 
 import com.google.common.collect.Maps;
-import de.obey.crown.core.data.v1.api.ICrownPlayerSession;
-import de.obey.crown.core.data.v1.api.ICrownPlayerSessionService;
 import de.obey.crown.core.data.v1.impl.CrownPlayerSession;
 import de.obey.crown.core.data.v1.impl.CrownPlayerSessionService;
-import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.noobf.PluginConfig;
 import de.obey.crown.core.util.Scheduler;
 import de.obey.crown.core.util.task.CrownTask;
@@ -21,6 +18,7 @@ import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -98,5 +96,18 @@ public class SessionServiceHandler implements Listener {
 
     public <S extends CrownPlayerSession<S>, ID extends UUID> void registerSessionService(final CrownPlayerSessionService<S,ID> sessionService) {
         sessionServiceMap.put(sessionService.getPlugin(), (CrownPlayerSessionService<?, UUID>) sessionService);
+    }
+
+    public void unregisterSessionService(final Plugin plugin) {
+        sessionServiceMap.remove(plugin);
+    }
+
+    public void shutdown() {
+        if (sessionScheduler != null) {
+            sessionScheduler.cancel();
+        }
+        HandlerList.unregisterAll(this);
+        saveAllSync();
+        sessionServiceMap.clear();
     }
 }

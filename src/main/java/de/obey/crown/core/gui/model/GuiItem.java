@@ -48,7 +48,7 @@ public record GuiItem(
     }
 
     public boolean canView(final Player player) {
-        return permission == null || player.hasPermission(permission);
+        return permission == null || (player != null && player.hasPermission(permission));
     }
 
 }

@@ -7,10 +7,10 @@ package de.obey.crown.core.gui.model;
     Project: CrownCore
 */
 
-import de.obey.crown.core.gui.GuiRegistry;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +38,36 @@ public class GuiHolder implements InventoryHolder {
 
     public void setInventory(final Inventory inventory) {
         this.inventory = inventory;
+    }
+
+    public void setDynamicItem(final int slot, final ItemStack itemStack, final GuiItem item) {
+        if (inventory != null && slot >= 0 && slot < inventory.getSize()) {
+            inventory.setItem(slot, itemStack);
+        }
+        if (item != null) {
+            itemLayout.put(slot, item);
+        } else {
+            itemLayout.remove(slot);
+        }
+    }
+
+    public void setDynamicItem(final int slot, final GuiItem item) {
+        if (item == null) {
+            removeDynamicItem(slot);
+            return;
+        }
+        itemLayout.put(slot, item);
+        if (inventory != null && slot >= 0 && slot < inventory.getSize() && item.itemBuilder() != null) {
+            final ItemStack stack = item.itemBuilder().clone().build(target);
+            inventory.setItem(slot, stack);
+        }
+    }
+
+    public void removeDynamicItem(final int slot) {
+        itemLayout.remove(slot);
+        if (inventory != null && slot >= 0 && slot < inventory.getSize()) {
+            inventory.setItem(slot, null);
+        }
     }
 
     public void setRenderState(final OfflinePlayer target, final String[] placeholders, final String... replacements) {
