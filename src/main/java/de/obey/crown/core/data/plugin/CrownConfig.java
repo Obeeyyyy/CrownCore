@@ -243,7 +243,9 @@ public class CrownConfig implements CrowPlugin {
                 lower.contains("chances") ||
                 lower.contains("map") ||
                 lower.contains("events") ||
+                lower.contains("tiers") ||
                 lower.contains("kits") ||
+                lower.contains("reminders") ||
                 lower.contains("custom-leaderboards") ||
                 lower.contains("custom-currencies") ||
                 lower.contains("ranks") ||
@@ -252,6 +254,7 @@ public class CrownConfig implements CrowPlugin {
                 lower.contains("daily-rewards") ||
                 lower.contains("progress-bar") ||
                 lower.contains("steps") ||
+                lower.contains("bounds") ||
                 lower.contains("sequence");
     }
 

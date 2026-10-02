@@ -11,6 +11,7 @@ package de.obey.crown.core.data.v1;
 import com.google.common.collect.Maps;
 import de.obey.crown.core.data.v1.impl.CrownPlayerSession;
 import de.obey.crown.core.data.v1.impl.CrownPlayerSessionService;
+import de.obey.crown.core.noobf.CrownCore;
 import de.obey.crown.core.noobf.PluginConfig;
 import de.obey.crown.core.util.Scheduler;
 import de.obey.crown.core.util.task.CrownTask;
@@ -57,7 +58,12 @@ public class SessionServiceHandler implements Listener {
 
     public void saveAllSync() {
         for (final CrownPlayerSessionService<?, UUID> sessionService : sessionServiceMap.values()) {
-            sessionService.saveAllSync();
+            try {
+                sessionService.saveAllSync();
+            } catch (final Throwable t) {
+                CrownCore.log.warn("Failed to synchronously save sessions for " + (sessionService.getPlugin() != null ? sessionService.getPlugin().getName() : "unknown plugin") + ": " + t.getMessage());
+                t.printStackTrace();
+            }
         }
     }
 

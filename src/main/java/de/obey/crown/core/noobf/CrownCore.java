@@ -121,11 +121,30 @@ public final class CrownCore extends JavaPlugin {
     @Override
     public void onDisable() {
         if (sessionServiceHandler != null) {
-            sessionServiceHandler.shutdown();
+            try {
+                sessionServiceHandler.shutdown();
+            } catch (final Throwable t) {
+                log.warn("Error during sessionServiceHandler shutdown: " + t.getMessage());
+                t.printStackTrace();
+            }
+        }
+
+        if (playerDataService != null) {
+            try {
+                playerDataService.saveAllData();
+            } catch (final Throwable t) {
+                log.warn("Error during playerDataService saveAllData: " + t.getMessage());
+                t.printStackTrace();
+            }
         }
 
         if (pluginStorageManager != null) {
-            pluginStorageManager.shutdown();
+            try {
+                pluginStorageManager.shutdown();
+            } catch (final Throwable t) {
+                log.warn("Error during pluginStorageManager shutdown: " + t.getMessage());
+                t.printStackTrace();
+            }
         }
 
         if (executor != null) {

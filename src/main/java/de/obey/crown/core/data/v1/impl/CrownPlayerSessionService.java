@@ -22,6 +22,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @Getter
@@ -103,16 +105,43 @@ public abstract class CrownPlayerSessionService<S extends CrownPlayerSession<S>,
             return;
         }
 
-        final List<CompletableFuture<?>> futures = new ArrayList<>();
-        for (final S session : sessions.values()) {
-            futures.add(CompletableFuture.runAsync(session::save, executor));
+        boolean canUseExecutor = true;
+        if (executor instanceof ExecutorService es) {
+            if (es.isShutdown() || es.isTerminated()) {
+                canUseExecutor = false;
+            }
         }
 
-        try {
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                    .get(10, TimeUnit.SECONDS);
-        } catch (final Exception e) {
-            CrownCore.log.warn("Timed out or error while saving sessions for plugin " + plugin.getName() + ": " + e.getMessage());
+        if (canUseExecutor) {
+            final List<CompletableFuture<?>> futures = new ArrayList<>();
+            for (final S session : sessions.values()) {
+                try {
+                    futures.add(CompletableFuture.runAsync(session::save, executor));
+                } catch (final RejectedExecutionException e) {
+                    try {
+                        session.save();
+                    } catch (final Exception ex) {
+                        CrownCore.log.warn("Error saving session directly for " + session.getUuid() + ": " + ex.getMessage());
+                    }
+                }
+            }
+
+            if (!futures.isEmpty()) {
+                try {
+                    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                            .get(10, TimeUnit.SECONDS);
+                } catch (final Exception e) {
+                    CrownCore.log.warn("Timed out or error while saving sessions for plugin " + plugin.getName() + ": " + e.getMessage());
+                }
+            }
+        } else {
+            for (final S session : sessions.values()) {
+                try {
+                    session.save();
+                } catch (final Exception e) {
+                    CrownCore.log.warn("Error saving session directly for " + session.getUuid() + ": " + e.getMessage());
+                }
+            }
         }
     }
 }
