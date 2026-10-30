@@ -74,6 +74,8 @@ public class Teleporter {
 
         player.teleportAsync(location);
 
+        CrownCore.log.info("[Teleporting] " + player.getName() + " to " + location.getX() + " " + location.getY() + " " + location.getZ() + " in " + location.getWorld().getName());
+
         sounds.playSoundToPlayer(player, "teleport-instant-1");
         sounds.playSoundToPlayer(player, "teleport-instant-2");
     }

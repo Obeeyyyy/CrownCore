@@ -49,7 +49,7 @@ public class DiscordWebHookUtil {
 
                 replaceNewlines(embed);
 
-                if (embed.has("color")) {
+                if (embed.has("color") && embed.get("color") instanceof String) {
                     embed.put("color", colorFrom(embed.getString("color")));
                 }
             }

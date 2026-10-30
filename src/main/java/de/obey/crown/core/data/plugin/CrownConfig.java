@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -40,6 +41,7 @@ public class CrownConfig implements CrowPlugin {
     private File messageFile, configFile, soundFile;
 
     private PluginStorageConfig pluginStorageConfig;
+    private final Set<String> deprecatedKeys = new HashSet<>();
 
     public CrownConfig(@NonNull Plugin plugin) {
         this.plugin = plugin;
@@ -119,7 +121,7 @@ public class CrownConfig implements CrowPlugin {
                 defaults.load(new InputStreamReader(stream, StandardCharsets.UTF_8));
 
                 changed = compareDefaults(defaults, configuration);
-                changed |= removeDeprecatedKeys(defaults, configuration);
+                changed |= removeDeprecatedKeys(configuration);
 
                 if (changed) {
                     backupConfigFile();
@@ -168,7 +170,7 @@ public class CrownConfig implements CrowPlugin {
                 final Object val = defaults.get(key);
                 configuration.set(key, val);
                 configuration.setComments(key, defaults.getComments(key));
-                configuration.setInlineComments(key, defaults.getInlineComments(key));;
+                configuration.setInlineComments(key, defaults.getInlineComments(key));
                 CrownCore.log.info("(" + plugin.getName() + ") generated missing key in config: " + key + " -> " + val);
             }
 
@@ -180,9 +182,6 @@ public class CrownConfig implements CrowPlugin {
     private boolean processSection(final ConfigurationSection section, final YamlConfiguration configuration, final String path) {
         boolean changed = false;
         for (final String key : section.getKeys(false)) {
-
-            if(isDynamicKey(key))
-                continue;
 
             final String fullPath = path == null || path.isEmpty()
                     ? key
@@ -198,9 +197,6 @@ public class CrownConfig implements CrowPlugin {
                 continue;
             }
 
-            if (isDynamicKey(fullPath) && configuration.isConfigurationSection(fullPath))
-                continue;
-
             if(!configuration.contains(fullPath)) {
                 changed = true;
                 final Object val = section.get(key);
@@ -214,18 +210,15 @@ public class CrownConfig implements CrowPlugin {
         return changed;
     }
 
-    private boolean removeDeprecatedKeys(final YamlConfiguration defaults, final YamlConfiguration configuration) {
+    private boolean removeDeprecatedKeys(final YamlConfiguration configuration) {
         boolean changed = false;
 
-        final Set<String> validKeys = defaults.getKeys(true);
-        final Set<String> existingKeys = new HashSet<>(configuration.getKeys(true));
+        final Set<String> deprecated = getDeprecatedKeys();
+        if (deprecated == null || deprecated.isEmpty())
+            return false;
 
-        for (String key : existingKeys) {
-
-            if (isDynamicKey(key))
-                continue;
-
-            if (!validKeys.contains(key)) {
+        for (final String key : deprecated) {
+            if (configuration.contains(key)) {
                 configuration.set(key, null);
                 changed = true;
 
@@ -236,26 +229,26 @@ public class CrownConfig implements CrowPlugin {
         return changed;
     }
 
-    private boolean isDynamicKey(final String key) {
-        if (key == null) return false;
-        final String lower = key.toLowerCase();
-        return lower.contains("permissions") ||
-                lower.contains("chances") ||
-                lower.contains("map") ||
-                lower.contains("events") ||
-                lower.contains("tiers") ||
-                lower.contains("kits") ||
-                lower.contains("reminders") ||
-                lower.contains("custom-leaderboards") ||
-                lower.contains("custom-currencies") ||
-                lower.contains("ranks") ||
-                lower.contains("items") ||
-                lower.contains("permission-taxes") ||
-                lower.contains("daily-rewards") ||
-                lower.contains("progress-bar") ||
-                lower.contains("steps") ||
-                lower.contains("bounds") ||
-                lower.contains("sequence");
+    public void addDeprecatedKey(final String key) {
+        if (key != null && !key.isEmpty()) {
+            deprecatedKeys.add(key);
+        }
+    }
+
+    public void addDeprecatedKeys(final String... keys) {
+        if (keys != null) {
+            for (final String key : keys) {
+                addDeprecatedKey(key);
+            }
+        }
+    }
+
+    public void addDeprecatedKeys(final Collection<String> keys) {
+        if (keys != null) {
+            for (final String key : keys) {
+                addDeprecatedKey(key);
+            }
+        }
     }
 
     private void backupConfigFile() {

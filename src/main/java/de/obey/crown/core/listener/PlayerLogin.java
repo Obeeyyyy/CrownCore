@@ -1,5 +1,6 @@
 package de.obey.crown.core.listener;
 
+import de.obey.crown.core.data.plugin.storage.player.PlayerData;
 import de.obey.crown.core.data.plugin.storage.player.PlayerDataService;
 import de.obey.crown.core.noobf.CrownCore;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +21,27 @@ public class PlayerLogin implements Listener {
 
         if(!CrownCore.getInstance().isReady()) {
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Component.text("Server Starting"));
+            disallow(event, "Server Starting");
             return;
         }
         
         if(event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED)
             return;
 
-        playerDataService.loadAsync(event.getUniqueId());
+        try {
+            final PlayerData playerData = playerDataService.load(event.getUniqueId());
+
+            if(playerData == null)
+                disallow(event, "Error loading PlayerData - CrownCore");
+
+        } catch (final Exception exception) {
+
+            playerDataService.unloadFromCache(event.getUniqueId());
+            disallow(event, "Error loading PlayerData - CrownCore");
+        }
+    }
+
+    private void disallow(final AsyncPlayerPreLoginEvent event, final String text){
+        event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Component.text(text));
     }
 }

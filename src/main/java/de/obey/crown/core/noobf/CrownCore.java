@@ -131,9 +131,9 @@ public final class CrownCore extends JavaPlugin {
 
         if (playerDataService != null) {
             try {
-                playerDataService.saveAllData();
+                playerDataService.shutdown();
             } catch (final Throwable t) {
-                log.warn("Error during playerDataService saveAllData: " + t.getMessage());
+                log.warn("Error during playerDataService shutdown: " + t.getMessage());
                 t.printStackTrace();
             }
         }
