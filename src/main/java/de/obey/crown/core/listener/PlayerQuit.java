@@ -1,5 +1,6 @@
 package de.obey.crown.core.listener;
 
+import de.obey.crown.core.data.plugin.storage.player.PlayerData;
 import de.obey.crown.core.data.plugin.storage.player.PlayerDataService;
 import de.obey.crown.core.noobf.PluginConfig;
 import de.obey.crown.core.util.Scheduler;
@@ -21,6 +22,10 @@ public class PlayerQuit implements Listener {
         final Player player = event.getPlayer();
 
         Teleporter.quit(player);
+
+        final PlayerData playerData = playerDataService.get(player.getUniqueId());
+        if(playerData != null)
+            playerData.quit();
 
         playerDataService.saveAsync(player.getUniqueId()).thenRun(() -> {
 

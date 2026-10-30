@@ -55,6 +55,15 @@ public class Teleporter {
 
     public void quit(final Player player) {
         isTeleporting.remove(player.getUniqueId());
+        // The entity task may never run again after quit, so clean up here or the bossbar and task keep the player
+        cancelTask(player.getUniqueId());
+        removeBossbar(player);
+    }
+
+    private void cancelTask(final UUID uuid) {
+        final CrownTask task = tasks.remove(uuid);
+        if (task != null)
+            task.cancel();
     }
 
     public void teleportInstant(final Player player, final String locationName) {
@@ -142,9 +151,10 @@ public class Teleporter {
 
         tasks.put(player.getUniqueId(), Scheduler.runEntityTaskTimer(CrownCore.getInstance(), player, () -> {
             if (!player.isOnline()) {
+                removeBossbar(player);
                 isTeleporting.remove(player.getUniqueId());
                 effect.stop();
-                tasks.get(player.getUniqueId()).cancel();
+                cancelTask(player.getUniqueId());
                 return;
             }
 
@@ -154,7 +164,7 @@ public class Teleporter {
                 sounds.playSoundToPlayer(player, "teleport-cancelled");
                 messanger.sendMessage(player, "teleportation-cancelled");
                 isTeleporting.remove(player.getUniqueId());
-                tasks.get(player.getUniqueId()).cancel();
+                cancelTask(player.getUniqueId());
                 return;
             }
 
@@ -174,7 +184,7 @@ public class Teleporter {
                 removeBossbar(player);
                 isTeleporting.remove(player.getUniqueId());
                 effect.stop();
-                tasks.get(player.getUniqueId()).cancel();
+                cancelTask(player.getUniqueId());
                 return;
             }
 
