@@ -61,6 +61,16 @@ public class PlayerData {
     }
 
     /***
+     * Executed whenever a player leaves the server in the
+     * PlayerQuitEvent. Drops the player object so a cached
+     * PlayerData does not keep the offline player in memory.
+     */
+    public void quit() {
+        lastseen = System.currentTimeMillis();
+        this.player = null;
+    }
+
+    /***
      * set the value of a datakey in the data cache
      * @param key dataKey to set
      * @param value value to set
