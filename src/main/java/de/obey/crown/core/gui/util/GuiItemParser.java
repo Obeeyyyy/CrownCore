@@ -70,11 +70,10 @@ public class GuiItemParser {
         builder.name(section.getString("name"))
                 .lore(section.getStringList("lore"))
                 .amount(section.getInt("amount", 1))
-                .glow(section.getBoolean("glow", false))
-                .customModelData(section.contains("custom-model-data")
-                        ? section.getInt("custom-model-data")
-                        : -231
-                );
+                .glow(section.getBoolean("glow", false));
+
+        if (section.contains("custom-model-data"))
+            builder.customModelData(section.getInt("custom-model-data"));
 
         if (material == Material.PLAYER_HEAD && section.contains("texture")) {
             builder.skullTexture(section.getString("texture"), UUID.randomUUID());

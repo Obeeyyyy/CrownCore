@@ -34,6 +34,7 @@ public final class ItemBuilder {
     /* base */
     private final Material material;
     private int amount = 1;
+    private ItemStack sourceItem;
 
     /* display */
     private String name;
@@ -43,6 +44,7 @@ public final class ItemBuilder {
     private boolean glow;
     private Boolean enchantmentGlintOverride;
     private Integer customModelData;
+    private boolean customModelDataModified;
     private Color leatherColor;
     private Color fireworkColor;
 
@@ -72,6 +74,12 @@ public final class ItemBuilder {
     }
 
     public ItemBuilder(final ItemStack item) {
+        if (item == null) {
+            this.material = Material.AIR;
+            return;
+        }
+
+        this.sourceItem = item.clone();
         final ItemMeta meta = item.getItemMeta();
 
         this.material = item.getType();
@@ -221,7 +229,16 @@ public final class ItemBuilder {
 
     public ItemBuilder customModelData(final Integer data) {
         this.customModelData = data;
+        this.customModelDataModified = true;
         return this;
+    }
+
+    public Integer getCustomModelData() {
+        return customModelData;
+    }
+
+    public boolean hasCustomModelData() {
+        return customModelData != null && customModelData >= 0;
     }
 
     public ItemBuilder color(final DyeColor color) {
@@ -284,8 +301,19 @@ public final class ItemBuilder {
     }
 
     private ItemStack buildInternal(final OfflinePlayer player) {
-        final ItemStack item = new ItemStack(material, amount);
-        final ItemMeta meta = item.getItemMeta();
+        final ItemStack item;
+        final ItemMeta meta;
+
+        if (sourceItem != null) {
+            item = sourceItem.clone();
+            item.setType(material);
+            item.setAmount(amount);
+            meta = item.getItemMeta();
+        } else {
+            item = new ItemStack(material, amount);
+            meta = item.getItemMeta();
+        }
+
         if (meta == null)
             return item;
 
@@ -359,8 +387,11 @@ public final class ItemBuilder {
         }
 
         /* custom model data */
-        if (customModelData != null)
+        if (customModelDataModified) {
+            meta.setCustomModelData(customModelData != null && customModelData >= 0 ? customModelData : null);
+        } else if (customModelData != null && customModelData >= 0) {
             meta.setCustomModelData(customModelData);
+        }
 
         /* leather armor */
         if (leatherColor != null && meta instanceof LeatherArmorMeta leather)
@@ -395,8 +426,19 @@ public final class ItemBuilder {
     }
 
     public ItemMeta buildMeta(final OfflinePlayer player) {
-        final ItemStack item = new ItemStack(material, amount);
-        final ItemMeta meta = item.getItemMeta();
+        final ItemStack item;
+        final ItemMeta meta;
+
+        if (sourceItem != null) {
+            item = sourceItem.clone();
+            item.setType(material);
+            item.setAmount(amount);
+            meta = item.getItemMeta();
+        } else {
+            item = new ItemStack(material, amount);
+            meta = item.getItemMeta();
+        }
+
         if (meta == null)
             return null;
 
@@ -470,8 +512,11 @@ public final class ItemBuilder {
         }
 
         /* custom model data */
-        if (customModelData != null)
+        if (customModelDataModified) {
+            meta.setCustomModelData(customModelData != null && customModelData >= 0 ? customModelData : null);
+        } else if (customModelData != null && customModelData >= 0) {
             meta.setCustomModelData(customModelData);
+        }
 
         /* leather armor */
         if (leatherColor != null && meta instanceof LeatherArmorMeta leather)
@@ -619,14 +664,17 @@ public final class ItemBuilder {
     }
 
     public ItemBuilder clone() {
-        final ItemBuilder clone = new ItemBuilder(this.material, this.amount);
+        final ItemBuilder clone = (this.sourceItem != null)
+                ? new ItemBuilder(this.sourceItem.clone())
+                : new ItemBuilder(this.material, this.amount);
         clone.name = this.name;
-        if (this.lore != null) {
+        if (this.lore != null)
             clone.lore = new ArrayList<>(this.lore);
-        }
+        clone.amount = this.amount;
         clone.glow = this.glow;
         clone.enchantmentGlintOverride = this.enchantmentGlintOverride;
         clone.customModelData = this.customModelData;
+        clone.customModelDataModified = this.customModelDataModified;
         clone.leatherColor = this.leatherColor;
         clone.fireworkColor = this.fireworkColor;
         clone.skullOwner = this.skullOwner;
@@ -635,9 +683,8 @@ public final class ItemBuilder {
         clone.enchantments.putAll(this.enchantments);
         clone.flags.addAll(this.flags);
         clone.persistentData.putAll(this.persistentData);
-        if (this.attributeModifiers != null) {
+        if (this.attributeModifiers != null)
             clone.attributeModifiers = LinkedHashMultimap.create(this.attributeModifiers);
-        }
         return clone;
     }
 

@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 public class PluginStorageManager {
@@ -31,6 +32,7 @@ public class PluginStorageManager {
     private final ExecutorService executor;
 
     private final Map<String, HikariDataSource> connections = new ConcurrentHashMap<>();
+    private final Map<String, CompletableFuture<Boolean>> pendingConnections = new ConcurrentHashMap<>();
     private final Map<String, PlayerDataSchema> playerDataSchemas = new ConcurrentHashMap<>();
     private final Map<String, List<PluginDataSchema>> pluginDataSchemas = new ConcurrentHashMap<>();
     private final Map<String, CrownConfig> pluginConfigs = new ConcurrentHashMap<>();
@@ -63,7 +65,11 @@ public class PluginStorageManager {
             return CompletableFuture.completedFuture(false);
         }
 
-        return CompletableFuture.supplyAsync(() -> {
+        final CompletableFuture<Boolean> existing = pendingConnections.get(rawPluginName);
+        if (existing != null && !existing.isDone())
+            return existing;
+
+        final CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
 
             if (connections.containsKey(rawPluginName)) {
                 String driverClassName = "";
@@ -141,6 +147,16 @@ public class PluginStorageManager {
 
             return true;
         }, executor);
+
+        pendingConnections.put(rawPluginName, future);
+        future.whenComplete((result, throwable) -> {
+            pendingConnections.remove(rawPluginName, future);
+            if (throwable != null) {
+                final Throwable cause = throwable.getCause() != null ? throwable.getCause() : throwable;
+                CrownCore.log.warn("failed to create database connection for " + rawPluginName + ": " + cause.getMessage());
+            }
+        });
+        return future;
     }
 
     public void loadPluginDataPlugins() {
@@ -401,7 +417,27 @@ public class PluginStorageManager {
         }
     }
 
+    private void awaitPendingConnection(final String pluginName) {
+        final String key = pluginName.toLowerCase();
+        if (connections.containsKey(key))
+            return;
+
+        final CompletableFuture<Boolean> pending = pendingConnections.get(key);
+        if (pending == null)
+            return;
+
+        try {
+            pending.get(10, TimeUnit.SECONDS);
+        } catch (final InterruptedException exception) {
+            Thread.currentThread().interrupt();
+        } catch (final Exception exception) {
+            final Throwable cause = exception.getCause() != null ? exception.getCause() : exception;
+            CrownCore.log.warn("database connection failed while waiting for " + key + ": " + cause.getMessage());
+        }
+    }
+
     public Connection getConnectionForPluginName(final String name) throws SQLException {
+        awaitPendingConnection(name);
 
         if(connections.isEmpty() || !connections.containsKey(name))
             throw new SQLException("Missing connection for " + name);
@@ -411,6 +447,8 @@ public class PluginStorageManager {
 
     public ConnectionSource getConnectionSourceForPlugin(final Plugin plugin) throws SQLException {
         final String pluginName = plugin.getName().toLowerCase();
+        awaitPendingConnection(pluginName);
+
         if(connections.isEmpty() || !connections.containsKey(pluginName))
             throw new SQLException("Missing connection for " + pluginName);
 
@@ -428,10 +466,12 @@ public class PluginStorageManager {
             } catch (Exception ignored) {}
         }
         connections.clear();
+        pendingConnections.clear();
     }
 
     public void shutdownPluginConnections(final Plugin plugin) {
         final String pluginName = plugin.getName().toLowerCase();
+        pendingConnections.remove(pluginName);
         if(connections.containsKey(pluginName)) {
             CrownCore.log.debug("shutting down connection for " + pluginName);
             connections.computeIfPresent(pluginName, (name, con) -> {
