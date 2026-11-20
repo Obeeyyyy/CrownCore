@@ -41,7 +41,7 @@ publishing {
 repositories {
     mavenCentral()
     mavenLocal()
-    maven("D:/Maven")
+    if (file("D:/Maven").exists()) maven("D:/Maven")
 
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://repo.papermc.io/repository/maven-public/")
